@@ -1,127 +1,165 @@
 import SwiftUI
+import SwiftData
 
 struct ChatView: View {
     @State private var chatInput = ""
     @State private var selectedScope = "My notes"
+    @State private var chatService = ChatService()
+    @State private var messages: [(role: String, content: String)] = []
+    @Query(sort: \Meeting.startedAt, order: .reverse) private var meetings: [Meeting]
+    @Query(sort: \Recipe.position) private var recipes: [Recipe]
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                // Header
-                Text("Ask anything")
-                    .font(.heading(32))
-                    .foregroundStyle(Theme.textHeading)
-                    .padding(.top, 40)
+        VStack(spacing: 0) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    // Header
+                    Text("Ask anything")
+                        .font(.heading(32))
+                        .foregroundStyle(Theme.textHeading)
+                        .padding(.top, 40)
 
-                // Chat input
-                VStack(spacing: 0) {
-                    // Scope tabs
-                    HStack(spacing: 12) {
-                        scopeTab("My notes", isSelected: selectedScope == "My notes")
-                        scopeTab("All meetings", isSelected: selectedScope == "All meetings")
-                        Spacer()
+                    // Chat messages
+                    if !messages.isEmpty {
+                        ForEach(Array(messages.enumerated()), id: \.offset) { _, msg in
+                            chatBubble(role: msg.role, content: msg.content)
+                        }
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.top, 12)
 
-                    // Input field
-                    HStack(spacing: 12) {
-                        TextField("Transcribe a meeting to start asking questions", text: $chatInput)
-                            .textFieldStyle(.plain)
-                            .font(.system(size: 14))
-                            .foregroundStyle(Theme.textPrimary)
+                    // Chat input card
+                    chatInputCard
 
-                        Spacer()
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
-
-                    // Bottom toolbar
-                    HStack(spacing: 12) {
-                        Button { } label: {
-                            Image(systemName: "paperclip")
-                                .font(.system(size: 14))
-                                .foregroundStyle(Theme.textSecondary)
-                        }
-                        .buttonStyle(.plain)
-
-                        Button { } label: {
-                            Image(systemName: "slider.horizontal.3")
-                                .font(.system(size: 14))
-                                .foregroundStyle(Theme.textSecondary)
-                        }
-                        .buttonStyle(.plain)
-
-                        Spacer()
-
-                        Button { } label: {
-                            Image(systemName: "mic")
-                                .font(.system(size: 14))
-                                .foregroundStyle(Theme.textSecondary)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 12)
-                }
-                .background(Theme.bgCard)
-                .cornerRadius(Theme.radiusLG)
-                .overlay(
-                    RoundedRectangle(cornerRadius: Theme.radiusLG)
-                        .stroke(Theme.bgCardBorder, lineWidth: 1)
-                )
-
-                // Recipes
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Recipes")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(Theme.textSecondary)
-
-                    FlowLayout(spacing: 8) {
-                        recipePill("List recent todos", color: Theme.accentGreen)
-                        recipePill("Coach me Matt", color: Theme.accentGreen)
-                        recipePill("Write weekly recap", color: Theme.accentOrange)
-                        recipePill("Streamline my calendar", color: Theme.accentGreen)
-                        recipePill("Blind spots", color: Theme.accentYellow)
-
-                        Button { } label: {
-                            HStack(spacing: 6) {
-                                Image(systemName: "square.grid.2x2")
-                                    .font(.system(size: 11))
-                                Text("See all")
-                                    .font(.system(size: 13))
-                                Image(systemName: "chevron.right")
-                                    .font(.system(size: 10))
-                            }
-                            .foregroundStyle(Theme.textSecondary)
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 8)
-                            .background(Theme.bgCard)
-                            .cornerRadius(Theme.radiusPill)
-                        }
-                        .buttonStyle(.plain)
+                    // Recipes
+                    if messages.isEmpty {
+                        recipesSection
                     }
                 }
+                .padding(.horizontal, 48)
             }
-            .padding(.horizontal, 48)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.bgPrimary)
     }
 
+    // MARK: - Chat Input Card
+    private var chatInputCard: some View {
+        VStack(spacing: 0) {
+            // Scope tabs
+            HStack(spacing: 12) {
+                scopeTab("My notes", isSelected: selectedScope == "My notes")
+                scopeTab("All meetings", isSelected: selectedScope == "All meetings")
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 12)
+
+            // Input field
+            HStack(spacing: 12) {
+                TextField("Transcribe a meeting to start asking questions", text: $chatInput)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 14))
+                    .foregroundStyle(Theme.textPrimary)
+                    .onSubmit { sendMessage() }
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+
+            // Bottom toolbar
+            HStack(spacing: 12) {
+                Button { } label: {
+                    Image(systemName: "paperclip")
+                        .font(.system(size: 14))
+                        .foregroundStyle(Theme.textSecondary)
+                }
+                .buttonStyle(.plain)
+
+                Button { } label: {
+                    Image(systemName: "slider.horizontal.3")
+                        .font(.system(size: 14))
+                        .foregroundStyle(Theme.textSecondary)
+                }
+                .buttonStyle(.plain)
+
+                Spacer()
+
+                if chatService.isLoading {
+                    ProgressView()
+                        .controlSize(.small)
+                }
+
+                Button { } label: {
+                    Image(systemName: "mic")
+                        .font(.system(size: 14))
+                        .foregroundStyle(Theme.textSecondary)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 12)
+        }
+        .background(Theme.bgCard)
+        .cornerRadius(Theme.radiusLG)
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.radiusLG)
+                .stroke(Theme.bgCardBorder, lineWidth: 1)
+        )
+    }
+
+    // MARK: - Recipes Section
+    private var recipesSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Recipes")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(Theme.textSecondary)
+
+            let displayRecipes = recipes.isEmpty ? defaultRecipePills : recipes.map { ($0.name, Color(hex: $0.iconColor)) }
+
+            FlowLayout(spacing: 8) {
+                ForEach(Array(displayRecipes.enumerated()), id: \.offset) { _, recipe in
+                    recipePill(recipe.0, color: recipe.1)
+                }
+
+                Button { } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "square.grid.2x2")
+                            .font(.system(size: 11))
+                        Text("See all")
+                            .font(.system(size: 13))
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 10))
+                    }
+                    .foregroundStyle(Theme.textSecondary)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(Theme.bgCard)
+                    .cornerRadius(Theme.radiusPill)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
+    private var defaultRecipePills: [(String, Color)] {
+        [
+            ("List recent todos", Theme.accentGreen),
+            ("Coach me", Theme.accentGreen),
+            ("Write weekly recap", Theme.accentOrange),
+            ("Streamline my calendar", Theme.accentGreen),
+            ("Blind spots", Theme.accentYellow)
+        ]
+    }
+
+    // MARK: - Components
     private func scopeTab(_ title: String, isSelected: Bool) -> some View {
-        Button {
-            selectedScope = title
-        } label: {
+        Button { selectedScope = title } label: {
             Text(title)
                 .font(.system(size: 13, weight: isSelected ? .medium : .regular))
                 .foregroundStyle(isSelected ? Theme.textPrimary : Theme.textSecondary)
                 .padding(.bottom, 4)
                 .overlay(alignment: .bottom) {
                     if isSelected {
-                        Rectangle()
-                            .fill(Theme.textPrimary)
-                            .frame(height: 1)
+                        Rectangle().fill(Theme.textPrimary).frame(height: 1)
                     }
                 }
         }
@@ -129,7 +167,13 @@ struct ChatView: View {
     }
 
     private func recipePill(_ title: String, color: Color) -> some View {
-        Button { } label: {
+        Button {
+            chatInput = "/\(title)"
+            // Find matching recipe and execute
+            if let recipe = recipes.first(where: { $0.name == title }) {
+                executeRecipe(recipe)
+            }
+        } label: {
             HStack(spacing: 6) {
                 Text("/")
                     .font(.system(size: 13, weight: .bold))
@@ -145,43 +189,57 @@ struct ChatView: View {
         }
         .buttonStyle(.plain)
     }
-}
 
-// Simple flow layout for recipe pills
-struct FlowLayout: Layout {
-    var spacing: CGFloat = 8
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let result = layout(proposal: proposal, subviews: subviews)
-        return result.size
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let result = layout(proposal: proposal, subviews: subviews)
-        for (index, position) in result.positions.enumerated() {
-            subviews[index].place(at: CGPoint(x: bounds.minX + position.x, y: bounds.minY + position.y), proposal: .unspecified)
-        }
-    }
-
-    private func layout(proposal: ProposedViewSize, subviews: Subviews) -> (size: CGSize, positions: [CGPoint]) {
-        let maxWidth = proposal.width ?? .infinity
-        var positions: [CGPoint] = []
-        var currentX: CGFloat = 0
-        var currentY: CGFloat = 0
-        var lineHeight: CGFloat = 0
-
-        for subview in subviews {
-            let size = subview.sizeThatFits(.unspecified)
-            if currentX + size.width > maxWidth && currentX > 0 {
-                currentX = 0
-                currentY += lineHeight + spacing
-                lineHeight = 0
+    private func chatBubble(role: String, content: String) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            if role == "assistant" {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 14))
+                    .foregroundStyle(Theme.accentGreen)
+                    .frame(width: 28, height: 28)
+                    .background(Theme.accentGreen.opacity(0.15))
+                    .cornerRadius(14)
             }
-            positions.append(CGPoint(x: currentX, y: currentY))
-            lineHeight = max(lineHeight, size.height)
-            currentX += size.width + spacing
-        }
 
-        return (CGSize(width: maxWidth, height: currentY + lineHeight), positions)
+            Text(content)
+                .font(.system(size: 14))
+                .foregroundStyle(role == "user" ? Theme.textPrimary : Theme.textSecondary)
+                .textSelection(.enabled)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(12)
+                .background(role == "user" ? Theme.bgCard : Theme.bgCard.opacity(0.5))
+                .cornerRadius(Theme.radiusMD)
+
+            if role == "user" {
+                Circle()
+                    .fill(Theme.accentGreen)
+                    .frame(width: 28, height: 28)
+                    .overlay(
+                        Text("VA").font(.system(size: 10, weight: .medium)).foregroundStyle(.white)
+                    )
+            }
+        }
+    }
+
+    // MARK: - Actions
+    private func sendMessage() {
+        guard !chatInput.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+        let question = chatInput
+        chatInput = ""
+        messages.append((role: "user", content: question))
+
+        Task {
+            let response = await chatService.askAcrossMeetings(question, meetings: meetings)
+            messages.append((role: "assistant", content: response))
+        }
+    }
+
+    private func executeRecipe(_ recipe: Recipe) {
+        messages.append((role: "user", content: "/\(recipe.name)"))
+        chatInput = ""
+        Task {
+            let response = await chatService.executeRecipe(recipe, meetings: meetings)
+            messages.append((role: "assistant", content: response))
+        }
     }
 }

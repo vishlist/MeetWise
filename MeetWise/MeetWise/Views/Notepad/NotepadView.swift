@@ -10,6 +10,11 @@ struct NotepadView: View {
     @State private var chatInput = ""
     @State private var isEnhancing = false
     @State private var showChatSidebar = false
+    @State private var showTemplateSelector = false
+    @State private var selectedTemplate: NoteTemplate = .auto
+    @State private var chatMessages: [(role: String, content: String)] = []
+    @State private var chatService = ChatService()
+    @State private var copiedToClipboard = false
 
     init(meeting: Meeting, sessionManager: MeetingSessionManager) {
         self.meeting = meeting
@@ -22,34 +27,54 @@ struct NotepadView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Top navigation bar
-            topBar
+        HStack(spacing: 0) {
+            // Main note area
+            mainContent
 
+            // CMD+J Chat sidebar
+            if showChatSidebar {
+                Divider().background(Theme.divider)
+                chatSidebar
+                    .frame(width: 320)
+                    .transition(.move(edge: .trailing))
+            }
+        }
+        .background(Theme.bgPrimary)
+        .onChange(of: userNotes) { _, newValue in
+            meeting.userNotes = newValue
+            try? modelContext.save()
+        }
+        .onKeyPress(keys: [.init("j")], phases: .down) { press in
+            if press.modifiers.contains(.command) {
+                withAnimation(.easeInOut(duration: 0.2)) { showChatSidebar.toggle() }
+                return .handled
+            }
+            return .ignored
+        }
+    }
+
+    // MARK: - Main Content
+    private var mainContent: some View {
+        VStack(spacing: 0) {
+            topBar
             Divider().background(Theme.divider)
 
-            // Main content area
             ZStack(alignment: .bottom) {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
-                        // Meeting title
                         meetingHeader
                             .padding(.horizontal, 48)
                             .padding(.top, 32)
 
-                        // Metadata pills
                         metadataPills
                             .padding(.horizontal, 48)
                             .padding(.top, 12)
 
-                        // Content: either enhanced notes or user notepad
                         if let enhanced = meeting.enhancedNotes, !enhanced.isEmpty {
                             enhancedContent(enhanced)
                                 .padding(.horizontal, 48)
                                 .padding(.top, 24)
                         } else {
-                            // Blank notepad — user types here during AND after meeting
-                            // Granola: transcript is INVISIBLE during meeting
                             noteEditor
                                 .padding(.horizontal, 44)
                                 .padding(.top, 16)
@@ -59,21 +84,14 @@ struct NotepadView: View {
                     }
                 }
 
-                // Bottom bar with Enhance + Ask anything + recipe
                 bottomBar
             }
-        }
-        .background(Theme.bgPrimary)
-        .onChange(of: userNotes) { _, newValue in
-            meeting.userNotes = newValue
-            try? modelContext.save()
         }
     }
 
     // MARK: - Top Bar
     private var topBar: some View {
         HStack(spacing: 12) {
-            // Back + Home
             Button {
                 appState.selectedMeeting = nil
             } label: {
@@ -92,7 +110,6 @@ struct NotepadView: View {
 
             Spacer()
 
-            // Recording indicator (subtle, top bar only)
             if isActiveRecording {
                 HStack(spacing: 6) {
                     Circle().fill(.red).frame(width: 8, height: 8)
@@ -106,12 +123,33 @@ struct NotepadView: View {
                 .cornerRadius(Theme.radiusPill)
             }
 
-            // Share button
-            Button { } label: {
+            // Enhanced badge
+            if meeting.enhancedNotes != nil {
+                HStack(spacing: 4) {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 12))
+                    Text("Enhanced")
+                        .font(.system(size: 13))
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 10))
+                }
+                .foregroundStyle(Theme.textSecondary)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Theme.bgCard)
+                .cornerRadius(Theme.radiusSM)
+            }
+
+            // Share
+            Button {
+                ShareService.copyNotesToClipboard(meeting: meeting)
+                copiedToClipboard = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2) { copiedToClipboard = false }
+            } label: {
                 HStack(spacing: 4) {
                     Image(systemName: "lock")
                         .font(.system(size: 11))
-                    Text("Share")
+                    Text(copiedToClipboard ? "Copied!" : "Share")
                         .font(.system(size: 13))
                 }
                 .foregroundStyle(Theme.textPrimary)
@@ -119,15 +157,14 @@ struct NotepadView: View {
                 .padding(.vertical, 6)
                 .background(Theme.bgCard)
                 .cornerRadius(Theme.radiusSM)
-                .overlay(
-                    RoundedRectangle(cornerRadius: Theme.radiusSM)
-                        .stroke(Theme.border, lineWidth: 1)
-                )
+                .overlay(RoundedRectangle(cornerRadius: Theme.radiusSM).stroke(Theme.border, lineWidth: 1))
             }
             .buttonStyle(.plain)
 
-            // Link button
-            Button { } label: {
+            // Link (copy markdown)
+            Button {
+                ShareService.copyAsMarkdown(meeting: meeting)
+            } label: {
                 Image(systemName: "link")
                     .font(.system(size: 13))
                     .foregroundStyle(Theme.textSecondary)
@@ -137,7 +174,20 @@ struct NotepadView: View {
             }
             .buttonStyle(.plain)
 
-            // More menu
+            // Chat sidebar toggle (CMD+J)
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) { showChatSidebar.toggle() }
+            } label: {
+                Image(systemName: "bubble.left.and.bubble.right")
+                    .font(.system(size: 13))
+                    .foregroundStyle(showChatSidebar ? Theme.accentGreen : Theme.textSecondary)
+                    .padding(6)
+                    .background(Theme.bgCard)
+                    .cornerRadius(Theme.radiusSM)
+            }
+            .buttonStyle(.plain)
+
+            // More
             Button { } label: {
                 Image(systemName: "ellipsis")
                     .font(.system(size: 13))
@@ -171,22 +221,39 @@ struct NotepadView: View {
                 metadataPill(icon: "person.2", text: "Me")
             }
 
-            Button { } label: {
+            // Template selector
+            Button { showTemplateSelector.toggle() } label: {
                 HStack(spacing: 4) {
-                    Image(systemName: "plus")
+                    Image(systemName: selectedTemplate.icon)
                         .font(.system(size: 10))
-                    Text("Add to folder")
+                    Text(selectedTemplate.rawValue)
                         .font(.system(size: 12))
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 8))
                 }
                 .foregroundStyle(Theme.textSecondary)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 5)
                 .background(Theme.bgCard)
                 .cornerRadius(Theme.radiusPill)
-                .overlay(
-                    RoundedRectangle(cornerRadius: Theme.radiusPill)
-                        .stroke(Theme.border, lineWidth: 1)
-                )
+                .overlay(RoundedRectangle(cornerRadius: Theme.radiusPill).stroke(Theme.border, lineWidth: 1))
+            }
+            .buttonStyle(.plain)
+            .popover(isPresented: $showTemplateSelector) {
+                templatePopover
+            }
+
+            Button { } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: "plus").font(.system(size: 10))
+                    Text("Add to folder").font(.system(size: 12))
+                }
+                .foregroundStyle(Theme.textSecondary)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(Theme.bgCard)
+                .cornerRadius(Theme.radiusPill)
+                .overlay(RoundedRectangle(cornerRadius: Theme.radiusPill).stroke(Theme.border, lineWidth: 1))
             }
             .buttonStyle(.plain)
 
@@ -194,25 +261,61 @@ struct NotepadView: View {
         }
     }
 
+    // MARK: - Template Popover
+    private var templatePopover: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text("Template")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(Theme.textSecondary)
+                .padding(.horizontal, 12)
+                .padding(.top, 8)
+
+            ForEach(NoteTemplate.allCases) { template in
+                Button {
+                    selectedTemplate = template
+                    meeting.templateID = template.rawValue
+                    showTemplateSelector = false
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: template.icon)
+                            .font(.system(size: 12))
+                            .frame(width: 20)
+                        Text(template.rawValue)
+                            .font(.system(size: 13))
+                        Spacer()
+                        if selectedTemplate == template {
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 11))
+                                .foregroundStyle(Theme.accentGreen)
+                        }
+                    }
+                    .foregroundStyle(Theme.textPrimary)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .frame(width: 220)
+        .padding(.vertical, 4)
+        .background(Theme.bgCard)
+    }
+
     private func metadataPill(icon: String, text: String) -> some View {
         HStack(spacing: 4) {
-            Image(systemName: icon)
-                .font(.system(size: 11))
-            Text(text)
-                .font(.system(size: 12))
+            Image(systemName: icon).font(.system(size: 11))
+            Text(text).font(.system(size: 12))
         }
         .foregroundStyle(Theme.textSecondary)
         .padding(.horizontal, 10)
         .padding(.vertical, 5)
         .background(Theme.bgCard)
         .cornerRadius(Theme.radiusPill)
-        .overlay(
-            RoundedRectangle(cornerRadius: Theme.radiusPill)
-                .stroke(Theme.border, lineWidth: 1)
-        )
+        .overlay(RoundedRectangle(cornerRadius: Theme.radiusPill).stroke(Theme.border, lineWidth: 1))
     }
 
-    // MARK: - Note Editor (blank notepad — Granola style)
+    // MARK: - Note Editor
     private var noteEditor: some View {
         TextEditor(text: $userNotes)
             .font(.system(size: 15))
@@ -231,7 +334,7 @@ struct NotepadView: View {
             }
     }
 
-    // MARK: - Enhanced Content (black = user, gray = AI)
+    // MARK: - Enhanced Content
     private func enhancedContent(_ content: String) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             let lines = content.components(separatedBy: "\n")
@@ -247,11 +350,8 @@ struct NotepadView: View {
         if trimmed.isEmpty {
             Spacer().frame(height: 8)
         } else if trimmed.hasPrefix("# ") {
-            // Section heading
             HStack(spacing: 6) {
-                Text("#")
-                    .font(.system(size: 14))
-                    .foregroundStyle(Theme.textMuted)
+                Text("#").font(.system(size: 14)).foregroundStyle(Theme.textMuted)
                 Text(String(trimmed.dropFirst(2)))
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary)
@@ -259,9 +359,7 @@ struct NotepadView: View {
             .padding(.top, 12)
         } else if trimmed.hasPrefix("## ") {
             HStack(spacing: 6) {
-                Text("#")
-                    .font(.system(size: 13))
-                    .foregroundStyle(Theme.textMuted)
+                Text("#").font(.system(size: 13)).foregroundStyle(Theme.textMuted)
                 Text(String(trimmed.dropFirst(3)))
                     .font(.system(size: 15, weight: .medium))
                     .foregroundStyle(Theme.textPrimary)
@@ -274,7 +372,6 @@ struct NotepadView: View {
         } else if trimmed.hasPrefix("    - ") || trimmed.hasPrefix("    ○ ") {
             bulletLine(String(trimmed.dropFirst(6)), isAI: line.contains("[AI]"), indent: 2)
         } else {
-            // Plain text — check for AI/USER markers
             let isAI = line.contains("[AI]")
             let cleaned = line
                 .replacingOccurrences(of: "[AI]", with: "")
@@ -304,13 +401,11 @@ struct NotepadView: View {
         .padding(.leading, CGFloat(indent) * 20)
     }
 
-    // MARK: - Bottom Bar (Enhance + Ask + Recipe)
+    // MARK: - Bottom Bar
     private var bottomBar: some View {
         VStack(spacing: 0) {
             Divider().background(Theme.divider)
-
             HStack(spacing: 12) {
-                // Enhance Notes button (show when meeting is done and not yet enhanced)
                 if !isActiveRecording && meeting.meetingStatus == .completed && meeting.enhancedNotes == nil {
                     Button {
                         isEnhancing = true
@@ -321,11 +416,9 @@ struct NotepadView: View {
                     } label: {
                         HStack(spacing: 6) {
                             if isEnhancing {
-                                ProgressView()
-                                    .controlSize(.small)
+                                ProgressView().controlSize(.small)
                             } else {
-                                Image(systemName: "sparkles")
-                                    .font(.system(size: 12))
+                                Image(systemName: "sparkles").font(.system(size: 12))
                             }
                             Text(isEnhancing ? "Enhancing..." : "Enhance Notes")
                                 .font(.system(size: 13, weight: .medium))
@@ -340,17 +433,13 @@ struct NotepadView: View {
                     .disabled(isEnhancing)
                 }
 
-                // Stop recording button (during recording)
                 if isActiveRecording {
                     Button {
-                        Task {
-                            await sessionManager.stopRecording(modelContext: modelContext)
-                        }
+                        Task { await sessionManager.stopRecording(modelContext: modelContext) }
                     } label: {
                         HStack(spacing: 6) {
                             Circle().fill(.red).frame(width: 8, height: 8)
-                            Text("Stop recording")
-                                .font(.system(size: 13, weight: .medium))
+                            Text("Stop recording").font(.system(size: 13, weight: .medium))
                         }
                         .foregroundStyle(Theme.textPrimary)
                         .padding(.horizontal, 16)
@@ -361,32 +450,29 @@ struct NotepadView: View {
                     .buttonStyle(.plain)
                 }
 
-                // Ask anything input
                 HStack(spacing: 8) {
                     TextField("Ask anything", text: $chatInput)
                         .textFieldStyle(.plain)
                         .font(.system(size: 13))
                         .foregroundStyle(Theme.textPrimary)
+                        .onSubmit {
+                            if !chatInput.isEmpty {
+                                withAnimation { showChatSidebar = true }
+                                sendChatMessage()
+                            }
+                        }
                     Spacer()
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
                 .background(Theme.bgCard)
                 .cornerRadius(Theme.radiusPill)
-                .overlay(
-                    RoundedRectangle(cornerRadius: Theme.radiusPill)
-                        .stroke(Theme.border, lineWidth: 1)
-                )
+                .overlay(RoundedRectangle(cornerRadius: Theme.radiusPill).stroke(Theme.border, lineWidth: 1))
 
-                // Recipe pill
                 Button { } label: {
                     HStack(spacing: 4) {
-                        Text("/")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundStyle(Theme.accentGreen)
-                        Text("Write follow up email")
-                            .font(.system(size: 12))
-                            .foregroundStyle(Theme.textPrimary)
+                        Text("/").font(.system(size: 12, weight: .bold)).foregroundStyle(Theme.accentGreen)
+                        Text("Write follow up email").font(.system(size: 12)).foregroundStyle(Theme.textPrimary)
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
@@ -395,12 +481,8 @@ struct NotepadView: View {
                 }
                 .buttonStyle(.plain)
 
-                // Error message
                 if let error = sessionManager.error {
-                    Text(error)
-                        .font(.system(size: 11))
-                        .foregroundStyle(.red)
-                        .lineLimit(1)
+                    Text(error).font(.system(size: 11)).foregroundStyle(.red).lineLimit(1)
                 }
             }
             .padding(.horizontal, 16)
@@ -409,7 +491,95 @@ struct NotepadView: View {
         }
     }
 
-    // MARK: - Helpers
+    // MARK: - Chat Sidebar (CMD+J)
+    private var chatSidebar: some View {
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Text("Ask about this meeting")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(Theme.textPrimary)
+                Spacer()
+                Button { withAnimation { showChatSidebar = false } } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 12))
+                        .foregroundStyle(Theme.textMuted)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(12)
+
+            Divider().background(Theme.divider)
+
+            // Messages
+            ScrollView {
+                VStack(alignment: .leading, spacing: 12) {
+                    if chatMessages.isEmpty {
+                        Text("Ask anything about this meeting.\nTry: \"What were the action items?\"")
+                            .font(.system(size: 13))
+                            .foregroundStyle(Theme.textMuted)
+                            .padding(12)
+                    }
+
+                    ForEach(Array(chatMessages.enumerated()), id: \.offset) { _, msg in
+                        VStack(alignment: msg.role == "user" ? .trailing : .leading, spacing: 4) {
+                            Text(msg.content)
+                                .font(.system(size: 13))
+                                .foregroundStyle(msg.role == "user" ? Theme.textPrimary : Theme.textSecondary)
+                                .padding(10)
+                                .background(msg.role == "user" ? Theme.bgCard : Theme.bgCard.opacity(0.5))
+                                .cornerRadius(Theme.radiusMD)
+                                .textSelection(.enabled)
+                        }
+                        .frame(maxWidth: .infinity, alignment: msg.role == "user" ? .trailing : .leading)
+                    }
+
+                    if chatService.isLoading {
+                        HStack(spacing: 6) {
+                            ProgressView().controlSize(.small)
+                            Text("Thinking...").font(.system(size: 12)).foregroundStyle(Theme.textMuted)
+                        }
+                        .padding(10)
+                    }
+                }
+                .padding(12)
+            }
+
+            Divider().background(Theme.divider)
+
+            // Input
+            HStack(spacing: 8) {
+                TextField("Ask about this meeting...", text: $chatInput)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 13))
+                    .onSubmit { sendChatMessage() }
+
+                Button { sendChatMessage() } label: {
+                    Image(systemName: "arrow.up.circle.fill")
+                        .font(.system(size: 20))
+                        .foregroundStyle(chatInput.isEmpty ? Theme.textMuted : Theme.accentGreen)
+                }
+                .buttonStyle(.plain)
+                .disabled(chatInput.isEmpty)
+            }
+            .padding(12)
+        }
+        .background(Theme.bgPrimary)
+    }
+
+    // MARK: - Actions
+    private func sendChatMessage() {
+        guard !chatInput.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+        let question = chatInput
+        chatInput = ""
+        chatMessages.append((role: "user", content: question))
+
+        Task {
+            let response = await chatService.askAboutMeeting(question, meeting: meeting)
+            chatMessages.append((role: "assistant", content: response))
+        }
+    }
+
     private func isToday(_ date: Date) -> Bool {
         Calendar.current.isDateInToday(date)
     }

@@ -6,10 +6,25 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var sessionManager = MeetingSessionManager()
     @State private var showSearch = false
+    @State private var onboardingComplete = UserDefaults.standard.bool(forKey: "onboardingComplete")
 
     var body: some View {
         @Bindable var state = appState
 
+        Group {
+            if onboardingComplete {
+                mainAppView
+            } else {
+                OnboardingView(isComplete: $onboardingComplete)
+            }
+        }
+        .preferredColorScheme(.dark)
+        .onAppear {
+            setupInitialData()
+        }
+    }
+
+    private var mainAppView: some View {
         ZStack {
             NavigationSplitView(columnVisibility: .constant(.all)) {
                 SidebarView(sessionManager: sessionManager)
@@ -20,7 +35,6 @@ struct ContentView: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .background(Theme.bgPrimary)
 
-                    // "+ Quick note" and "Invite" buttons (always visible on non-note views)
                     if appState.selectedMeeting == nil {
                         quickNoteHeaderButton
                             .padding(.top, 8)
@@ -41,15 +55,21 @@ struct ContentView: View {
                     .frame(maxHeight: .infinity, alignment: .top)
             }
         }
-        .preferredColorScheme(.dark)
-        .onAppear {
-            setupInitialData()
-        }
-        // CMD+K for search
-        .keyboardShortcut("k", modifiers: .command)
         .onKeyPress(keys: [.init("k")], phases: .down) { press in
             if press.modifiers.contains(.command) {
                 showSearch.toggle()
+                return .handled
+            }
+            return .ignored
+        }
+        .onKeyPress(keys: [.init("n")], phases: .down) { press in
+            if press.modifiers.contains(.command) {
+                Task {
+                    await sessionManager.startRecording(modelContext: modelContext)
+                    if let meeting = sessionManager.currentMeeting {
+                        appState.selectedMeeting = meeting
+                    }
+                }
                 return .handled
             }
             return .ignored
@@ -61,20 +81,15 @@ struct ContentView: View {
         HStack(spacing: 12) {
             Button { } label: {
                 HStack(spacing: 4) {
-                    Image(systemName: "person.badge.plus")
-                        .font(.system(size: 12))
-                    Text("Invite")
-                        .font(.system(size: 13))
+                    Image(systemName: "person.badge.plus").font(.system(size: 12))
+                    Text("Invite").font(.system(size: 13))
                 }
                 .foregroundStyle(Theme.textPrimary)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
                 .background(Theme.bgCard)
                 .cornerRadius(Theme.radiusSM)
-                .overlay(
-                    RoundedRectangle(cornerRadius: Theme.radiusSM)
-                        .stroke(Theme.border, lineWidth: 1)
-                )
+                .overlay(RoundedRectangle(cornerRadius: Theme.radiusSM).stroke(Theme.border, lineWidth: 1))
             }
             .buttonStyle(.plain)
 
@@ -87,20 +102,15 @@ struct ContentView: View {
                 }
             } label: {
                 HStack(spacing: 4) {
-                    Image(systemName: "plus")
-                        .font(.system(size: 12, weight: .medium))
-                    Text("Quick note")
-                        .font(.system(size: 13, weight: .medium))
+                    Image(systemName: "plus").font(.system(size: 12, weight: .medium))
+                    Text("Quick note").font(.system(size: 13, weight: .medium))
                 }
                 .foregroundStyle(Theme.textPrimary)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
                 .background(Theme.bgCard)
                 .cornerRadius(Theme.radiusSM)
-                .overlay(
-                    RoundedRectangle(cornerRadius: Theme.radiusSM)
-                        .stroke(Theme.border, lineWidth: 1)
-                )
+                .overlay(RoundedRectangle(cornerRadius: Theme.radiusSM).stroke(Theme.border, lineWidth: 1))
             }
             .buttonStyle(.plain)
         }
@@ -141,5 +151,8 @@ struct ContentView: View {
         } else {
             appState.currentUser = profiles.first
         }
+
+        // Seed recipes if needed
+        RecipeService.seedRecipes(modelContext: modelContext)
     }
 }

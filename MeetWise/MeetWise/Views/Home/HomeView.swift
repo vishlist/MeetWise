@@ -6,6 +6,8 @@ struct HomeView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Meeting.startedAt, order: .reverse) private var recentMeetings: [Meeting]
+    @State private var calendarService = CalendarService()
+    @State private var homeChat = ""
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -27,18 +29,20 @@ struct HomeView: View {
                         emptyNotesState
                     }
 
-                    // Bottom padding for chat bar
                     Spacer(minLength: 80)
                 }
                 .padding(.horizontal, 48)
                 .padding(.top, 40)
             }
 
-            // Bottom chat bar (like Granola)
+            // Bottom chat bar
             homeBottomBar
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.bgPrimary)
+        .task {
+            await calendarService.requestAccess()
+        }
     }
 
     // MARK: - Calendar Card
@@ -65,17 +69,21 @@ struct HomeView: View {
             .background(Theme.bgCard)
             .clipShape(UnevenRoundedRectangle(topLeadingRadius: Theme.radiusLG, topTrailingRadius: Theme.radiusLG))
 
-            VStack(spacing: 8) {
-                Image(systemName: "calendar.badge.clock")
-                    .font(.system(size: 28))
-                    .foregroundStyle(Theme.textMuted)
-                Text("No upcoming events")
-                    .font(.system(size: 14))
-                    .foregroundStyle(Theme.textSecondary)
-                Text("Check your visible calendars")
-                    .font(.system(size: 12))
-                    .foregroundStyle(Theme.textMuted)
-                Button("Calendar settings") { }
+            // Events or empty state
+            if calendarService.todayEvents.isEmpty {
+                VStack(spacing: 8) {
+                    Image(systemName: "calendar.badge.clock")
+                        .font(.system(size: 28))
+                        .foregroundStyle(Theme.textMuted)
+                    Text("No upcoming events")
+                        .font(.system(size: 14))
+                        .foregroundStyle(Theme.textSecondary)
+                    Text("Check your visible calendars")
+                        .font(.system(size: 12))
+                        .foregroundStyle(Theme.textMuted)
+                    Button("Calendar settings") {
+                        appState.selectedNavItem = .settings
+                    }
                     .font(.system(size: 13))
                     .foregroundStyle(Theme.textPrimary)
                     .padding(.horizontal, 16)
@@ -87,20 +95,80 @@ struct HomeView: View {
                             .stroke(Theme.border, lineWidth: 1)
                     )
                     .padding(.top, 4)
+                    .buttonStyle(.plain)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 24)
+                .overlay(
+                    UnevenRoundedRectangle(bottomLeadingRadius: Theme.radiusLG, bottomTrailingRadius: Theme.radiusLG)
+                        .stroke(Theme.bgCardBorder, style: StrokeStyle(lineWidth: 1, dash: [6]))
+                )
+            } else {
+                // Show real calendar events
+                VStack(spacing: 0) {
+                    ForEach(calendarService.todayEvents) { event in
+                        HStack(spacing: 12) {
+                            Rectangle()
+                                .fill(Theme.accentGreen)
+                                .frame(width: 3)
+                                .cornerRadius(2)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(event.title)
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundStyle(Theme.textPrimary)
+                                Text(event.formattedTimeRange)
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(Theme.textSecondary)
+                            }
+
+                            Spacer()
+
+                            if event.meetingURL != nil {
+                                Button {
+                                    // Start recording for this meeting
+                                    Task {
+                                        await sessionManager.startRecording(modelContext: modelContext)
+                                        if let meeting = sessionManager.currentMeeting {
+                                            meeting.title = event.title
+                                            meeting.calendarEventID = event.id
+                                            try? modelContext.save()
+                                            appState.selectedMeeting = meeting
+                                        }
+                                    }
+                                } label: {
+                                    Text("Join & Note")
+                                        .font(.system(size: 12, weight: .medium))
+                                        .foregroundStyle(Theme.accentGreen)
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 4)
+                                        .background(Theme.accentGreen.opacity(0.15))
+                                        .cornerRadius(Theme.radiusSM)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+
+                        if event.id != calendarService.todayEvents.last?.id {
+                            Divider().background(Theme.divider).padding(.horizontal, 16)
+                        }
+                    }
+                }
+                .background(Theme.bgCard.opacity(0.3))
+                .clipShape(UnevenRoundedRectangle(bottomLeadingRadius: Theme.radiusLG, bottomTrailingRadius: Theme.radiusLG))
+                .overlay(
+                    UnevenRoundedRectangle(bottomLeadingRadius: Theme.radiusLG, bottomTrailingRadius: Theme.radiusLG)
+                        .stroke(Theme.bgCardBorder, lineWidth: 1)
+                )
             }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 24)
-            .overlay(
-                UnevenRoundedRectangle(bottomLeadingRadius: Theme.radiusLG, bottomTrailingRadius: Theme.radiusLG)
-                    .stroke(Theme.bgCardBorder, style: StrokeStyle(lineWidth: 1, dash: [6]))
-            )
         }
     }
 
-    // MARK: - Notes Section (grouped by day like Granola's "Today")
+    // MARK: - Notes Section
     private var notesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Group by day
             let grouped = Dictionary(grouping: recentMeetings) { meeting in
                 Calendar.current.startOfDay(for: meeting.startedAt)
             }
@@ -109,13 +177,11 @@ struct HomeView: View {
             ForEach(sortedDays, id: \.self) { day in
                 let meetings = grouped[day] ?? []
 
-                // Day header
                 Text(dayLabel(day))
                     .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(Theme.textSecondary)
                     .padding(.top, 8)
 
-                // Meeting rows
                 ForEach(meetings) { meeting in
                     noteRow(meeting)
                 }
@@ -128,7 +194,6 @@ struct HomeView: View {
             appState.selectedMeeting = meeting
         } label: {
             HStack(spacing: 12) {
-                // Document icon
                 Image(systemName: "doc.text")
                     .font(.system(size: 16))
                     .foregroundStyle(Theme.textMuted)
@@ -140,33 +205,29 @@ struct HomeView: View {
                     Text(meeting.title)
                         .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(Theme.textPrimary)
-                    Text("Me")
+                    Text(meeting.participants?.map(\.name).joined(separator: ", ") ?? "Me")
                         .font(.system(size: 12))
                         .foregroundStyle(Theme.textSecondary)
                 }
 
                 Spacer()
 
-                // Lock icon
                 Image(systemName: "lock")
                     .font(.system(size: 11))
                     .foregroundStyle(Theme.textMuted)
 
-                // Time
                 Text(meeting.formattedTime)
                     .font(.system(size: 12))
                     .foregroundStyle(Theme.textSecondary)
             }
             .padding(.vertical, 8)
             .padding(.horizontal, 12)
-            .background(Color.clear)
-            .cornerRadius(Theme.radiusMD)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
 
-    // MARK: - Empty Notes State
+    // MARK: - Empty State
     private var emptyNotesState: some View {
         VStack(spacing: 12) {
             Text("Take your first note")
@@ -201,15 +262,13 @@ struct HomeView: View {
         .padding(.vertical, 40)
     }
 
-    // MARK: - Bottom Chat Bar (like Granola's "What did we talk about yesterday?")
+    // MARK: - Bottom Bar
     private var homeBottomBar: some View {
         VStack(spacing: 0) {
             Divider().background(Theme.divider)
-
             HStack(spacing: 12) {
-                // Chat input
                 HStack {
-                    TextField("What did we talk about yesterday?", text: .constant(""))
+                    TextField("What did we talk about yesterday?", text: $homeChat)
                         .textFieldStyle(.plain)
                         .font(.system(size: 13))
                         .foregroundStyle(Theme.textPrimary)
@@ -224,7 +283,6 @@ struct HomeView: View {
                         .stroke(Theme.border, lineWidth: 1)
                 )
 
-                // Recipe pill
                 Button { } label: {
                     HStack(spacing: 4) {
                         Text("/")
@@ -261,14 +319,10 @@ struct HomeView: View {
     }
 
     private func dayLabel(_ date: Date) -> String {
-        if Calendar.current.isDateInToday(date) {
-            return "Today"
-        } else if Calendar.current.isDateInYesterday(date) {
-            return "Yesterday"
-        } else {
-            let f = DateFormatter()
-            f.dateFormat = "EEEE, MMM d"
-            return f.string(from: date)
-        }
+        if Calendar.current.isDateInToday(date) { return "Today" }
+        if Calendar.current.isDateInYesterday(date) { return "Yesterday" }
+        let f = DateFormatter()
+        f.dateFormat = "EEEE, MMM d"
+        return f.string(from: date)
     }
 }

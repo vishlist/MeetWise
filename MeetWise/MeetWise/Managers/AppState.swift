@@ -24,6 +24,14 @@ final class AppState {
     // User
     var currentUser: UserProfile?
     var isAuthenticated = false
+
+    // Menu bar
+    var recentMeetingTitle: String?
+
+    // Onboarding
+    var onboardingComplete: Bool {
+        UserDefaults.standard.bool(forKey: "onboardingComplete")
+    }
 }
 
 enum NavItem: Hashable {

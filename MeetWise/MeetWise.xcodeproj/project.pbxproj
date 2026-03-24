@@ -39,6 +39,14 @@
 		A1B2C3D40000001E /* MeetingSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000021 /* MeetingSessionManager.swift */; };
 		A1B2C3D40000001F /* NotepadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000022 /* NotepadView.swift */; };
 		A1B2C3D400000020 /* SearchOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000023 /* SearchOverlay.swift */; };
+		A1B2C3D400000021 /* CalendarService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000024 /* CalendarService.swift */; };
+		A1B2C3D400000022 /* ChatService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000025 /* ChatService.swift */; };
+		A1B2C3D400000023 /* RecipeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000026 /* RecipeService.swift */; };
+		A1B2C3D400000024 /* TemplateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000027 /* TemplateService.swift */; };
+		A1B2C3D400000025 /* ShareService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000028 /* ShareService.swift */; };
+		A1B2C3D400000026 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000029 /* NotificationService.swift */; };
+		A1B2C3D400000027 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D50000002A /* OnboardingView.swift */; };
+		A1B2C3D400000028 /* FlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D50000002B /* FlowLayout.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -77,6 +85,14 @@
 		A1B2C3D500000021 /* MeetingSessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingSessionManager.swift; sourceTree = "<group>"; };
 		A1B2C3D500000022 /* NotepadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotepadView.swift; sourceTree = "<group>"; };
 		A1B2C3D500000023 /* SearchOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchOverlay.swift; sourceTree = "<group>"; };
+		A1B2C3D500000024 /* CalendarService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarService.swift; sourceTree = "<group>"; };
+		A1B2C3D500000025 /* ChatService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatService.swift; sourceTree = "<group>"; };
+		A1B2C3D500000026 /* RecipeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeService.swift; sourceTree = "<group>"; };
+		A1B2C3D500000027 /* TemplateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateService.swift; sourceTree = "<group>"; };
+		A1B2C3D500000028 /* ShareService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareService.swift; sourceTree = "<group>"; };
+		A1B2C3D500000029 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
+		A1B2C3D50000002A /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		A1B2C3D50000002B /* FlowLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowLayout.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -144,6 +160,7 @@
 			isa = PBXGroup;
 			children = (
 				A1B2C3D50000000D /* Constants.swift */,
+				A1B2C3D50000002B /* FlowLayout.swift */,
 				A1B2C3D50000000F /* Theme.swift */,
 				A1B2C3D700000006 /* Extensions */,
 			);
@@ -168,6 +185,7 @@
 				A1B2C3D70000000B /* Home */,
 				A1B2C3D70000000C /* MenuBar */,
 				A1B2C3D700000014 /* Notepad */,
+				A1B2C3D700000016 /* Onboarding */,
 				A1B2C3D70000000D /* People */,
 				A1B2C3D700000011 /* Settings */,
 				A1B2C3D700000015 /* Shared */,
@@ -253,8 +271,14 @@
 			isa = PBXGroup;
 			children = (
 				A1B2C3D50000001E /* AudioCaptureService.swift */,
-				A1B2C3D50000001F /* TranscriptionService.swift */,
+				A1B2C3D500000024 /* CalendarService.swift */,
+				A1B2C3D500000025 /* ChatService.swift */,
 				A1B2C3D500000020 /* EnhancementService.swift */,
+				A1B2C3D500000029 /* NotificationService.swift */,
+				A1B2C3D500000026 /* RecipeService.swift */,
+				A1B2C3D500000028 /* ShareService.swift */,
+				A1B2C3D500000027 /* TemplateService.swift */,
+				A1B2C3D50000001F /* TranscriptionService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -273,6 +297,14 @@
 				A1B2C3D500000023 /* SearchOverlay.swift */,
 			);
 			path = Shared;
+			sourceTree = "<group>";
+		};
+		A1B2C3D700000016 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D50000002A /* OnboardingView.swift */,
+			);
+			path = Onboarding;
 			sourceTree = "<group>";
 		};
 		A1B2C3D70000000F /* Resources */ = {
@@ -391,6 +423,14 @@
 				A1B2C3D40000001E /* MeetingSessionManager.swift in Sources */,
 				A1B2C3D40000001F /* NotepadView.swift in Sources */,
 				A1B2C3D400000020 /* SearchOverlay.swift in Sources */,
+				A1B2C3D400000021 /* CalendarService.swift in Sources */,
+				A1B2C3D400000022 /* ChatService.swift in Sources */,
+				A1B2C3D400000023 /* RecipeService.swift in Sources */,
+				A1B2C3D400000024 /* TemplateService.swift in Sources */,
+				A1B2C3D400000025 /* ShareService.swift in Sources */,
+				A1B2C3D400000026 /* NotificationService.swift in Sources */,
+				A1B2C3D400000027 /* OnboardingView.swift in Sources */,
+				A1B2C3D400000028 /* FlowLayout.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
