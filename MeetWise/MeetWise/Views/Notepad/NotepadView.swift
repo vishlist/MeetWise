@@ -423,10 +423,10 @@ struct NotepadView: View {
                             Text(isEnhancing ? "Enhancing..." : "Enhance Notes")
                                 .font(.system(size: 13, weight: .medium))
                         }
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Color.black)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 8)
-                        .background(Theme.accentGreen)
+                        .background(Color.white)
                         .cornerRadius(Theme.radiusPill)
                     }
                     .buttonStyle(.plain)

@@ -149,10 +149,23 @@ final class EnhancementService {
 
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
-        let (data, _) = try await URLSession.shared.data(for: request)
-        let response = try JSONDecoder().decode(ClaudeResponse.self, from: data)
+        let (data, httpResponse) = try await URLSession.shared.data(for: request)
 
-        return response.content.first?.text ?? ""
+        // Check for HTTP errors
+        if let http = httpResponse as? HTTPURLResponse, http.statusCode != 200 {
+            let errorBody = String(data: data, encoding: .utf8) ?? "Unknown error"
+            print("[Claude API] HTTP \(http.statusCode): \(errorBody)")
+            throw EnhancementError.apiError("HTTP \(http.statusCode): \(String(errorBody.prefix(200)))")
+        }
+
+        do {
+            let response = try JSONDecoder().decode(ClaudeResponse.self, from: data)
+            return response.content.first?.text ?? ""
+        } catch {
+            let raw = String(data: data, encoding: .utf8) ?? "nil"
+            print("[Claude API] Decode error: \(error). Raw: \(String(raw.prefix(500)))")
+            throw EnhancementError.apiError("Response parse failed: \(error.localizedDescription)")
+        }
     }
 
     private func defaultSummary(title: String) -> MeetingSummary {

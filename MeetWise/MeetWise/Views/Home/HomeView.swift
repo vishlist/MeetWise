@@ -255,10 +255,10 @@ struct HomeView: View {
                     Image(systemName: "plus").font(.system(size: 12))
                     Text("Quick Note").font(.system(size: 13, weight: .semibold))
                 }
-                .foregroundStyle(.white)
+                .foregroundStyle(Color.black)
                 .padding(.horizontal, 20)
                 .padding(.vertical, 10)
-                .background(Theme.gradientAccent)
+                .background(Color.white)
                 .cornerRadius(Theme.radiusPill)
                 .glow(Theme.accent)
             }
