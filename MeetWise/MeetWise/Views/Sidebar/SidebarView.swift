@@ -5,17 +5,7 @@ struct SidebarView: View {
     var sessionManager: MeetingSessionManager
     @Environment(AppState.self) private var appState
     @Environment(\.modelContext) private var modelContext
-    @Query(filter: #Predicate<Folder> { $0.spaceType == "personal" },
-           sort: \Folder.position)
-    private var personalFolders: [Folder]
-
-    @Query(filter: #Predicate<Folder> { $0.spaceType == "team" },
-           sort: \Folder.position)
-    private var teamFolders: [Folder]
-
-    @State private var isAddingPersonalFolder = false
-    @State private var isAddingTeamFolder = false
-    @State private var newFolderName = ""
+    @Query(sort: \Folder.position) private var folders: [Folder]
 
     var body: some View {
         @Bindable var state = appState
@@ -23,48 +13,37 @@ struct SidebarView: View {
         VStack(spacing: 0) {
             // Search bar
             searchBar
+                .padding(.horizontal, 12)
+                .padding(.top, 12)
+                .padding(.bottom, 8)
 
-            // Navigation items
+            // Main nav items
             VStack(spacing: 2) {
-                navItem(title: "Home", icon: "house", item: .home)
-                navItem(title: "Shared with me", icon: "person.2", item: .sharedWithMe)
-                navItem(title: "Chat", icon: "bubble.left", item: .chat)
+                navItem(icon: "house.fill", label: "Home", item: .home)
+                navItem(icon: "shared.with.you", label: "Shared with me", item: .sharedWithMe)
+                navItem(icon: "bubble.left.and.bubble.right.fill", label: "Chat", item: .chat)
             }
-            .padding(.horizontal, 12)
-            .padding(.top, 8)
+            .padding(.horizontal, 8)
 
-            Divider()
-                .background(Theme.divider)
-                .padding(.vertical, 12)
+            Rectangle()
+                .fill(Theme.divider)
+                .frame(height: 1)
                 .padding(.horizontal, 16)
+                .padding(.vertical, 10)
 
             // Spaces
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Spaces")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(Theme.textSecondary)
-                    .textCase(.uppercase)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("SPACES")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(Theme.textMuted)
+                    .tracking(1.2)
                     .padding(.horizontal, 16)
-                    .padding(.bottom, 4)
+                    .padding(.bottom, 6)
 
-                // My notes (personal space)
-                spaceSection(
-                    title: "My notes",
-                    icon: "lock.fill",
-                    folders: personalFolders,
-                    spaceType: "personal",
-                    isAddingFolder: $isAddingPersonalFolder
-                )
-
-                // Team HQ
-                spaceSection(
-                    title: "Vishal HQ",
-                    icon: "person.3.fill",
-                    folders: teamFolders,
-                    spaceType: "team",
-                    isAddingFolder: $isAddingTeamFolder
-                )
+                spaceSection(name: "My notes", icon: "lock.fill", isPersonal: true)
+                spaceSection(name: "Vishal HQ", icon: "person.3.fill", isPersonal: false)
             }
+            .padding(.horizontal, 8)
 
             Spacer()
 
@@ -72,244 +51,189 @@ struct SidebarView: View {
             bottomSection
         }
         .background(Theme.bgSidebar)
-        .frame(maxHeight: .infinity)
     }
 
-    // MARK: - Search Bar
     private var searchBar: some View {
-        Button {
-            appState.isSearchPresented = true
-        } label: {
+        Button { } label: {
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: 13))
-                    .foregroundStyle(Theme.textSecondary)
+                    .foregroundStyle(Theme.textMuted)
                 Text("Search")
                     .font(.system(size: 13))
-                    .foregroundStyle(Theme.textSecondary)
+                    .foregroundStyle(Theme.textMuted)
                 Spacer()
                 Text("⌘K")
-                    .font(.system(size: 11))
+                    .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(Theme.textMuted)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
-                    .background(Theme.bgCard.opacity(0.5))
+                    .background(Theme.bgCard)
                     .cornerRadius(4)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
             .background(Theme.bgInput)
             .cornerRadius(Theme.radiusSM)
-        }
-        .buttonStyle(.plain)
-        .padding(.horizontal, 12)
-        .padding(.top, 12)
-    }
-
-    // MARK: - Nav Item
-    private func navItem(title: String, icon: String, item: NavItem) -> some View {
-        Button {
-            appState.selectedNavItem = item
-        } label: {
-            HStack(spacing: 10) {
-                Image(systemName: icon)
-                    .font(.system(size: 14))
-                    .foregroundStyle(appState.selectedNavItem == item ? Theme.textPrimary : Theme.textSecondary)
-                    .frame(width: 20)
-                Text(title)
-                    .font(.system(size: 14))
-                    .foregroundStyle(appState.selectedNavItem == item ? Theme.textPrimary : Theme.textSecondary)
-                Spacer()
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 7)
-            .background(
-                appState.selectedNavItem == item ? Theme.bgActive : Color.clear
+            .overlay(
+                RoundedRectangle(cornerRadius: Theme.radiusSM)
+                    .stroke(Theme.border, lineWidth: 1)
             )
-            .cornerRadius(Theme.radiusSM)
         }
         .buttonStyle(.plain)
     }
 
-    // MARK: - Space Section
-    private func spaceSection(
-        title: String,
-        icon: String,
-        folders: [Folder],
-        spaceType: String,
-        isAddingFolder: Binding<Bool>
-    ) -> some View {
+    private func navItem(icon: String, label: String, item: NavItem) -> some View {
+        SidebarNavButton(
+            icon: icon, label: label,
+            isSelected: appState.selectedNavItem == item && appState.selectedMeeting == nil
+        ) {
+            appState.selectedNavItem = item
+            appState.selectedMeeting = nil
+        }
+    }
+
+    private func spaceSection(name: String, icon: String, isPersonal: Bool) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             HStack(spacing: 8) {
                 Image(systemName: icon)
                     .font(.system(size: 12))
-                    .foregroundStyle(Theme.textSecondary)
-                Text(title)
-                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(isPersonal ? Theme.accentGreen : Theme.accent)
+                Text(name)
+                    .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary)
                 Spacer()
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 8)
             .padding(.vertical, 6)
 
-            // Folders
-            ForEach(folders) { folder in
-                Button {
+            let spaceFolders = folders.filter { isPersonal ? $0.spaceType == "personal" : $0.spaceType == "team" }
+            ForEach(spaceFolders) { folder in
+                SidebarNavButton(
+                    icon: "folder.fill", label: folder.name,
+                    isSelected: appState.selectedNavItem == .folder(folder.id)
+                ) {
                     appState.selectedNavItem = .folder(folder.id)
-                } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "folder")
-                            .font(.system(size: 12))
-                            .foregroundStyle(Theme.textSecondary)
-                        Text(folder.name)
-                            .font(.system(size: 13))
-                            .foregroundStyle(Theme.textSecondary)
-                        Spacer()
-                    }
-                    .padding(.leading, 36)
-                    .padding(.trailing, 16)
-                    .padding(.vertical, 5)
-                    .background(
-                        isSelected(folder) ? Theme.bgActive : Color.clear
-                    )
-                    .cornerRadius(Theme.radiusSM)
+                    appState.selectedMeeting = nil
                 }
-                .buttonStyle(.plain)
-            }
-
-            // Add folder
-            if isAddingFolder.wrappedValue {
-                HStack(spacing: 8) {
-                    Image(systemName: "folder.badge.plus")
-                        .font(.system(size: 12))
-                        .foregroundStyle(Theme.textSecondary)
-                    TextField("Folder name", text: $newFolderName)
-                        .textFieldStyle(.plain)
-                        .font(.system(size: 13))
-                        .foregroundStyle(Theme.textPrimary)
-                        .onSubmit {
-                            createFolder(name: newFolderName, spaceType: spaceType)
-                            newFolderName = ""
-                            isAddingFolder.wrappedValue = false
-                        }
-                }
-                .padding(.leading, 36)
-                .padding(.trailing, 16)
-                .padding(.vertical, 5)
+                .padding(.leading, 12)
             }
 
             Button {
-                isAddingFolder.wrappedValue = true
+                let folder = Folder(name: "New Folder", spaceType: isPersonal ? "personal" : "team")
+                modelContext.insert(folder)
+                try? modelContext.save()
             } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "plus")
-                        .font(.system(size: 11))
-                        .foregroundStyle(Theme.textMuted)
-                    Text("Add folder")
-                        .font(.system(size: 12))
-                        .foregroundStyle(Theme.textMuted)
-                    Spacer()
+                HStack(spacing: 6) {
+                    Image(systemName: "plus").font(.system(size: 10))
+                    Text("Add folder").font(.system(size: 12))
                 }
-                .padding(.leading, 36)
-                .padding(.trailing, 16)
+                .foregroundStyle(Theme.textMuted)
+                .padding(.horizontal, 8)
                 .padding(.vertical, 4)
+                .padding(.leading, 12)
             }
             .buttonStyle(.plain)
         }
     }
 
-    // MARK: - Bottom Section
     private var bottomSection: some View {
-        VStack(spacing: 8) {
-            Divider()
-                .background(Theme.divider)
-                .padding(.horizontal, 16)
+        VStack(spacing: 0) {
+            Rectangle().fill(Theme.divider).frame(height: 1).padding(.horizontal, 16)
 
-            // Action icons
-            HStack(spacing: 16) {
-                Button {
-                    appState.selectedMeeting = nil
-                    appState.selectedNavItem = .settings
-                } label: {
-                    Image(systemName: "gearshape")
-                        .font(.system(size: 14))
-                        .foregroundStyle(Theme.textSecondary)
-                }
-                .buttonStyle(.plain)
-
-                Button {
-                    appState.selectedMeeting = nil
-                    appState.selectedNavItem = .people
-                } label: {
-                    Image(systemName: "person")
-                        .font(.system(size: 14))
-                        .foregroundStyle(Theme.textSecondary)
-                }
-                .buttonStyle(.plain)
-
-                Button {
-                    appState.selectedMeeting = nil
-                    appState.selectedNavItem = .companies
-                } label: {
-                    Image(systemName: "building.2")
-                        .font(.system(size: 14))
-                        .foregroundStyle(Theme.textSecondary)
-                }
-                .buttonStyle(.plain)
-
+            HStack(spacing: 0) {
+                bottomIcon("gearshape.fill", item: .settings)
+                bottomIcon("person.fill", item: .people)
+                bottomIcon("building.2.fill", item: .companies)
                 Spacer()
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 8)
+            .padding(.top, 8)
 
-            // Plan info
             HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Free Plan")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(Theme.textPrimary)
-                }
+                Text("Free Plan")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(Theme.textSecondary)
                 Spacer()
-                Button("Upgrade") { }
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(Theme.accentGreen)
-                    .buttonStyle(.plain)
+                Text("Upgrade")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(Theme.accent)
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
 
-            // User
-            HStack(spacing: 10) {
+            HStack(spacing: 8) {
                 Circle()
-                    .fill(Theme.accentGreen)
+                    .fill(Theme.accent.opacity(0.2))
                     .frame(width: 28, height: 28)
                     .overlay(
-                        Text(appState.currentUser?.initials ?? "U")
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(.white)
+                        Text("VA")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(Theme.accent)
                     )
-                Text(appState.currentUser?.displayName ?? "User")
-                    .font(.system(size: 13))
+                Text(appState.currentUser?.fullName ?? "User")
+                    .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(Theme.textPrimary)
+                    .lineLimit(1)
                 Spacer()
                 Image(systemName: "chevron.up.chevron.down")
-                    .font(.system(size: 10))
+                    .font(.system(size: 9))
                     .foregroundStyle(Theme.textMuted)
             }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 12)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
         }
     }
 
-    // MARK: - Helpers
-    private func isSelected(_ folder: Folder) -> Bool {
-        if case .folder(let id) = appState.selectedNavItem {
-            return id == folder.id
+    private func bottomIcon(_ icon: String, item: NavItem) -> some View {
+        Button {
+            appState.selectedNavItem = item
+            appState.selectedMeeting = nil
+        } label: {
+            Image(systemName: icon)
+                .font(.system(size: 14))
+                .foregroundStyle(appState.selectedNavItem == item ? Theme.accent : Theme.textMuted)
+                .frame(width: 32, height: 32)
         }
-        return false
+        .buttonStyle(.plain)
     }
+}
 
-    private func createFolder(name: String, spaceType: String) {
-        guard !name.isEmpty else { return }
-        let folder = Folder(name: name, spaceType: spaceType)
-        modelContext.insert(folder)
+// MARK: - Animated Sidebar Nav Button
+struct SidebarNavButton: View {
+    let icon: String
+    let label: String
+    let isSelected: Bool
+    let action: () -> Void
+    @State private var isHovering = false
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 10) {
+                Image(systemName: icon)
+                    .font(.system(size: 14))
+                    .foregroundStyle(isSelected ? Theme.accent : Theme.textSecondary)
+                    .frame(width: 20)
+                Text(label)
+                    .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
+                    .foregroundStyle(isSelected ? Theme.textPrimary : Theme.textSecondary)
+                Spacer()
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .background(
+                RoundedRectangle(cornerRadius: Theme.radiusSM)
+                    .fill(isSelected ? Theme.accent.opacity(0.12) : (isHovering ? Theme.bgHover : .clear))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: Theme.radiusSM)
+                    .stroke(isSelected ? Theme.accent.opacity(0.2) : .clear, lineWidth: 1)
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering in
+            withAnimation(.easeOut(duration: 0.15)) { isHovering = hovering }
+        }
     }
 }
