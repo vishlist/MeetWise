@@ -38,6 +38,7 @@
 		A1B2C3D40000001D /* EnhancementService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000020 /* EnhancementService.swift */; };
 		A1B2C3D40000001E /* MeetingSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000021 /* MeetingSessionManager.swift */; };
 		A1B2C3D40000001F /* NotepadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000022 /* NotepadView.swift */; };
+		A1B2C3D400000020 /* SearchOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000023 /* SearchOverlay.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -75,6 +76,7 @@
 		A1B2C3D500000020 /* EnhancementService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnhancementService.swift; sourceTree = "<group>"; };
 		A1B2C3D500000021 /* MeetingSessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingSessionManager.swift; sourceTree = "<group>"; };
 		A1B2C3D500000022 /* NotepadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotepadView.swift; sourceTree = "<group>"; };
+		A1B2C3D500000023 /* SearchOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchOverlay.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -168,6 +170,7 @@
 				A1B2C3D700000014 /* Notepad */,
 				A1B2C3D70000000D /* People */,
 				A1B2C3D700000011 /* Settings */,
+				A1B2C3D700000015 /* Shared */,
 				A1B2C3D700000012 /* SharedWithMe */,
 				A1B2C3D70000000E /* Sidebar */,
 			);
@@ -262,6 +265,14 @@
 				A1B2C3D500000022 /* NotepadView.swift */,
 			);
 			path = Notepad;
+			sourceTree = "<group>";
+		};
+		A1B2C3D700000015 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D500000023 /* SearchOverlay.swift */,
+			);
+			path = Shared;
 			sourceTree = "<group>";
 		};
 		A1B2C3D70000000F /* Resources */ = {
@@ -379,6 +390,7 @@
 				A1B2C3D40000001D /* EnhancementService.swift in Sources */,
 				A1B2C3D40000001E /* MeetingSessionManager.swift in Sources */,
 				A1B2C3D40000001F /* NotepadView.swift in Sources */,
+				A1B2C3D400000020 /* SearchOverlay.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

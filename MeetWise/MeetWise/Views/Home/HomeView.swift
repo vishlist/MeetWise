@@ -8,36 +8,34 @@ struct HomeView: View {
     @Query(sort: \Meeting.startedAt, order: .reverse) private var recentMeetings: [Meeting]
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                // Coming up section
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("Coming up")
-                        .font(.heading(28))
-                        .foregroundStyle(Theme.textHeading)
+        ZStack(alignment: .bottom) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    // Coming up section
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Coming up")
+                            .font(.heading(28))
+                            .foregroundStyle(Theme.textHeading)
 
-                    // Today's date + meetings
-                    calendarCard
-                }
-
-                // Notes section
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("Notes")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(Theme.textSecondary)
-                        .textCase(.uppercase)
-
-                    if recentMeetings.isEmpty {
-                        emptyNotesState
-                    } else {
-                        ForEach(recentMeetings.prefix(5)) { meeting in
-                            recentNoteRow(meeting)
-                        }
+                        calendarCard
                     }
+
+                    // Notes section grouped by day
+                    if !recentMeetings.isEmpty {
+                        notesSection
+                    } else {
+                        emptyNotesState
+                    }
+
+                    // Bottom padding for chat bar
+                    Spacer(minLength: 80)
                 }
+                .padding(.horizontal, 48)
+                .padding(.top, 40)
             }
-            .padding(.horizontal, 48)
-            .padding(.top, 40)
+
+            // Bottom chat bar (like Granola)
+            homeBottomBar
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.bgPrimary)
@@ -46,9 +44,7 @@ struct HomeView: View {
     // MARK: - Calendar Card
     private var calendarCard: some View {
         VStack(spacing: 0) {
-            // Date header with demo meeting
             HStack(alignment: .top, spacing: 16) {
-                // Date
                 VStack(spacing: 2) {
                     Text("\(Calendar.current.component(.day, from: Date()))")
                         .font(.system(size: 32, weight: .light))
@@ -67,9 +63,8 @@ struct HomeView: View {
             }
             .padding(16)
             .background(Theme.bgCard)
-            .cornerRadius(Theme.radiusLG, corners: [.topLeft, .topRight])
+            .clipShape(UnevenRoundedRectangle(topLeadingRadius: Theme.radiusLG, topTrailingRadius: Theme.radiusLG))
 
-            // No upcoming events
             VStack(spacing: 8) {
                 Image(systemName: "calendar.badge.clock")
                     .font(.system(size: 28))
@@ -95,13 +90,80 @@ struct HomeView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 24)
-            .background(Theme.bgPrimary)
             .overlay(
-                RoundedRectangle(cornerRadius: Theme.radiusLG)
+                UnevenRoundedRectangle(bottomLeadingRadius: Theme.radiusLG, bottomTrailingRadius: Theme.radiusLG)
                     .stroke(Theme.bgCardBorder, style: StrokeStyle(lineWidth: 1, dash: [6]))
             )
         }
-        .cornerRadius(Theme.radiusLG)
+    }
+
+    // MARK: - Notes Section (grouped by day like Granola's "Today")
+    private var notesSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Group by day
+            let grouped = Dictionary(grouping: recentMeetings) { meeting in
+                Calendar.current.startOfDay(for: meeting.startedAt)
+            }
+            let sortedDays = grouped.keys.sorted(by: >)
+
+            ForEach(sortedDays, id: \.self) { day in
+                let meetings = grouped[day] ?? []
+
+                // Day header
+                Text(dayLabel(day))
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(Theme.textSecondary)
+                    .padding(.top, 8)
+
+                // Meeting rows
+                ForEach(meetings) { meeting in
+                    noteRow(meeting)
+                }
+            }
+        }
+    }
+
+    private func noteRow(_ meeting: Meeting) -> some View {
+        Button {
+            appState.selectedMeeting = meeting
+        } label: {
+            HStack(spacing: 12) {
+                // Document icon
+                Image(systemName: "doc.text")
+                    .font(.system(size: 16))
+                    .foregroundStyle(Theme.textMuted)
+                    .frame(width: 32, height: 32)
+                    .background(Theme.bgCard)
+                    .cornerRadius(Theme.radiusSM)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(meeting.title)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(Theme.textPrimary)
+                    Text("Me")
+                        .font(.system(size: 12))
+                        .foregroundStyle(Theme.textSecondary)
+                }
+
+                Spacer()
+
+                // Lock icon
+                Image(systemName: "lock")
+                    .font(.system(size: 11))
+                    .foregroundStyle(Theme.textMuted)
+
+                // Time
+                Text(meeting.formattedTime)
+                    .font(.system(size: 12))
+                    .foregroundStyle(Theme.textSecondary)
+            }
+            .padding(.vertical, 8)
+            .padding(.horizontal, 12)
+            .background(Color.clear)
+            .cornerRadius(Theme.radiusMD)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Empty Notes State
@@ -121,21 +183,17 @@ struct HomeView: View {
                     }
                 }
             } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: sessionManager.isRecording ? "stop.fill" : "mic.fill")
-                        .font(.system(size: 12))
-                    Text(sessionManager.isRecording ? "Recording..." : "Quick Note")
-                        .font(.system(size: 13, weight: .medium))
-                }
-                .foregroundStyle(sessionManager.isRecording ? .white : Theme.textPrimary)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(sessionManager.isRecording ? Color.red : Theme.bgCard)
-                .cornerRadius(Theme.radiusSM)
-                .overlay(
-                    RoundedRectangle(cornerRadius: Theme.radiusSM)
-                        .stroke(sessionManager.isRecording ? Color.red : Theme.border, lineWidth: 1)
-                )
+                Text("Quick Note")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(Theme.textPrimary)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(Theme.bgCard)
+                    .cornerRadius(Theme.radiusSM)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: Theme.radiusSM)
+                            .stroke(Theme.border, lineWidth: 1)
+                    )
             }
             .buttonStyle(.plain)
         }
@@ -143,67 +201,74 @@ struct HomeView: View {
         .padding(.vertical, 40)
     }
 
-    // MARK: - Recent Note Row
-    private func recentNoteRow(_ meeting: Meeting) -> some View {
-        Button {
-            appState.selectedMeeting = meeting
-        } label: {
+    // MARK: - Bottom Chat Bar (like Granola's "What did we talk about yesterday?")
+    private var homeBottomBar: some View {
+        VStack(spacing: 0) {
+            Divider().background(Theme.divider)
+
             HStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(meeting.title)
-                        .font(.system(size: 14, weight: .medium))
+                // Chat input
+                HStack {
+                    TextField("What did we talk about yesterday?", text: .constant(""))
+                        .textFieldStyle(.plain)
+                        .font(.system(size: 13))
                         .foregroundStyle(Theme.textPrimary)
-                    Text(meeting.formattedDate)
-                        .font(.system(size: 12))
-                        .foregroundStyle(Theme.textSecondary)
+                    Spacer()
                 }
-                Spacer()
-                if let duration = meeting.durationSeconds {
-                    Text("\(duration / 60) min")
-                        .font(.system(size: 12))
-                        .foregroundStyle(Theme.textMuted)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(Theme.bgCard)
+                .cornerRadius(Theme.radiusPill)
+                .overlay(
+                    RoundedRectangle(cornerRadius: Theme.radiusPill)
+                        .stroke(Theme.border, lineWidth: 1)
+                )
+
+                // Recipe pill
+                Button { } label: {
+                    HStack(spacing: 4) {
+                        Text("/")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundStyle(Theme.accentGreen)
+                        Text("List recent todos")
+                            .font(.system(size: 12))
+                            .foregroundStyle(Theme.textPrimary)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(Theme.bgCard)
+                    .cornerRadius(Theme.radiusPill)
                 }
+                .buttonStyle(.plain)
             }
-            .padding(12)
-            .background(Theme.bgCard.opacity(0.5))
-            .cornerRadius(Theme.radiusMD)
+            .padding(.horizontal, 24)
+            .padding(.vertical, 10)
+            .background(Theme.bgPrimary)
         }
-        .buttonStyle(.plain)
     }
 
     // MARK: - Helpers
     private var dayOfWeek: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "EEE"
-        return formatter.string(from: Date())
+        let f = DateFormatter()
+        f.dateFormat = "EEE"
+        return f.string(from: Date())
     }
 
     private var monthName: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMMM"
-        return formatter.string(from: Date())
+        let f = DateFormatter()
+        f.dateFormat = "MMMM"
+        return f.string(from: Date())
     }
-}
 
-// UnevenRoundedRectangle is available in macOS 13.0+
-extension View {
-    func cornerRadius(_ radius: CGFloat, corners: RectCorner) -> some View {
-        clipShape(
-            UnevenRoundedRectangle(
-                topLeadingRadius: corners.contains(.topLeft) ? radius : 0,
-                bottomLeadingRadius: corners.contains(.bottomLeft) ? radius : 0,
-                bottomTrailingRadius: corners.contains(.bottomRight) ? radius : 0,
-                topTrailingRadius: corners.contains(.topRight) ? radius : 0
-            )
-        )
+    private func dayLabel(_ date: Date) -> String {
+        if Calendar.current.isDateInToday(date) {
+            return "Today"
+        } else if Calendar.current.isDateInYesterday(date) {
+            return "Yesterday"
+        } else {
+            let f = DateFormatter()
+            f.dateFormat = "EEEE, MMM d"
+            return f.string(from: date)
+        }
     }
-}
-
-struct RectCorner: OptionSet {
-    let rawValue: Int
-    static let topLeft = RectCorner(rawValue: 1 << 0)
-    static let topRight = RectCorner(rawValue: 1 << 1)
-    static let bottomLeft = RectCorner(rawValue: 1 << 2)
-    static let bottomRight = RectCorner(rawValue: 1 << 3)
-    static let allCorners: RectCorner = [.topLeft, .topRight, .bottomLeft, .bottomRight]
 }
