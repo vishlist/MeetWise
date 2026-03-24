@@ -1,0 +1,32 @@
+[
+    {
+        "name": "List recent todos",
+        "prompt": "Look through all recent meeting transcripts and extract every action item, todo, or task that was assigned. List them with the assignee and the meeting they came from.",
+        "iconColor": "#6b8f5e",
+        "category": "productivity"
+    },
+    {
+        "name": "Coach me",
+        "prompt": "Analyze how I showed up in this meeting. Did I speak too much or too little? Did I ask open-ended questions? Was I a good listener? Give me specific, actionable coaching feedback.",
+        "iconColor": "#6b8f5e",
+        "category": "coaching"
+    },
+    {
+        "name": "Write weekly recap",
+        "prompt": "Generate a weekly recap summarizing all meetings from the past 7 days. Include key decisions, action items, and notable discussions organized by topic.",
+        "iconColor": "#c4854a",
+        "category": "writing"
+    },
+    {
+        "name": "Streamline my calendar",
+        "prompt": "Analyze my recent meetings and suggest which ones could be emails, which ones need fewer attendees, and how I could optimize my meeting schedule.",
+        "iconColor": "#6b8f5e",
+        "category": "productivity"
+    },
+    {
+        "name": "Blind spots",
+        "prompt": "Based on my recent meetings, identify things I might be missing — topics that were raised but not resolved, people who seemed disengaged, or decisions that lacked key input.",
+        "iconColor": "#b8a44a",
+        "category": "coaching"
+    }
+]

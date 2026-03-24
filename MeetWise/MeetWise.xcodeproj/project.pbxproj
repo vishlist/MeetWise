@@ -1,0 +1,586 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A1B2C3D400000001 /* MeetWiseApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000001 /* MeetWiseApp.swift */; };
+		A1B2C3D400000002 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000002 /* AppState.swift */; };
+		A1B2C3D400000003 /* ChatConversation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000003 /* ChatConversation.swift */; };
+		A1B2C3D400000004 /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000004 /* ChatMessage.swift */; };
+		A1B2C3D400000005 /* Company.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000005 /* Company.swift */; };
+		A1B2C3D400000006 /* Contact.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000006 /* Contact.swift */; };
+		A1B2C3D400000007 /* Folder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000007 /* Folder.swift */; };
+		A1B2C3D400000008 /* Meeting.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000008 /* Meeting.swift */; };
+		A1B2C3D400000009 /* MeetingParticipant.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000009 /* MeetingParticipant.swift */; };
+		A1B2C3D40000000A /* Recipe.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D50000000A /* Recipe.swift */; };
+		A1B2C3D40000000B /* TranscriptChunk.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D50000000B /* TranscriptChunk.swift */; };
+		A1B2C3D40000000C /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D50000000C /* UserProfile.swift */; };
+		A1B2C3D40000000D /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D50000000D /* Constants.swift */; };
+		A1B2C3D40000000E /* DateFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D50000000E /* DateFormatting.swift */; };
+		A1B2C3D40000000F /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D50000000F /* Theme.swift */; };
+		A1B2C3D400000010 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000010 /* ChatView.swift */; };
+		A1B2C3D400000011 /* CompaniesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000011 /* CompaniesView.swift */; };
+		A1B2C3D400000012 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000012 /* ContentView.swift */; };
+		A1B2C3D400000013 /* FolderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000013 /* FolderView.swift */; };
+		A1B2C3D400000014 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000014 /* HomeView.swift */; };
+		A1B2C3D400000015 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000015 /* MenuBarView.swift */; };
+		A1B2C3D400000016 /* PeopleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000016 /* PeopleView.swift */; };
+		A1B2C3D400000017 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000017 /* SettingsView.swift */; };
+		A1B2C3D400000018 /* SharedWithMeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000018 /* SharedWithMeView.swift */; };
+		A1B2C3D400000019 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000019 /* SidebarView.swift */; };
+		A1B2C3D40000001A /* DefaultRecipes.json in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D50000001A /* DefaultRecipes.json */; };
+		A1B2C3D40000001B /* AudioCaptureService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D50000001E /* AudioCaptureService.swift */; };
+		A1B2C3D40000001C /* TranscriptionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D50000001F /* TranscriptionService.swift */; };
+		A1B2C3D40000001D /* EnhancementService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000020 /* EnhancementService.swift */; };
+		A1B2C3D40000001E /* MeetingSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000021 /* MeetingSessionManager.swift */; };
+		A1B2C3D40000001F /* NotepadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000022 /* NotepadView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		A1B2C3D500000001 /* MeetWiseApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetWiseApp.swift; sourceTree = "<group>"; };
+		A1B2C3D500000002 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		A1B2C3D500000003 /* ChatConversation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatConversation.swift; sourceTree = "<group>"; };
+		A1B2C3D500000004 /* ChatMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessage.swift; sourceTree = "<group>"; };
+		A1B2C3D500000005 /* Company.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Company.swift; sourceTree = "<group>"; };
+		A1B2C3D500000006 /* Contact.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Contact.swift; sourceTree = "<group>"; };
+		A1B2C3D500000007 /* Folder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Folder.swift; sourceTree = "<group>"; };
+		A1B2C3D500000008 /* Meeting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Meeting.swift; sourceTree = "<group>"; };
+		A1B2C3D500000009 /* MeetingParticipant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingParticipant.swift; sourceTree = "<group>"; };
+		A1B2C3D50000000A /* Recipe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Recipe.swift; sourceTree = "<group>"; };
+		A1B2C3D50000000B /* TranscriptChunk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptChunk.swift; sourceTree = "<group>"; };
+		A1B2C3D50000000C /* UserProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfile.swift; sourceTree = "<group>"; };
+		A1B2C3D50000000D /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
+		A1B2C3D50000000E /* DateFormatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateFormatting.swift; sourceTree = "<group>"; };
+		A1B2C3D50000000F /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		A1B2C3D500000010 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
+		A1B2C3D500000011 /* CompaniesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompaniesView.swift; sourceTree = "<group>"; };
+		A1B2C3D500000012 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		A1B2C3D500000013 /* FolderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderView.swift; sourceTree = "<group>"; };
+		A1B2C3D500000014 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		A1B2C3D500000015 /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
+		A1B2C3D500000016 /* PeopleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeopleView.swift; sourceTree = "<group>"; };
+		A1B2C3D500000017 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		A1B2C3D500000018 /* SharedWithMeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedWithMeView.swift; sourceTree = "<group>"; };
+		A1B2C3D500000019 /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
+		A1B2C3D50000001A /* DefaultRecipes.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = DefaultRecipes.json; sourceTree = "<group>"; };
+		A1B2C3D50000001B /* MeetWise.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MeetWise.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A1B2C3D50000001C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A1B2C3D50000001D /* MeetWise.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MeetWise.entitlements; sourceTree = "<group>"; };
+		A1B2C3D50000001E /* AudioCaptureService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioCaptureService.swift; sourceTree = "<group>"; };
+		A1B2C3D50000001F /* TranscriptionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptionService.swift; sourceTree = "<group>"; };
+		A1B2C3D500000020 /* EnhancementService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnhancementService.swift; sourceTree = "<group>"; };
+		A1B2C3D500000021 /* MeetingSessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingSessionManager.swift; sourceTree = "<group>"; };
+		A1B2C3D500000022 /* NotepadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotepadView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A1B2C3D600000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A1B2C3D700000001 /* Root */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D700000002 /* MeetWise */,
+				A1B2C3D700000010 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A1B2C3D700000002 /* MeetWise */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D500000001 /* MeetWiseApp.swift */,
+				A1B2C3D50000001C /* Info.plist */,
+				A1B2C3D50000001D /* MeetWise.entitlements */,
+				A1B2C3D700000003 /* Managers */,
+				A1B2C3D700000004 /* Models */,
+				A1B2C3D700000013 /* Services */,
+				A1B2C3D700000005 /* Utilities */,
+				A1B2C3D700000007 /* Views */,
+				A1B2C3D70000000F /* Resources */,
+			);
+			path = MeetWise;
+			sourceTree = "<group>";
+		};
+		A1B2C3D700000003 /* Managers */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D500000002 /* AppState.swift */,
+				A1B2C3D500000021 /* MeetingSessionManager.swift */,
+			);
+			path = Managers;
+			sourceTree = "<group>";
+		};
+		A1B2C3D700000004 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D500000003 /* ChatConversation.swift */,
+				A1B2C3D500000004 /* ChatMessage.swift */,
+				A1B2C3D500000005 /* Company.swift */,
+				A1B2C3D500000006 /* Contact.swift */,
+				A1B2C3D500000007 /* Folder.swift */,
+				A1B2C3D500000008 /* Meeting.swift */,
+				A1B2C3D500000009 /* MeetingParticipant.swift */,
+				A1B2C3D50000000A /* Recipe.swift */,
+				A1B2C3D50000000B /* TranscriptChunk.swift */,
+				A1B2C3D50000000C /* UserProfile.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		A1B2C3D700000005 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D50000000D /* Constants.swift */,
+				A1B2C3D50000000F /* Theme.swift */,
+				A1B2C3D700000006 /* Extensions */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		A1B2C3D700000006 /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D50000000E /* DateFormatting.swift */,
+			);
+			path = Extensions;
+			sourceTree = "<group>";
+		};
+		A1B2C3D700000007 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D500000012 /* ContentView.swift */,
+				A1B2C3D700000008 /* Chat */,
+				A1B2C3D700000009 /* Companies */,
+				A1B2C3D70000000A /* Folders */,
+				A1B2C3D70000000B /* Home */,
+				A1B2C3D70000000C /* MenuBar */,
+				A1B2C3D700000014 /* Notepad */,
+				A1B2C3D70000000D /* People */,
+				A1B2C3D700000011 /* Settings */,
+				A1B2C3D700000012 /* SharedWithMe */,
+				A1B2C3D70000000E /* Sidebar */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		A1B2C3D700000008 /* Chat */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D500000010 /* ChatView.swift */,
+			);
+			path = Chat;
+			sourceTree = "<group>";
+		};
+		A1B2C3D700000009 /* Companies */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D500000011 /* CompaniesView.swift */,
+			);
+			path = Companies;
+			sourceTree = "<group>";
+		};
+		A1B2C3D70000000A /* Folders */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D500000013 /* FolderView.swift */,
+			);
+			path = Folders;
+			sourceTree = "<group>";
+		};
+		A1B2C3D70000000B /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D500000014 /* HomeView.swift */,
+			);
+			path = Home;
+			sourceTree = "<group>";
+		};
+		A1B2C3D70000000C /* MenuBar */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D500000015 /* MenuBarView.swift */,
+			);
+			path = MenuBar;
+			sourceTree = "<group>";
+		};
+		A1B2C3D70000000D /* People */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D500000016 /* PeopleView.swift */,
+			);
+			path = People;
+			sourceTree = "<group>";
+		};
+		A1B2C3D700000011 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D500000017 /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		A1B2C3D700000012 /* SharedWithMe */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D500000018 /* SharedWithMeView.swift */,
+			);
+			path = SharedWithMe;
+			sourceTree = "<group>";
+		};
+		A1B2C3D70000000E /* Sidebar */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D500000019 /* SidebarView.swift */,
+			);
+			path = Sidebar;
+			sourceTree = "<group>";
+		};
+		A1B2C3D700000013 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D50000001E /* AudioCaptureService.swift */,
+				A1B2C3D50000001F /* TranscriptionService.swift */,
+				A1B2C3D500000020 /* EnhancementService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		A1B2C3D700000014 /* Notepad */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D500000022 /* NotepadView.swift */,
+			);
+			path = Notepad;
+			sourceTree = "<group>";
+		};
+		A1B2C3D70000000F /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D50000001A /* DefaultRecipes.json */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		A1B2C3D700000010 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D50000001B /* MeetWise.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A1B2C3D800000001 /* MeetWise */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A1B2C3DA00000003 /* Build configuration list for PBXNativeTarget "MeetWise" */;
+			buildPhases = (
+				A1B2C3D900000001 /* Sources */,
+				A1B2C3D600000001 /* Frameworks */,
+				A1B2C3D900000002 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MeetWise;
+			productName = MeetWise;
+			productReference = A1B2C3D50000001B /* MeetWise.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A1B2C3DB00000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1520;
+				LastUpgradeCheck = 1520;
+				TargetAttributes = {
+					A1B2C3D800000001 = {
+						CreatedOnToolsVersion = 15.2;
+					};
+				};
+			};
+			buildConfigurationList = A1B2C3DA00000001 /* Build configuration list for PBXProject "MeetWise" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = A1B2C3D700000001 /* Root */;
+			productRefGroup = A1B2C3D700000010 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A1B2C3D800000001 /* MeetWise */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A1B2C3D900000002 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1B2C3D40000001A /* DefaultRecipes.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A1B2C3D900000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1B2C3D400000001 /* MeetWiseApp.swift in Sources */,
+				A1B2C3D400000002 /* AppState.swift in Sources */,
+				A1B2C3D400000003 /* ChatConversation.swift in Sources */,
+				A1B2C3D400000004 /* ChatMessage.swift in Sources */,
+				A1B2C3D400000005 /* Company.swift in Sources */,
+				A1B2C3D400000006 /* Contact.swift in Sources */,
+				A1B2C3D400000007 /* Folder.swift in Sources */,
+				A1B2C3D400000008 /* Meeting.swift in Sources */,
+				A1B2C3D400000009 /* MeetingParticipant.swift in Sources */,
+				A1B2C3D40000000A /* Recipe.swift in Sources */,
+				A1B2C3D40000000B /* TranscriptChunk.swift in Sources */,
+				A1B2C3D40000000C /* UserProfile.swift in Sources */,
+				A1B2C3D40000000D /* Constants.swift in Sources */,
+				A1B2C3D40000000E /* DateFormatting.swift in Sources */,
+				A1B2C3D40000000F /* Theme.swift in Sources */,
+				A1B2C3D400000010 /* ChatView.swift in Sources */,
+				A1B2C3D400000011 /* CompaniesView.swift in Sources */,
+				A1B2C3D400000012 /* ContentView.swift in Sources */,
+				A1B2C3D400000013 /* FolderView.swift in Sources */,
+				A1B2C3D400000014 /* HomeView.swift in Sources */,
+				A1B2C3D400000015 /* MenuBarView.swift in Sources */,
+				A1B2C3D400000016 /* PeopleView.swift in Sources */,
+				A1B2C3D400000017 /* SettingsView.swift in Sources */,
+				A1B2C3D400000018 /* SharedWithMeView.swift in Sources */,
+				A1B2C3D400000019 /* SidebarView.swift in Sources */,
+				A1B2C3D40000001B /* AudioCaptureService.swift in Sources */,
+				A1B2C3D40000001C /* TranscriptionService.swift in Sources */,
+				A1B2C3D40000001D /* EnhancementService.swift in Sources */,
+				A1B2C3D40000001E /* MeetingSessionManager.swift in Sources */,
+				A1B2C3D40000001F /* NotepadView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		A1B2C3DC00000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		A1B2C3DC00000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		A1B2C3DC00000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = MeetWise/MeetWise.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MeetWise/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MeetWise;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "MeetWise needs access to your microphone to record meetings.";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.meetwise.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		A1B2C3DC00000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = MeetWise/MeetWise.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MeetWise/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MeetWise;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "MeetWise needs access to your microphone to record meetings.";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.meetwise.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A1B2C3DA00000001 /* Build configuration list for PBXProject "MeetWise" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A1B2C3DC00000001 /* Debug */,
+				A1B2C3DC00000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A1B2C3DA00000003 /* Build configuration list for PBXNativeTarget "MeetWise" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A1B2C3DC00000003 /* Debug */,
+				A1B2C3DC00000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A1B2C3DB00000001 /* Project object */;
+}
