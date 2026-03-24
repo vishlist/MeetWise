@@ -84,6 +84,10 @@ final class MeetingSessionManager {
         // Start audio capture
         do {
             try await audio.startCapture()
+            // Show capture mode info
+            if audio.captureMode == .micOnly {
+                self.error = "Mic-only mode (system audio unavailable). Grant Screen Recording permission for full capture."
+            }
         } catch {
             self.error = "Audio capture failed: \(error.localizedDescription)"
             transcription.disconnect()
