@@ -168,14 +168,19 @@ final class MeetingSessionManager {
 
     /// Enhance user notes with transcript
     func enhanceNotes(meeting: Meeting, modelContext: ModelContext) async {
-        guard let transcript = meeting.transcriptRaw, !transcript.isEmpty else {
-            error = "No transcript available to enhance notes"
+        let transcript = meeting.transcriptRaw ?? ""
+        let notes = meeting.userNotes
+
+        // Need at least notes or transcript to enhance
+        if transcript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+           notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            error = "Type some notes or record a meeting first, then enhance."
             return
         }
 
         do {
             let result = try await enhancementService.enhanceNotes(
-                userNotes: meeting.userNotes,
+                userNotes: notes,
                 transcript: transcript,
                 attendees: meeting.participants?.map { $0.name } ?? [],
                 meetingTitle: meeting.title
@@ -183,7 +188,9 @@ final class MeetingSessionManager {
 
             meeting.enhancedNotes = result.content
             meeting.summaryJSON = try? JSONEncoder().encode(result.summary)
-            meeting.title = result.summary.title
+            if !result.summary.title.isEmpty {
+                meeting.title = result.summary.title
+            }
             try? modelContext.save()
         } catch {
             self.error = "Enhancement failed: \(error.localizedDescription)"

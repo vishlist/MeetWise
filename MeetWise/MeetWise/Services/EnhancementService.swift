@@ -3,7 +3,7 @@ import Foundation
 final class EnhancementService {
 
     struct EnhancedNote {
-        let content: String            // markdown with [USER]/[AI] markers
+        let content: String
         let summary: MeetingSummary
     }
 
@@ -39,35 +39,51 @@ final class EnhancementService {
         meetingTitle: String
     ) async throws -> EnhancedNote {
 
+        // If both notes and transcript are empty, return a helpful default
+        if userNotes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+           transcript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return EnhancedNote(
+                content: "# \(meetingTitle)\n\n*No notes or transcript available. Start recording a meeting or type notes to enhance.*",
+                summary: defaultSummary(title: meetingTitle)
+            )
+        }
+
         let systemPrompt = """
-        You are MeetWise, an AI meeting notes enhancer. You take a user's rough notes and a meeting transcript, and produce polished, structured meeting notes.
+        You are MeetWise, an AI meeting notes enhancer. You take a user's rough notes and a meeting transcript, and produce polished, structured meeting notes in markdown format.
 
-        CRITICAL RULES:
-        1. The user's original notes are SACRED. Keep them intact but clean up typos and expand abbreviations.
-        2. Mark user-written content with [USER] tags and AI-added content with [AI] tags.
-        3. Organize by topic, not chronologically.
-        4. Extract action items, decisions, and key points.
-        5. Be concise — bullet points, not paragraphs.
+        RULES:
+        1. Keep user's original notes intact but clean up formatting.
+        2. Organize by topic with clear headings.
+        3. Extract action items, decisions, and key points.
+        4. Use bullet points, not paragraphs.
+        5. Be concise and professional.
 
-        MEETING CONTEXT:
-        - Title: \(meetingTitle)
-        - Attendees: \(attendees.joined(separator: ", "))
+        MEETING: \(meetingTitle)
+        ATTENDEES: \(attendees.isEmpty ? "Unknown" : attendees.joined(separator: ", "))
         """
 
-        let userMessage = """
-        USER'S NOTES:
-        \(userNotes.isEmpty ? "(No notes taken)" : userNotes)
+        let hasTranscript = !transcript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let hasNotes = !userNotes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
 
-        MEETING TRANSCRIPT:
-        \(transcript)
-
-        Enhance these notes. Return the enhanced notes with [USER]/[AI] markers. Then on a new line after "---SUMMARY---", return a JSON summary object with keys: title, overview, key_points, action_items, decisions, questions_raised, sentiment, topics.
+        var userMessage = ""
+        if hasNotes {
+            userMessage += "USER'S NOTES:\n\(userNotes)\n\n"
+        }
+        if hasTranscript {
+            userMessage += "MEETING TRANSCRIPT:\n\(transcript)\n\n"
+        }
+        userMessage += """
+        Produce enhanced meeting notes in clean markdown. After the notes, add exactly this separator on its own line:
+        ---SUMMARY_JSON---
+        Then return ONLY a valid JSON object (no markdown fences) with these keys:
+        {"title":"string","overview":"string","key_points":["string"],"action_items":[{"task":"string","assignee":null,"deadline":null}],"decisions":["string"],"questions_raised":["string"],"sentiment":"neutral","topics":["string"]}
         """
 
         let response = try await callClaudeAPI(system: systemPrompt, message: userMessage, maxTokens: 4096)
 
         // Parse response: split enhanced notes from summary JSON
-        let parts = response.components(separatedBy: "---SUMMARY---")
+        let separator = "---SUMMARY_JSON---"
+        let parts = response.components(separatedBy: separator)
         let enhancedContent = parts[0].trimmingCharacters(in: .whitespacesAndNewlines)
 
         var summary: MeetingSummary
@@ -77,52 +93,34 @@ final class EnhancementService {
                 .replacingOccurrences(of: "```", with: "")
                 .trimmingCharacters(in: .whitespacesAndNewlines)
 
-            if let jsonData = jsonStr.data(using: .utf8) {
-                summary = try JSONDecoder().decode(MeetingSummary.self, from: jsonData)
-            } else {
-                summary = defaultSummary(title: meetingTitle)
-            }
+            summary = parseJSONSummary(jsonStr, fallbackTitle: meetingTitle)
         } else {
-            summary = defaultSummary(title: meetingTitle)
+            // Try to find JSON in the response itself
+            summary = extractJSONFromResponse(response, fallbackTitle: meetingTitle)
         }
 
         return EnhancedNote(content: enhancedContent, summary: summary)
     }
 
-    /// Generate just a summary from transcript (no user notes needed)
+    /// Generate just a summary from transcript
     func generateSummary(transcript: String, meetingTitle: String) async throws -> MeetingSummary {
-        let systemPrompt = "You are a meeting summarization AI. Given a meeting transcript, produce a structured JSON summary. Return ONLY valid JSON with no other text."
-
-        let userMessage = """
-        Summarize this meeting transcript into structured JSON:
-
-        \(transcript)
-
-        Return this exact JSON structure:
-        {
-            "title": "Short descriptive title (max 60 chars)",
-            "overview": "2-3 sentence summary",
-            "key_points": ["Array of main discussion points"],
-            "action_items": [{"task": "description", "assignee": "person or null", "deadline": "deadline or null"}],
-            "decisions": ["Array of decisions made"],
-            "questions_raised": ["Array of unresolved questions"],
-            "sentiment": "positive | neutral | negative | mixed",
-            "topics": ["Array of topic tags"]
-        }
-        """
-
-        let response = try await callClaudeAPI(system: systemPrompt, message: userMessage, maxTokens: 2048)
-
-        let cleaned = response
-            .replacingOccurrences(of: "```json", with: "")
-            .replacingOccurrences(of: "```", with: "")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-
-        guard let data = cleaned.data(using: .utf8) else {
+        if transcript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             return defaultSummary(title: meetingTitle)
         }
 
-        return try JSONDecoder().decode(MeetingSummary.self, from: data)
+        let systemPrompt = "You are a meeting summarization AI. Return ONLY valid JSON, no other text, no markdown fences."
+
+        let userMessage = """
+        Summarize this meeting transcript as JSON:
+
+        \(transcript.prefix(8000))
+
+        Return exactly this structure:
+        {"title":"string","overview":"string","key_points":["string"],"action_items":[{"task":"string","assignee":null,"deadline":null}],"decisions":["string"],"questions_raised":["string"],"sentiment":"neutral","topics":["string"]}
+        """
+
+        let response = try await callClaudeAPI(system: systemPrompt, message: userMessage, maxTokens: 2048)
+        return parseJSONSummary(response, fallbackTitle: meetingTitle)
     }
 
     // MARK: - Claude API
@@ -137,6 +135,7 @@ final class EnhancementService {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue(Constants.anthropicAPIKey, forHTTPHeaderField: "x-api-key")
         request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
+        request.timeoutInterval = 60
 
         let body: [String: Any] = [
             "model": Constants.anthropicModel,
@@ -149,23 +148,100 @@ final class EnhancementService {
 
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
+        print("[EnhancementService] Calling Claude API...")
+
         let (data, httpResponse) = try await URLSession.shared.data(for: request)
 
-        // Check for HTTP errors
         if let http = httpResponse as? HTTPURLResponse, http.statusCode != 200 {
             let errorBody = String(data: data, encoding: .utf8) ?? "Unknown error"
-            print("[Claude API] HTTP \(http.statusCode): \(errorBody)")
-            throw EnhancementError.apiError("HTTP \(http.statusCode): \(String(errorBody.prefix(200)))")
+            print("[EnhancementService] HTTP \(http.statusCode): \(errorBody)")
+            throw EnhancementError.apiError("HTTP \(http.statusCode)")
         }
 
-        do {
-            let response = try JSONDecoder().decode(ClaudeResponse.self, from: data)
-            return response.content.first?.text ?? ""
-        } catch {
-            let raw = String(data: data, encoding: .utf8) ?? "nil"
-            print("[Claude API] Decode error: \(error). Raw: \(String(raw.prefix(500)))")
-            throw EnhancementError.apiError("Response parse failed: \(error.localizedDescription)")
+        // Parse the Claude response
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let content = json["content"] as? [[String: Any]],
+              let firstBlock = content.first,
+              let text = firstBlock["text"] as? String else {
+            // Fallback: try Codable
+            do {
+                let response = try JSONDecoder().decode(ClaudeResponse.self, from: data)
+                return response.content.first?.text ?? ""
+            } catch {
+                let raw = String(data: data, encoding: .utf8) ?? "nil"
+                print("[EnhancementService] Parse error. Raw response: \(raw.prefix(500))")
+                throw EnhancementError.apiError("Failed to parse response")
+            }
         }
+
+        print("[EnhancementService] Got response: \(text.prefix(100))...")
+        return text
+    }
+
+    // MARK: - JSON Parsing Helpers
+
+    private func parseJSONSummary(_ str: String, fallbackTitle: String) -> MeetingSummary {
+        let cleaned = str
+            .replacingOccurrences(of: "```json", with: "")
+            .replacingOccurrences(of: "```", with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard let data = cleaned.data(using: .utf8) else {
+            return defaultSummary(title: fallbackTitle)
+        }
+
+        // Try strict decode first
+        if let summary = try? JSONDecoder().decode(MeetingSummary.self, from: data) {
+            return summary
+        }
+
+        // Try extracting JSON object from string (Claude sometimes adds text before/after)
+        if let startIdx = cleaned.firstIndex(of: "{"),
+           let endIdx = cleaned.lastIndex(of: "}") {
+            let jsonOnly = String(cleaned[startIdx...endIdx])
+            if let jsonData = jsonOnly.data(using: .utf8),
+               let summary = try? JSONDecoder().decode(MeetingSummary.self, from: jsonData) {
+                return summary
+            }
+        }
+
+        // Manual parse as last resort
+        if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+            return manualParseSummary(json, fallbackTitle: fallbackTitle)
+        }
+
+        return defaultSummary(title: fallbackTitle)
+    }
+
+    private func extractJSONFromResponse(_ response: String, fallbackTitle: String) -> MeetingSummary {
+        // Find the last JSON object in the response
+        if let startIdx = response.lastIndex(of: "{"),
+           let endIdx = response.lastIndex(of: "}"),
+           startIdx < endIdx {
+            let jsonStr = String(response[startIdx...endIdx])
+            return parseJSONSummary(jsonStr, fallbackTitle: fallbackTitle)
+        }
+        return defaultSummary(title: fallbackTitle)
+    }
+
+    private func manualParseSummary(_ json: [String: Any], fallbackTitle: String) -> MeetingSummary {
+        MeetingSummary(
+            title: json["title"] as? String ?? fallbackTitle,
+            overview: json["overview"] as? String ?? "",
+            keyPoints: json["key_points"] as? [String] ?? [],
+            actionItems: (json["action_items"] as? [[String: Any]])?.compactMap { item in
+                guard let task = item["task"] as? String else { return nil }
+                return MeetingSummary.ActionItem(
+                    task: task,
+                    assignee: item["assignee"] as? String,
+                    deadline: item["deadline"] as? String
+                )
+            } ?? [],
+            decisions: json["decisions"] as? [String] ?? [],
+            questionsRaised: json["questions_raised"] as? [String] ?? [],
+            sentiment: json["sentiment"] as? String ?? "neutral",
+            topics: json["topics"] as? [String] ?? []
+        )
     }
 
     private func defaultSummary(title: String) -> MeetingSummary {
@@ -194,11 +270,13 @@ struct ClaudeResponse: Codable {
 enum EnhancementError: Error, LocalizedError {
     case missingAPIKey
     case apiError(String)
+    case noContent
 
     var errorDescription: String? {
         switch self {
-        case .missingAPIKey: return "Anthropic API key not configured"
-        case .apiError(let msg): return "Claude API error: \(msg)"
+        case .missingAPIKey: return "Anthropic API key not configured. Set it in Settings."
+        case .apiError(let msg): return "Enhancement failed: \(msg)"
+        case .noContent: return "No notes or transcript to enhance"
         }
     }
 }

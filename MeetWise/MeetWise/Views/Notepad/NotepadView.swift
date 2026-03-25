@@ -406,7 +406,7 @@ struct NotepadView: View {
         VStack(spacing: 0) {
             Divider().background(Theme.divider)
             HStack(spacing: 12) {
-                if !isActiveRecording && meeting.meetingStatus == .completed && meeting.enhancedNotes == nil {
+                if !isActiveRecording && meeting.enhancedNotes == nil {
                     Button {
                         isEnhancing = true
                         Task {
