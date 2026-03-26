@@ -94,6 +94,101 @@ final class MeetingSessionManager {
 
     // MARK: - Recording
 
+    /// Start recording for an EXISTING meeting (e.g. a Quick Note that
+    /// the user decides to record into). Does NOT create a new meeting.
+    func startRecordingForMeeting(_ meeting: Meeting, modelContext: ModelContext, appState: AppState? = nil) async {
+        guard !isRecording else { return }
+
+        // Issue 3: Check meeting limit
+        if let appState = appState, !appState.checkMeetingLimit() {
+            let used = appState.currentUser?.meetingsThisMonth ?? 0
+            appState.showUpgrade("You've used \(used)/\(UserProfile.freeMeetingLimit) free meetings this month. Upgrade to Pro for unlimited.")
+            return
+        }
+
+        error = nil
+        liveTranscriptText = ""
+        liveTranscriptSegments = []
+        interimText = ""
+        speakerNames = [:]
+
+        // Use the existing meeting
+        meeting.status = "recording"
+        meeting.isDraft = false
+        try? modelContext.save()
+        currentMeeting = meeting
+
+        appState?.incrementMeetingCount()
+
+        // Validate API key
+        let apiKey = Constants.deepgramAPIKey
+        guard !apiKey.isEmpty else {
+            error = "Deepgram API key not configured. Set it in Settings."
+            return
+        }
+
+        // Create services fresh each time
+        let audio = AudioCaptureService()
+        let transcription = TranscriptionService()
+        self.audioService = audio
+        self.transcriptionService = transcription
+
+        // Wire audio data -> Deepgram
+        audio.onAudioData = { [weak transcription] data in
+            transcription?.sendAudioData(data)
+        }
+
+        // Handle final transcript
+        transcription.onFinalTranscript = { [weak self] segment in
+            Task { @MainActor in
+                guard let self else { return }
+                let rawSpeaker = segment.speaker ?? "Speaker"
+                let displaySpeaker = self.speakerNames[rawSpeaker] ?? self.letterBasedSpeaker(rawSpeaker)
+                let line = "\(rawSpeaker): \(segment.text)\n"
+                self.liveTranscriptText += line
+                self.liveTranscriptSegments.append(
+                    TranscriptSegmentData(
+                        speaker: displaySpeaker,
+                        text: segment.text,
+                        isUser: rawSpeaker.lowercased().contains("you") || rawSpeaker == "Speaker 0"
+                    )
+                )
+                self.interimText = ""
+            }
+        }
+
+        transcription.onTranscriptUpdate = { [weak self] segment in
+            Task { @MainActor in
+                self?.interimText = segment.text
+            }
+        }
+
+        transcription.connect(apiKey: apiKey)
+
+        do {
+            try await audio.startCapture()
+            if audio.captureMode == .micOnly {
+                self.error = "Mic-only mode (system audio unavailable). Grant Screen Recording permission for full capture."
+            }
+        } catch {
+            self.error = "Audio capture failed: \(error.localizedDescription)"
+            transcription.disconnect()
+            self.audioService = nil
+            self.transcriptionService = nil
+            return
+        }
+
+        recordingStartTime = Date()
+        isRecording = true
+        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                guard let self, let start = self.recordingStartTime else { return }
+                self.recordingDuration = Date().timeIntervalSince(start)
+                self.audioLevel = self.audioService?.audioLevel ?? 0
+            }
+        }
+    }
+
     func startRecording(modelContext: ModelContext, title: String? = nil, platform: String? = nil, appState: AppState? = nil) async {
         guard !isRecording else { return }
 

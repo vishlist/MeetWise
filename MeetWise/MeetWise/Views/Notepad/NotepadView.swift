@@ -97,6 +97,10 @@ struct NotepadView: View {
     @State private var editedSpeakerName = ""
     // Issue 11: Move to folder
     @State private var showFolderPicker = false
+    // Dictation
+    @State private var dictationService = DictationService()
+    // Recording prompt for Quick Notes
+    @State private var recordingBannerDismissed = false
 
     init(meeting: Meeting, sessionManager: MeetingSessionManager) {
         self.meeting = meeting
@@ -154,6 +158,8 @@ struct NotepadView: View {
             return .ignored
         }
         .onDisappear {
+            // Stop dictation if active
+            dictationService.stopDictation()
             // Issue 9: Clean up empty meetings when navigating away
             sessionManager.cleanupEmptyMeeting(meeting, modelContext: modelContext)
         }
@@ -169,6 +175,16 @@ struct NotepadView: View {
         }
     }
 
+    /// Whether this is a brand-new meeting with no content worth showing the
+    /// prominent recording CTA for.
+    private var isNewEmptyMeeting: Bool {
+        !isActiveRecording &&
+        !recordingBannerDismissed &&
+        (meeting.transcriptRaw ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+        meeting.enhancedNotes == nil &&
+        meeting.userNotes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     // MARK: - Main Content
     private var mainContent: some View {
         VStack(spacing: 0) {
@@ -182,10 +198,17 @@ struct NotepadView: View {
             ZStack(alignment: .bottom) {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
+                        // Prominent recording CTA for empty Quick Notes
+                        if isNewEmptyMeeting {
+                            quickNoteRecordingBanner
+                                .padding(.horizontal, 48)
+                                .padding(.top, 24)
+                        }
+
                         // Title
                         meetingHeader
                             .padding(.horizontal, 48)
-                            .padding(.top, 24)
+                            .padding(.top, isNewEmptyMeeting ? 16 : 24)
 
                         // Date + Attendee pills
                         metadataAndAttendees
@@ -208,12 +231,29 @@ struct NotepadView: View {
                                 .padding(.horizontal, 32)
                                 .padding(.top, 16)
                         case .notes:
-                            notesTabContent
-                                .padding(.horizontal, 44)
-                                .padding(.top, 16)
+                            ZStack(alignment: .bottomTrailing) {
+                                notesTabContent
+                                    .padding(.horizontal, 44)
+                                    .padding(.top, 16)
+
+                                // Dictation interim overlay
+                                if dictationService.isDictating && !dictationService.currentText.isEmpty {
+                                    dictationInterimOverlay
+                                        .padding(.trailing, 60)
+                                        .padding(.bottom, 8)
+                                }
+                            }
                         }
 
                         Spacer(minLength: 80)
+                    }
+                }
+                .overlay(alignment: .bottomTrailing) {
+                    // Floating dictation mic button (only on Notes tab)
+                    if selectedTab == .notes {
+                        dictationMicButton
+                            .padding(.trailing, 24)
+                            .padding(.bottom, 70)
                     }
                 }
 
@@ -1019,11 +1059,172 @@ struct NotepadView: View {
         .padding(.leading, CGFloat(indent) * 20)
     }
 
+    // MARK: - Quick Note Recording Banner
+    private var quickNoteRecordingBanner: some View {
+        VStack(spacing: 12) {
+            HStack(spacing: 10) {
+                Image(systemName: "mic.fill")
+                    .font(.system(size: 22))
+                    .foregroundStyle(Theme.accent)
+                Text("Start a meeting recording")
+                    .font(.heading(18))
+                    .foregroundStyle(Theme.textHeading)
+                Spacer()
+            }
+
+            Text("Record system audio and microphone to get a full transcript and AI summary")
+                .font(.system(size: 13, weight: .light))
+                .foregroundStyle(Theme.textSecondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            HStack(spacing: 12) {
+                Button {
+                    Task {
+                        await sessionManager.startRecordingForMeeting(meeting, modelContext: modelContext, appState: appState)
+                    }
+                } label: {
+                    HStack(spacing: 6) {
+                        Circle().fill(Theme.accentRed).frame(width: 8, height: 8)
+                        Text("Start Recording")
+                            .font(.system(size: 13, weight: .medium))
+                    }
+                    .foregroundStyle(Color.white)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 10)
+                    .background(Theme.accent)
+                    .cornerRadius(Theme.radiusPill)
+                }
+                .buttonStyle(.plain)
+                .hoverScale(1.03)
+
+                Button {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                        recordingBannerDismissed = true
+                    }
+                } label: {
+                    Text("Skip \u{2014} just notes")
+                        .font(.system(size: 13, weight: .light))
+                        .foregroundStyle(Theme.textSecondary)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .background(Theme.bgCard)
+                        .cornerRadius(Theme.radiusPill)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: Theme.radiusPill)
+                                .stroke(Theme.border, lineWidth: 1)
+                        )
+                }
+                .buttonStyle(.plain)
+                .hoverScale(1.03)
+
+                Spacer()
+            }
+        }
+        .padding(20)
+        .background(Theme.tintWarm)
+        .cornerRadius(Theme.radiusMD)
+        .shadow(color: Color.black.opacity(0.04), radius: 8, y: 2)
+        .transition(.opacity.combined(with: .move(edge: .top)))
+    }
+
+    // MARK: - Dictation Mic Button
+    private var dictationMicButton: some View {
+        Button {
+            if dictationService.isDictating {
+                dictationService.stopDictation()
+            } else {
+                dictationService.onFinalTranscript = { text in
+                    // Append transcribed text to user notes
+                    if !userNotes.isEmpty && !userNotes.hasSuffix("\n") {
+                        userNotes += " "
+                    }
+                    userNotes += text
+                }
+                dictationService.startDictation()
+            }
+        } label: {
+            ZStack {
+                // Pulsing background when active
+                if dictationService.isDictating {
+                    Circle()
+                        .fill(Theme.accentRed.opacity(0.15))
+                        .frame(width: 56, height: 56)
+                        .scaleEffect(1.0 + CGFloat(dictationService.audioLevel) * 0.5)
+                        .animation(.easeInOut(duration: 0.3), value: dictationService.audioLevel)
+                }
+
+                Circle()
+                    .fill(dictationService.isDictating ? Theme.accentRed : Theme.accent)
+                    .frame(width: 44, height: 44)
+                    .shadow(color: (dictationService.isDictating ? Theme.accentRed : Theme.accent).opacity(0.3), radius: 8, y: 2)
+
+                Image(systemName: dictationService.isDictating ? "mic.fill" : "mic")
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundStyle(Color.white)
+            }
+        }
+        .buttonStyle(.plain)
+        .help(dictationService.isDictating ? "Stop dictation" : "Start voice dictation")
+        .overlay(alignment: .top) {
+            if dictationService.isDictating {
+                HStack(spacing: 4) {
+                    Circle()
+                        .fill(Theme.accentRed)
+                        .frame(width: 6, height: 6)
+                    Text("Listening...")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(Theme.accentRed)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(Theme.bgCard)
+                .cornerRadius(Theme.radiusPill)
+                .shadow(color: Color.black.opacity(0.06), radius: 4, y: 2)
+                .offset(y: -14)
+            }
+        }
+    }
+
+    // MARK: - Dictation Interim Overlay
+    private var dictationInterimOverlay: some View {
+        Text(dictationService.currentText)
+            .font(.system(size: 13, weight: .light))
+            .foregroundStyle(Theme.textMuted)
+            .italic()
+            .padding(10)
+            .background(Theme.tintWarm.opacity(0.8))
+            .cornerRadius(Theme.radiusSM)
+            .shadow(color: Color.black.opacity(0.04), radius: 4, y: 2)
+            .transition(.opacity)
+    }
+
     // MARK: - Bottom Bar — Issue 3: Enhancement limit check
     private var bottomBar: some View {
         VStack(spacing: 0) {
             Divider().background(Theme.divider)
             HStack(spacing: 12) {
+                // Record button (when not already recording)
+                if !isActiveRecording && (meeting.transcriptRaw ?? "").isEmpty {
+                    Button {
+                        Task {
+                            await sessionManager.startRecordingForMeeting(meeting, modelContext: modelContext, appState: appState)
+                        }
+                    } label: {
+                        HStack(spacing: 6) {
+                            Circle().fill(Theme.accentRed).frame(width: 8, height: 8)
+                            Text("Record")
+                                .font(.system(size: 13, weight: .medium))
+                        }
+                        .foregroundStyle(Theme.accentRed)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(Theme.accentRed.opacity(0.08))
+                        .cornerRadius(Theme.radiusPill)
+                    }
+                    .buttonStyle(.plain)
+                    .hoverScale(1.03)
+                }
+
                 // Enhance button (dark charcoal bg, white text)
                 if !isActiveRecording && meeting.enhancedNotes == nil {
                     Button {

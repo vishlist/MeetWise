@@ -57,6 +57,7 @@ ttF0F0F0F000000003 /* InstrumentSerif-Italic.ttf in Resources */ = {isa = PBXBui
 		A1B2C3D400000029 /* MeetingDetectionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D50000002C /* MeetingDetectionService.swift */; };
 		A1B2C3D40000002A /* PricingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D50000002D /* PricingView.swift */; };
 		A1B2C3D40000002B /* StripeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D50000002E /* StripeService.swift */; };
+		D1D1D1D100000001 /* DictationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1D1D1D100000002 /* DictationService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -113,6 +114,7 @@ ttF0F0F0F000000004 /* InstrumentSerif-Italic.ttf */ = {isa = PBXFileReference; l
 		A1B2C3D50000002C /* MeetingDetectionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingDetectionService.swift; sourceTree = "<group>"; };
 		A1B2C3D50000002D /* PricingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PricingView.swift; sourceTree = "<group>"; };
 		A1B2C3D50000002E /* StripeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StripeService.swift; sourceTree = "<group>"; };
+		D1D1D1D100000002 /* DictationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictationService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -294,6 +296,7 @@ ttF0F0F0F000000004 /* InstrumentSerif-Italic.ttf */ = {isa = PBXFileReference; l
 				A1B2C3D50000001E /* AudioCaptureService.swift */,
 				A1B2C3D500000024 /* CalendarService.swift */,
 				A1B2C3D500000025 /* ChatService.swift */,
+				D1D1D1D100000002 /* DictationService.swift */,
 				A1B2C3D500000020 /* EnhancementService.swift */,
 				A1B2C3D50000002C /* MeetingDetectionService.swift */,
 				A1B2C3D500000029 /* NotificationService.swift */,
@@ -479,6 +482,7 @@ ttttF0F0F0F000000003 /* InstrumentSerif-Italic.ttf in Resources */,
 				A1B2C3D400000029 /* MeetingDetectionService.swift in Sources */,
 				A1B2C3D40000002A /* PricingView.swift in Sources */,
 				A1B2C3D40000002B /* StripeService.swift in Sources */,
+				D1D1D1D100000001 /* DictationService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

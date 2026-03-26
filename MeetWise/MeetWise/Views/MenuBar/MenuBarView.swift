@@ -76,22 +76,43 @@ struct MenuBarView: View {
                 .buttonStyle(.plain)
                 .padding(.horizontal, 12)
             } else {
-                // Detected meeting info
+                // Detected meeting info with Record button
                 if let detected = appState.meetingDetectionService.detectedMeeting {
-                    HStack(spacing: 8) {
-                        Circle()
-                            .fill(Theme.accent)
-                            .frame(width: 6, height: 6)
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(detected.platform.rawValue)
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundStyle(Theme.textPrimary)
-                            Text(detected.windowTitle)
-                                .font(.system(size: 11, weight: .light))
-                                .foregroundStyle(Theme.textMuted)
-                                .lineLimit(1)
+                    VStack(spacing: 6) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "video.fill")
+                                .font(.system(size: 12))
+                                .foregroundStyle(Theme.accent)
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text("Meeting detected")
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundStyle(Theme.textPrimary)
+                                Text("\(detected.platform.rawValue): \(detected.windowTitle)")
+                                    .font(.system(size: 11, weight: .light))
+                                    .foregroundStyle(Theme.textMuted)
+                                    .lineLimit(1)
+                            }
+                            Spacer()
                         }
-                        Spacer()
+
+                        Button {
+                            appState.isRecording = true
+                            NSApp.activate(ignoringOtherApps: true)
+                        } label: {
+                            HStack(spacing: 6) {
+                                Circle()
+                                    .fill(Theme.accentRed)
+                                    .frame(width: 6, height: 6)
+                                Text("Record this meeting")
+                                    .font(.system(size: 12, weight: .medium))
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 6)
+                            .background(Theme.accent)
+                            .foregroundStyle(Color.white)
+                            .cornerRadius(Theme.radiusSM)
+                        }
+                        .buttonStyle(.plain)
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)

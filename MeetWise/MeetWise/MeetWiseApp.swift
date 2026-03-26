@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import CoreText
 
 @main
 struct MeetWiseApp: App {
@@ -29,6 +30,10 @@ struct MeetWiseApp: App {
         }
     }()
 
+    init() {
+        registerCustomFonts()
+    }
+
     var body: some Scene {
         // Main window
         WindowGroup {
@@ -48,6 +53,25 @@ struct MeetWiseApp: App {
         } label: {
             Image(systemName: appState.isRecording ? "waveform.circle.fill" : "waveform.circle")
                 .symbolRenderingMode(.hierarchical)
+        }
+    }
+
+    /// Register bundled fonts at app launch
+    private func registerCustomFonts() {
+        let fontNames = [
+            "IBMPlexSerif-Regular",
+            "IBMPlexSerif-Bold",
+            "IBMPlexSerif-Light",
+            "IBMPlexSerif-Italic"
+        ]
+
+        for fontName in fontNames {
+            if let url = Bundle.main.url(forResource: fontName, withExtension: "ttf") {
+                CTFontManagerRegisterFontsForURL(url as CFURL, .process, nil)
+                print("[Fonts] Registered: \(fontName)")
+            } else {
+                print("[Fonts] WARNING: Could not find \(fontName).ttf in bundle")
+            }
         }
     }
 }
