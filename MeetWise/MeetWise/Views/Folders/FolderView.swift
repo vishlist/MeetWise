@@ -5,6 +5,7 @@ struct FolderView: View {
     let folderID: UUID
     var sessionManager: MeetingSessionManager
     @Query private var allFolders: [Folder]
+    @Query(sort: \Meeting.startedAt, order: .reverse) private var allMeetings: [Meeting]
     @Environment(AppState.self) private var appState
     @Environment(\.modelContext) private var modelContext
 
@@ -12,11 +13,9 @@ struct FolderView: View {
         allFolders.first { $0.id == folderID }
     }
 
-    // Issue 10: Filter meetings that belong to this folder
+    // Query all meetings and filter by folder — more reliable than relationship traversal
     private var folderMeetings: [Meeting] {
-        guard let folder = folder else { return [] }
-        return (folder.meetings ?? [])
-            .filter { !$0.isDraft || $0.hasContent } // Issue 9: exclude empty drafts
+        allMeetings.filter { $0.folder?.id == folderID && (!$0.isDraft || $0.hasContent) }
             .sorted { $0.startedAt > $1.startedAt }
     }
 
@@ -30,25 +29,6 @@ struct FolderView: View {
                         .foregroundStyle(Theme.textHeading)
 
                     Spacer()
-
-                    // Issue 10: Quick note in this folder
-                    Button {
-                        let meeting = sessionManager.startQuickNote(modelContext: modelContext, in: folder)
-                        appState.selectedMeeting = meeting
-                    } label: {
-                        HStack(spacing: 4) {
-                            Image(systemName: "plus").font(.system(size: 12, weight: .medium))
-                            Text("Quick note").font(.system(size: 13, weight: .medium))
-                        }
-                        .foregroundStyle(Theme.textPrimary)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(Theme.bgCard)
-                        .cornerRadius(Theme.radiusSM)
-                        .overlay(RoundedRectangle(cornerRadius: Theme.radiusSM).stroke(Theme.border, lineWidth: 1))
-                    }
-                    .buttonStyle(.plain)
-                    .hoverScale(1.05)
 
                     Text("\(folderMeetings.count) notes")
                         .font(.system(size: 12, weight: .light))

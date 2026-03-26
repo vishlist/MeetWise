@@ -102,13 +102,13 @@ enum Theme {
     ]
 }
 
-// MARK: - Fonts (Instrument Serif for headings, system light for body)
+// MARK: - Fonts (IBM Plex Serif for headings, system light for body)
 extension Font {
     static func heading(_ size: CGFloat) -> Font {
-        .custom("InstrumentSerif-Regular", size: size)
+        .custom("IBMPlexSerif-Bold", size: size)
     }
     static func subheading(_ size: CGFloat) -> Font {
-        .custom("InstrumentSerif-Regular", size: size)
+        .custom("IBMPlexSerif-Regular", size: size)
     }
     static func body(_ size: CGFloat) -> Font {
         .system(size: size, weight: .light)
@@ -361,7 +361,7 @@ struct CollapsibleSection<Content: View>: View {
                         .foregroundStyle(Theme.textSecondary)
                         .frame(width: 18)
                     Text(title)
-                        .font(.custom("InstrumentSerif-Regular", size: 15))
+                        .font(.custom("IBMPlexSerif-Bold", size: 15))
                         .foregroundStyle(Theme.textPrimary)
                     Spacer()
                     Image(systemName: "chevron.right")
@@ -413,7 +413,7 @@ struct StatsCard: View {
             }
 
             Text(value)
-                .font(.custom("InstrumentSerif-Regular", size: 28))
+                .font(.custom("IBMPlexSerif-Bold", size: 28))
                 .foregroundStyle(Theme.textHeading)
 
             VStack(alignment: .leading, spacing: 2) {

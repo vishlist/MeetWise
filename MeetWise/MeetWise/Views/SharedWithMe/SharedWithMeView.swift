@@ -20,7 +20,7 @@ struct SharedWithMeView: View {
                     .foregroundStyle(Theme.accent.opacity(0.4))
 
                 Text("No shared notes yet")
-                    .font(.custom("InstrumentSerif-Regular", size: 16))
+                    .font(.custom("IBMPlexSerif-Bold", size: 16))
                     .foregroundStyle(Theme.textPrimary)
 
                 Text("When someone shares a note with you, it will show up here")

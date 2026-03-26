@@ -177,7 +177,7 @@ struct HomeView: View {
             HStack(alignment: .top, spacing: 16) {
                 VStack(spacing: 2) {
                     Text("\(Calendar.current.component(.day, from: Date()))")
-                        .font(.custom("InstrumentSerif-Regular", size: 32))
+                        .font(.custom("IBMPlexSerif-Bold", size: 32))
                         .foregroundStyle(Theme.textPrimary)
                     Text(dayOfWeek)
                         .font(.system(size: 14, weight: .medium))
@@ -186,7 +186,7 @@ struct HomeView: View {
                 .frame(width: 50)
 
                 Text(monthName)
-                    .font(.custom("InstrumentSerif-Regular", size: 14))
+                    .font(.custom("IBMPlexSerif-Bold", size: 14))
                     .foregroundStyle(Theme.textSecondary)
 
                 Spacer()
@@ -203,46 +203,47 @@ struct HomeView: View {
                     Text("Calendar not connected")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(Theme.textSecondary)
-                    Text("Connect your calendar to see upcoming meetings")
+                    Text("Grant calendar access to see your meetings")
                         .font(.system(size: 12, weight: .light))
                         .foregroundStyle(Theme.textMuted)
 
                     HStack(spacing: 12) {
-                        Button("Connect Calendar") {
+                        Button {
                             Task {
                                 await calendarService.requestAccess()
                                 calendarAuthorized = calendarService.isAuthorized
                             }
-                        }
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(Color.white)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 6)
-                        .background(Theme.accent)
-                        .cornerRadius(Theme.radiusSM)
-                        .buttonStyle(.plain)
-                        .hoverScale(1.05)
-
-                        // Issue 2: Connect Google Calendar via Internet Accounts
-                        Button {
-                            CalendarService.openInternetAccountsSettings()
                         } label: {
-                            HStack(spacing: 4) {
-                                Image(systemName: "person.badge.plus").font(.system(size: 11))
-                                Text("Add Google Account")
+                            HStack(spacing: 6) {
+                                Image(systemName: "calendar").font(.system(size: 11))
+                                Text("Grant Calendar Access")
                                     .font(.system(size: 13, weight: .medium))
                             }
-                            .foregroundStyle(Theme.textSecondary)
+                            .foregroundStyle(Color.white)
                             .padding(.horizontal, 16)
-                            .padding(.vertical, 6)
-                            .background(Theme.bgActive)
+                            .padding(.vertical, 8)
+                            .background(Theme.accent)
                             .cornerRadius(Theme.radiusSM)
                         }
                         .buttonStyle(.plain)
+                        .hoverScale(1.05)
                     }
                     .padding(.top, 4)
 
-                    Text("Add your Google account to macOS to sync your calendar")
+                    Button {
+                        CalendarService.openInternetAccountsSettings()
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "person.badge.plus").font(.system(size: 10))
+                            Text("Add Google Account")
+                                .font(.system(size: 11, weight: .medium))
+                        }
+                        .foregroundStyle(Theme.accentBlue)
+                    }
+                    .buttonStyle(.plain)
+                    .hoverScale(1.03)
+
+                    Text("Add your Google account in System Settings > Internet Accounts")
                         .font(.system(size: 11, weight: .light))
                         .foregroundStyle(Theme.textMuted)
                 }
@@ -259,21 +260,46 @@ struct HomeView: View {
                     Text("No upcoming events")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(Theme.textSecondary)
-                    Text("Check your visible calendars")
+                    Text(calendarService.hasGoogleCalendar
+                         ? "No events scheduled for today"
+                         : "No Google Calendar found. Add your Google account in System Settings > Internet Accounts")
                         .font(.system(size: 12, weight: .light))
                         .foregroundStyle(Theme.textMuted)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 20)
 
-                    Button("Calendar Settings") {
-                        NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.datetime")!)
+                    HStack(spacing: 12) {
+                        if !calendarService.hasGoogleCalendar {
+                            Button {
+                                CalendarService.openInternetAccountsSettings()
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "person.badge.plus").font(.system(size: 10))
+                                    Text("Add Google Account")
+                                        .font(.system(size: 13, weight: .medium))
+                                }
+                                .foregroundStyle(Color.white)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 6)
+                                .background(Theme.accent)
+                                .cornerRadius(Theme.radiusSM)
+                            }
+                            .buttonStyle(.plain)
+                            .hoverScale(1.05)
+                        }
+
+                        Button("Calendar Settings") {
+                            CalendarService.openCalendarSettings()
+                        }
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(Theme.textSecondary)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 6)
+                        .background(Theme.bgActive)
+                        .cornerRadius(Theme.radiusSM)
+                        .buttonStyle(.plain)
                     }
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(Theme.textSecondary)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 6)
-                    .background(Theme.bgActive)
-                    .cornerRadius(Theme.radiusSM)
                     .padding(.top, 4)
-                    .buttonStyle(.plain)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 24)
@@ -370,7 +396,7 @@ struct HomeView: View {
     private var notesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Recent Notes")
-                .font(.custom("InstrumentSerif-Regular", size: 16))
+                .font(.custom("IBMPlexSerif-Bold", size: 16))
                 .foregroundStyle(Theme.textPrimary)
 
             let grouped = Dictionary(grouping: recentMeetings) { meeting in
@@ -470,7 +496,7 @@ struct HomeView: View {
                     .font(.system(size: 13))
                     .foregroundStyle(Theme.textSecondary)
                 Text("Today's Tasks")
-                    .font(.custom("InstrumentSerif-Regular", size: 14))
+                    .font(.custom("IBMPlexSerif-Bold", size: 14))
                     .foregroundStyle(Theme.textPrimary)
                 Spacer()
                 Text("\(todayActionItems.count)")
@@ -504,7 +530,7 @@ struct HomeView: View {
                 .foregroundStyle(Theme.textMuted)
 
             Text("Take your first note")
-                .font(.custom("InstrumentSerif-Regular", size: 16))
+                .font(.custom("IBMPlexSerif-Bold", size: 16))
                 .foregroundStyle(Theme.textPrimary)
 
             Text("Your meeting notes will appear here")

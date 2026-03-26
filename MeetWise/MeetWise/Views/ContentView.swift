@@ -188,38 +188,22 @@ struct ContentView: View {
 
     // MARK: - Quick Note Header Button
     private var quickNoteHeaderButton: some View {
-        HStack(spacing: 12) {
-            Button { } label: {
-                HStack(spacing: 4) {
-                    Image(systemName: "person.badge.plus").font(.system(size: 12))
-                    Text("Invite").font(.system(size: 13))
-                }
-                .foregroundStyle(Theme.textPrimary)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(Theme.bgCard)
-                .cornerRadius(Theme.radiusSM)
-                .overlay(RoundedRectangle(cornerRadius: Theme.radiusSM).stroke(Theme.border, lineWidth: 1))
+        Button {
+            let meeting = sessionManager.startQuickNote(modelContext: modelContext)
+            appState.selectedMeeting = meeting
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: "plus").font(.system(size: 12, weight: .medium))
+                Text("Quick note").font(.system(size: 13, weight: .medium))
             }
-            .buttonStyle(.plain)
-
-            Button {
-                let meeting = sessionManager.startQuickNote(modelContext: modelContext)
-                appState.selectedMeeting = meeting
-            } label: {
-                HStack(spacing: 4) {
-                    Image(systemName: "plus").font(.system(size: 12, weight: .medium))
-                    Text("Quick note").font(.system(size: 13, weight: .medium))
-                }
-                .foregroundStyle(Theme.textPrimary)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(Theme.bgCard)
-                .cornerRadius(Theme.radiusSM)
-                .overlay(RoundedRectangle(cornerRadius: Theme.radiusSM).stroke(Theme.border, lineWidth: 1))
-            }
-            .buttonStyle(.plain)
+            .foregroundStyle(Theme.textPrimary)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(Theme.bgCard)
+            .cornerRadius(Theme.radiusSM)
+            .overlay(RoundedRectangle(cornerRadius: Theme.radiusSM).stroke(Theme.border, lineWidth: 1))
         }
+        .buttonStyle(.plain)
     }
 
     @ViewBuilder

@@ -202,7 +202,7 @@ struct PricingView: View {
             // Badge
             HStack {
                 Text(name)
-                    .font(.custom("InstrumentSerif-Regular", size: 16))
+                    .font(.custom("IBMPlexSerif-Bold", size: 16))
                     .foregroundStyle(Theme.textPrimary)
                 Spacer()
                 if isRecommended {
@@ -216,10 +216,10 @@ struct PricingView: View {
                 }
             }
 
-            // Price (Georgia Bold serif)
+            // Price (IBM Plex Serif)
             HStack(alignment: .firstTextBaseline, spacing: 2) {
                 Text(price)
-                    .font(.custom("InstrumentSerif-Regular", size: 32))
+                    .font(.custom("IBMPlexSerif-Bold", size: 32))
                     .foregroundStyle(Theme.textHeading)
                 Text(period)
                     .font(.system(size: 14, weight: .light))
@@ -278,7 +278,7 @@ struct PricingView: View {
     private var faqSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Frequently Asked Questions")
-                .font(.custom("InstrumentSerif-Regular", size: 16))
+                .font(.custom("IBMPlexSerif-Bold", size: 16))
                 .foregroundStyle(Theme.textPrimary)
 
             faqItem(

@@ -89,7 +89,7 @@ struct SettingsView: View {
                         .fill(Theme.accentSoft)
                         .frame(width: 72, height: 72)
                     Text(appState.currentUser?.initials ?? "U")
-                        .font(.custom("InstrumentSerif-Regular", size: 24))
+                        .font(.custom("IBMPlexSerif-Bold", size: 24))
                         .foregroundStyle(Theme.accent)
                 }
 
@@ -137,7 +137,7 @@ struct SettingsView: View {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(appState.currentUser?.planDisplayName ?? "Free Plan")
-                            .font(.custom("InstrumentSerif-Regular", size: 16))
+                            .font(.custom("IBMPlexSerif-Bold", size: 16))
                             .foregroundStyle(Theme.textPrimary)
                         Text(planDescription)
                             .font(.system(size: 13, weight: .light))
@@ -217,7 +217,7 @@ struct SettingsView: View {
                                 HStack(spacing: 6) {
                                     Image(systemName: "person.badge.plus")
                                         .font(.system(size: 12))
-                                    Text("Connect Google Calendar")
+                                    Text("Add Google Account")
                                         .font(.system(size: 13, weight: .medium))
                                 }
                                 .foregroundStyle(Color.white)
@@ -400,7 +400,7 @@ struct SettingsView: View {
         }
     }
 
-    // MARK: - About Tab (Georgia serif for app name)
+    // MARK: - About Tab (IBM Plex Serif for app name)
     private var aboutTab: some View {
         VStack(alignment: .leading, spacing: 24) {
             // Logo area
@@ -410,7 +410,7 @@ struct SettingsView: View {
                     .foregroundStyle(Theme.accent)
 
                 Text("MeetWise")
-                    .font(.custom("InstrumentSerif-Regular", size: 24))
+                    .font(.custom("IBMPlexSerif-Bold", size: 24))
                     .foregroundStyle(Theme.textHeading)
 
                 Text("Version 1.0.0")
@@ -440,7 +440,7 @@ struct SettingsView: View {
     private func settingsSection(_ title: String, @ViewBuilder content: () -> some View) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
-                .font(.custom("InstrumentSerif-Regular", size: 12))
+                .font(.custom("IBMPlexSerif-Bold", size: 12))
                 .foregroundStyle(Theme.textMuted)
                 .textCase(.uppercase)
                 .tracking(1)

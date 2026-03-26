@@ -357,7 +357,7 @@ struct ChatView: View {
     private var recipesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Suggested")
-                .font(.custom("InstrumentSerif-Regular", size: 14))
+                .font(.custom("IBMPlexSerif-Bold", size: 14))
                 .foregroundStyle(Theme.textSecondary)
 
             let displayRecipes = recipes.isEmpty ? defaultRecipePills : recipes.map { ($0.name, Theme.accent) }

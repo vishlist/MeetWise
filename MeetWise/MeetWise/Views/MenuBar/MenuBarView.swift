@@ -13,7 +13,7 @@ struct MenuBarView: View {
                     .font(.system(size: 16))
                     .foregroundStyle(Theme.accent)
                 Text("MeetWise")
-                    .font(.custom("InstrumentSerif-Regular", size: 13))
+                    .font(.custom("IBMPlexSerif-Bold", size: 13))
                     .foregroundStyle(Theme.textPrimary)
                 Spacer()
 
@@ -124,7 +124,7 @@ struct MenuBarView: View {
                     Divider().background(Theme.divider)
 
                     Text("Recent")
-                        .font(.custom("InstrumentSerif-Regular", size: 10))
+                        .font(.custom("IBMPlexSerif-Bold", size: 10))
                         .foregroundStyle(Theme.textMuted)
                         .tracking(0.5)
                         .padding(.horizontal, 12)

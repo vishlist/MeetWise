@@ -33,11 +33,18 @@
 		A1B2C3D400000018 /* SharedWithMeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000018 /* SharedWithMeView.swift */; };
 		A1B2C3D400000019 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000019 /* SidebarView.swift */; };
 		A1B2C3D40000001A /* DefaultRecipes.json in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D50000001A /* DefaultRecipes.json */; };
+ttF0F0F0F000000001 /* InstrumentSerif-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F0F0F0F000000002 /* InstrumentSerif-Regular.ttf */; };
+ttF0F0F0F000000003 /* InstrumentSerif-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F0F0F0F000000004 /* InstrumentSerif-Italic.ttf */; };
+		F1F1F1F100000001 /* IBMPlexSerif-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F1F1F1F100000002 /* IBMPlexSerif-Regular.ttf */; };
+		F1F1F1F100000003 /* IBMPlexSerif-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F1F1F1F100000004 /* IBMPlexSerif-Bold.ttf */; };
+		F1F1F1F100000005 /* IBMPlexSerif-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F1F1F1F100000006 /* IBMPlexSerif-Light.ttf */; };
+		F1F1F1F100000007 /* IBMPlexSerif-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F1F1F1F100000008 /* IBMPlexSerif-Italic.ttf */; };
 		A1B2C3D40000001B /* AudioCaptureService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D50000001E /* AudioCaptureService.swift */; };
 		A1B2C3D40000001C /* TranscriptionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D50000001F /* TranscriptionService.swift */; };
 		A1B2C3D40000001D /* EnhancementService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000020 /* EnhancementService.swift */; };
 		A1B2C3D40000001E /* MeetingSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000021 /* MeetingSessionManager.swift */; };
 		A1B2C3D40000001F /* NotepadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000022 /* NotepadView.swift */; };
+		F1F1F1F100000010 /* AITextEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1F1F1F100000011 /* AITextEditor.swift */; };
 		A1B2C3D400000020 /* SearchOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000023 /* SearchOverlay.swift */; };
 		A1B2C3D400000021 /* CalendarService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000024 /* CalendarService.swift */; };
 		A1B2C3D400000022 /* ChatService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000025 /* ChatService.swift */; };
@@ -79,6 +86,12 @@
 		A1B2C3D500000018 /* SharedWithMeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedWithMeView.swift; sourceTree = "<group>"; };
 		A1B2C3D500000019 /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
 		A1B2C3D50000001A /* DefaultRecipes.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = DefaultRecipes.json; sourceTree = "<group>"; };
+ttF0F0F0F000000002 /* InstrumentSerif-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "InstrumentSerif-Regular.ttf"; sourceTree = "<group>"; };
+ttF0F0F0F000000004 /* InstrumentSerif-Italic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "InstrumentSerif-Italic.ttf"; sourceTree = "<group>"; };
+		F1F1F1F100000002 /* IBMPlexSerif-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "IBMPlexSerif-Regular.ttf"; sourceTree = "<group>"; };
+		F1F1F1F100000004 /* IBMPlexSerif-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "IBMPlexSerif-Bold.ttf"; sourceTree = "<group>"; };
+		F1F1F1F100000006 /* IBMPlexSerif-Light.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "IBMPlexSerif-Light.ttf"; sourceTree = "<group>"; };
+		F1F1F1F100000008 /* IBMPlexSerif-Italic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "IBMPlexSerif-Italic.ttf"; sourceTree = "<group>"; };
 		A1B2C3D50000001B /* MeetWise.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MeetWise.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A1B2C3D50000001C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A1B2C3D50000001D /* MeetWise.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MeetWise.entitlements; sourceTree = "<group>"; };
@@ -87,6 +100,7 @@
 		A1B2C3D500000020 /* EnhancementService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnhancementService.swift; sourceTree = "<group>"; };
 		A1B2C3D500000021 /* MeetingSessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingSessionManager.swift; sourceTree = "<group>"; };
 		A1B2C3D500000022 /* NotepadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotepadView.swift; sourceTree = "<group>"; };
+		F1F1F1F100000011 /* AITextEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AITextEditor.swift; sourceTree = "<group>"; };
 		A1B2C3D500000023 /* SearchOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchOverlay.swift; sourceTree = "<group>"; };
 		A1B2C3D500000024 /* CalendarService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarService.swift; sourceTree = "<group>"; };
 		A1B2C3D500000025 /* ChatService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatService.swift; sourceTree = "<group>"; };
@@ -296,6 +310,7 @@
 			isa = PBXGroup;
 			children = (
 				A1B2C3D500000022 /* NotepadView.swift */,
+				F1F1F1F100000011 /* AITextEditor.swift */,
 			);
 			path = Notepad;
 			sourceTree = "<group>";
@@ -328,6 +343,12 @@
 			isa = PBXGroup;
 			children = (
 				A1B2C3D50000001A /* DefaultRecipes.json */,
+ttttF0F0F0F000000002 /* InstrumentSerif-Regular.ttf */,
+ttttF0F0F0F000000004 /* InstrumentSerif-Italic.ttf */,
+				F1F1F1F100000002 /* IBMPlexSerif-Regular.ttf */,
+				F1F1F1F100000004 /* IBMPlexSerif-Bold.ttf */,
+				F1F1F1F100000006 /* IBMPlexSerif-Light.ttf */,
+				F1F1F1F100000008 /* IBMPlexSerif-Italic.ttf */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -399,6 +420,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				A1B2C3D40000001A /* DefaultRecipes.json in Resources */,
+ttttF0F0F0F000000001 /* InstrumentSerif-Regular.ttf in Resources */,
+ttttF0F0F0F000000003 /* InstrumentSerif-Italic.ttf in Resources */,
+				F1F1F1F100000001 /* IBMPlexSerif-Regular.ttf in Resources */,
+				F1F1F1F100000003 /* IBMPlexSerif-Bold.ttf in Resources */,
+				F1F1F1F100000005 /* IBMPlexSerif-Light.ttf in Resources */,
+				F1F1F1F100000007 /* IBMPlexSerif-Italic.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -439,6 +466,7 @@
 				A1B2C3D40000001D /* EnhancementService.swift in Sources */,
 				A1B2C3D40000001E /* MeetingSessionManager.swift in Sources */,
 				A1B2C3D40000001F /* NotepadView.swift in Sources */,
+				F1F1F1F100000010 /* AITextEditor.swift in Sources */,
 				A1B2C3D400000020 /* SearchOverlay.swift in Sources */,
 				A1B2C3D400000021 /* CalendarService.swift in Sources */,
 				A1B2C3D400000022 /* ChatService.swift in Sources */,

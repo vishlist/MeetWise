@@ -22,21 +22,8 @@ struct SidebarView: View {
         @Bindable var state = appState
 
         VStack(spacing: 0) {
-            // Collapse button + Search bar
+            // Search bar
             HStack(spacing: 8) {
-                Button {
-                    toggleSidebar?()
-                } label: {
-                    Image(systemName: "sidebar.left")
-                        .font(.system(size: 14))
-                        .foregroundStyle(Theme.textSecondary)
-                        .padding(6)
-                        .background(Theme.bgCard)
-                        .cornerRadius(Theme.radiusSM)
-                }
-                .buttonStyle(.plain)
-                .hoverScale(1.05)
-
                 Spacer()
             }
             .padding(.horizontal, 12)
@@ -82,7 +69,7 @@ struct SidebarView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("SPACES")
-                        .font(.custom("InstrumentSerif-Regular", size: 10))
+                        .font(.custom("IBMPlexSerif-Bold", size: 10))
                         .foregroundStyle(Theme.textMuted)
                         .tracking(1.2)
                         .padding(.horizontal, 16)

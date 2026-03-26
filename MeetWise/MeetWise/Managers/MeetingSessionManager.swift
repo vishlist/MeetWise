@@ -72,6 +72,14 @@ final class MeetingSessionManager {
         meeting.isDraft = true  // Issue 9: Mark as draft until content is added
         meeting.folder = folder // Issue 10: Assign to folder if provided
         modelContext.insert(meeting)
+        // Ensure bidirectional relationship is established
+        if let folder = folder {
+            if folder.meetings == nil {
+                folder.meetings = [meeting]
+            } else {
+                folder.meetings?.append(meeting)
+            }
+        }
         try? modelContext.save()
         return meeting
     }

@@ -79,7 +79,7 @@ struct OnboardingView: View {
         .background(Theme.bgPrimary)
     }
 
-    // MARK: - Step 1: Welcome (Georgia Bold serif)
+    // MARK: - Step 1: Welcome (IBM Plex Serif)
     private var welcomeStep: some View {
         VStack(spacing: 20) {
             Image(systemName: "waveform.circle.fill")
@@ -232,7 +232,7 @@ struct OnboardingView: View {
 
             VStack(alignment: .leading, spacing: 10) {
                 Text("Keyboard Shortcuts")
-                    .font(.custom("InstrumentSerif-Regular", size: 13))
+                    .font(.custom("IBMPlexSerif-Bold", size: 13))
                     .foregroundStyle(Theme.textSecondary)
 
                 shortcutRow(keys: "N", description: "Create quick note")

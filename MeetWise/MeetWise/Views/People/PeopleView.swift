@@ -204,7 +204,7 @@ struct PeopleView: View {
         VStack(spacing: 0) {
             HStack {
                 Text("Ask about \(person.name)")
-                    .font(.custom("InstrumentSerif-Regular", size: 14))
+                    .font(.custom("IBMPlexSerif-Bold", size: 14))
                     .foregroundStyle(Theme.textPrimary)
                     .lineLimit(1)
                 Spacer()
@@ -296,7 +296,7 @@ struct PeopleView: View {
                 .font(.system(size: 36))
                 .foregroundStyle(Theme.textMuted)
             Text("No contacts yet")
-                .font(.custom("InstrumentSerif-Regular", size: 14))
+                .font(.custom("IBMPlexSerif-Bold", size: 14))
                 .foregroundStyle(Theme.textSecondary)
             Text("People from your meetings will appear here")
                 .font(.system(size: 12, weight: .light))

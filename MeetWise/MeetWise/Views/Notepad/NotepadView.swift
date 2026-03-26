@@ -521,7 +521,7 @@ struct NotepadView: View {
         .padding(.vertical, 10)
     }
 
-    // MARK: - Meeting Header (Georgia Bold serif)
+    // MARK: - Meeting Header (IBM Plex Serif)
     private var meetingHeader: some View {
         Text(meeting.title)
             .font(.heading(28))
@@ -673,23 +673,12 @@ struct NotepadView: View {
         }
     }
 
-    // MARK: - Note Editor
+    // MARK: - Note Editor (AI Text Actions enabled)
     private var noteEditor: some View {
-        TextEditor(text: $userNotes)
-            .font(.system(size: 15, weight: .light))
-            .foregroundStyle(Theme.textPrimary)
-            .scrollContentBackground(.hidden)
-            .frame(minHeight: 400)
-            .overlay(alignment: .topLeading) {
-                if userNotes.isEmpty {
-                    Text("Start taking notes...")
-                        .font(.system(size: 15, weight: .light))
-                        .foregroundStyle(Theme.textMuted)
-                        .padding(.leading, 5)
-                        .padding(.top, 8)
-                        .allowsHitTesting(false)
-                }
-            }
+        AITextEditorWithToolbar(
+            text: $userNotes,
+            placeholder: "Start taking notes..."
+        )
     }
 
     // MARK: - Transcript Tab — Issue 4: Speaker names with rename support
@@ -701,7 +690,7 @@ struct NotepadView: View {
                         .font(.system(size: 36))
                         .foregroundStyle(Theme.textMuted)
                     Text("No transcript yet")
-                        .font(.custom("InstrumentSerif-Regular", size: 14))
+                        .font(.custom("IBMPlexSerif-Bold", size: 14))
                         .foregroundStyle(Theme.textSecondary)
                     Text("Start recording to see real-time transcription")
                         .font(.system(size: 12, weight: .light))
@@ -951,7 +940,7 @@ struct NotepadView: View {
                         .font(.system(size: 36))
                         .foregroundStyle(Theme.textMuted)
                     Text("No summary available")
-                        .font(.custom("InstrumentSerif-Regular", size: 14))
+                        .font(.custom("IBMPlexSerif-Bold", size: 14))
                         .foregroundStyle(Theme.textSecondary)
                     Text("Enhance your notes to generate a summary")
                         .font(.system(size: 12, weight: .light))
@@ -963,7 +952,7 @@ struct NotepadView: View {
         }
     }
 
-    // MARK: - Enhanced Content (Markdown-like rendering with Georgia headers)
+    // MARK: - Enhanced Content (Markdown-like rendering with IBM Plex Serif headers)
     private func enhancedContent(_ content: String) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             let lines = content.components(separatedBy: "\n")
@@ -982,7 +971,7 @@ struct NotepadView: View {
             HStack(spacing: 6) {
                 Text("#").font(.system(size: 14)).foregroundStyle(Theme.textMuted)
                 Text(String(trimmed.dropFirst(2)))
-                    .font(.custom("InstrumentSerif-Regular", size: 16))
+                    .font(.custom("IBMPlexSerif-Bold", size: 16))
                     .foregroundStyle(Theme.textPrimary)
             }
             .padding(.top, 12)
@@ -990,7 +979,7 @@ struct NotepadView: View {
             HStack(spacing: 6) {
                 Text("#").font(.system(size: 13)).foregroundStyle(Theme.textMuted)
                 Text(String(trimmed.dropFirst(3)))
-                    .font(.custom("InstrumentSerif-Regular", size: 15))
+                    .font(.custom("IBMPlexSerif-Bold", size: 15))
                     .foregroundStyle(Theme.textPrimary)
             }
             .padding(.top, 8)
@@ -1154,7 +1143,7 @@ struct NotepadView: View {
                     )
 
                 Text("Ask about this meeting")
-                    .font(.custom("InstrumentSerif-Regular", size: 14))
+                    .font(.custom("IBMPlexSerif-Bold", size: 14))
                     .foregroundStyle(Theme.textPrimary)
                 Spacer()
                 Text("J")
