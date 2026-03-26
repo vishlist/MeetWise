@@ -1,6 +1,40 @@
 import SwiftUI
 import SwiftData
 
+// MARK: - Tab Enum for Notes/Transcript/Summary
+enum NotepadTab: String, CaseIterable {
+    case notes = "Notes"
+    case transcript = "Transcript"
+    case summary = "Summary"
+}
+
+// MARK: - Template Picker Enum
+enum NoteTemplateChoice: String, CaseIterable, Identifiable {
+    case auto = "Auto"
+    case blank = "Blank"
+    case meetingNotes = "Meeting Notes"
+    case oneOnOne = "1:1 Meeting"
+    case standup = "Standup"
+    case retrospective = "Retrospective"
+    case clientCall = "Client Call"
+    case brainstorm = "Brainstorm"
+
+    var id: String { rawValue }
+
+    var icon: String {
+        switch self {
+        case .auto: return "sparkles"
+        case .blank: return "doc"
+        case .meetingNotes: return "note.text"
+        case .oneOnOne: return "person.2"
+        case .standup: return "sunrise"
+        case .retrospective: return "arrow.counterclockwise"
+        case .clientCall: return "phone"
+        case .brainstorm: return "lightbulb"
+        }
+    }
+}
+
 struct NotepadView: View {
     let meeting: Meeting
     @Environment(\.modelContext) private var modelContext
@@ -11,10 +45,12 @@ struct NotepadView: View {
     @State private var isEnhancing = false
     @State private var showChatSidebar = false
     @State private var showTemplateSelector = false
-    @State private var selectedTemplate: NoteTemplate = .auto
+    @State private var selectedTemplate: NoteTemplateChoice = .auto
     @State private var chatMessages: [(role: String, content: String)] = []
     @State private var chatService = ChatService()
     @State private var copiedToClipboard = false
+    @State private var selectedTab: NotepadTab = .notes
+    @State private var showShareMenu = false
 
     init(meeting: Meeting, sessionManager: MeetingSessionManager) {
         self.meeting = meeting
@@ -35,7 +71,7 @@ struct NotepadView: View {
             if showChatSidebar {
                 Divider().background(Theme.divider)
                 chatSidebar
-                    .frame(width: 320)
+                    .frame(minWidth: 280, idealWidth: 320, maxWidth: 400)
                     .transition(.move(edge: .trailing))
             }
         }
@@ -43,6 +79,9 @@ struct NotepadView: View {
         .onChange(of: userNotes) { _, newValue in
             meeting.userNotes = newValue
             try? modelContext.save()
+        }
+        .onChange(of: appState.showChatSidebar) { _, newValue in
+            withAnimation(.easeInOut(duration: 0.2)) { showChatSidebar = newValue }
         }
         .onKeyPress(keys: [.init("j")], phases: .down) { press in
             if press.modifiers.contains(.command) {
@@ -56,27 +95,41 @@ struct NotepadView: View {
     // MARK: - Main Content
     private var mainContent: some View {
         VStack(spacing: 0) {
+            // Recording indicator
+            if isActiveRecording {
+                recordingBanner
+            }
+
             topBar
             Divider().background(Theme.divider)
+
+            // Tab bar
+            tabBar
 
             ZStack(alignment: .bottom) {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
                         meetingHeader
                             .padding(.horizontal, 48)
-                            .padding(.top, 32)
+                            .padding(.top, 24)
 
                         metadataPills
                             .padding(.horizontal, 48)
                             .padding(.top, 12)
 
-                        if let enhanced = meeting.enhancedNotes, !enhanced.isEmpty {
-                            enhancedContent(enhanced)
-                                .padding(.horizontal, 48)
-                                .padding(.top, 24)
-                        } else {
-                            noteEditor
+                        // Tab content
+                        switch selectedTab {
+                        case .notes:
+                            notesTabContent
                                 .padding(.horizontal, 44)
+                                .padding(.top, 16)
+                        case .transcript:
+                            transcriptTabContent
+                                .padding(.horizontal, 32)
+                                .padding(.top, 16)
+                        case .summary:
+                            summaryTabContent
+                                .padding(.horizontal, 48)
                                 .padding(.top, 16)
                         }
 
@@ -87,6 +140,86 @@ struct NotepadView: View {
                 bottomBar
             }
         }
+    }
+
+    // MARK: - Recording Banner
+    private var recordingBanner: some View {
+        HStack(spacing: 10) {
+            Circle()
+                .fill(Color.red)
+                .frame(width: 8, height: 8)
+                .shadow(color: .red.opacity(0.6), radius: 4)
+
+            // Waveform visualization
+            HStack(spacing: 2) {
+                ForEach(0..<12, id: \.self) { i in
+                    RoundedRectangle(cornerRadius: 1)
+                        .fill(Color.red.opacity(0.6))
+                        .frame(width: 2, height: waveformHeight(index: i))
+                }
+            }
+
+            Text("Recording")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(Color.red)
+
+            Text(sessionManager.formattedDuration)
+                .font(.system(size: 12).monospacedDigit())
+                .foregroundStyle(Theme.textSecondary)
+
+            Spacer()
+
+            Button {
+                Task { await sessionManager.stopRecording(modelContext: modelContext) }
+            } label: {
+                Text("Stop")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.red)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(Color.red.opacity(0.12))
+                    .cornerRadius(Theme.radiusPill)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .background(Color.red.opacity(0.06))
+    }
+
+    private func waveformHeight(index: Int) -> CGFloat {
+        let base: CGFloat = 4
+        let level = CGFloat(sessionManager.audioLevel)
+        let variation = CGFloat(abs(sin(Double(index) * 0.8))) * level * 14
+        return max(base, base + variation)
+    }
+
+    // MARK: - Tab Bar
+    private var tabBar: some View {
+        HStack(spacing: 0) {
+            ForEach(NotepadTab.allCases, id: \.self) { tab in
+                Button {
+                    withAnimation(.easeInOut(duration: 0.15)) { selectedTab = tab }
+                } label: {
+                    Text(tab.rawValue)
+                        .font(.system(size: 13, weight: selectedTab == tab ? .semibold : .regular))
+                        .foregroundStyle(selectedTab == tab ? Theme.textPrimary : Theme.textSecondary)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .overlay(alignment: .bottom) {
+                            if selectedTab == tab {
+                                Rectangle()
+                                    .fill(Theme.textPrimary)
+                                    .frame(height: 2)
+                            }
+                        }
+                }
+                .buttonStyle(.plain)
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 16)
+        .background(Theme.bgPrimary)
     }
 
     // MARK: - Top Bar
@@ -110,19 +243,6 @@ struct NotepadView: View {
 
             Spacer()
 
-            if isActiveRecording {
-                HStack(spacing: 6) {
-                    Circle().fill(.red).frame(width: 8, height: 8)
-                    Text(sessionManager.formattedDuration)
-                        .font(.system(size: 13).monospacedDigit())
-                        .foregroundStyle(Theme.textPrimary)
-                }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
-                .background(Color.red.opacity(0.15))
-                .cornerRadius(Theme.radiusPill)
-            }
-
             // Enhanced badge
             if meeting.enhancedNotes != nil {
                 HStack(spacing: 4) {
@@ -130,8 +250,6 @@ struct NotepadView: View {
                         .font(.system(size: 12))
                     Text("Enhanced")
                         .font(.system(size: 13))
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 10))
                 }
                 .foregroundStyle(Theme.textSecondary)
                 .padding(.horizontal, 10)
@@ -140,11 +258,31 @@ struct NotepadView: View {
                 .cornerRadius(Theme.radiusSM)
             }
 
-            // Share
-            Button {
-                ShareService.copyNotesToClipboard(meeting: meeting)
-                copiedToClipboard = true
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2) { copiedToClipboard = false }
+            // Share menu
+            Menu {
+                Button {
+                    ShareService.copyAsMarkdown(meeting: meeting)
+                    showCopiedFeedback()
+                } label: {
+                    Label("Copy as Markdown", systemImage: "doc.richtext")
+                }
+
+                Button {
+                    ShareService.copyAsPlainText(meeting: meeting)
+                    showCopiedFeedback()
+                } label: {
+                    Label("Copy as Plain Text", systemImage: "doc.plaintext")
+                }
+
+                Divider()
+
+                Button {
+                    if let url = ShareService.exportTranscript(meeting: meeting) {
+                        NSWorkspace.shared.activateFileViewerSelecting([url])
+                    }
+                } label: {
+                    Label("Export Transcript", systemImage: "square.and.arrow.up")
+                }
             } label: {
                 HStack(spacing: 4) {
                     Image(systemName: "lock")
@@ -159,11 +297,13 @@ struct NotepadView: View {
                 .cornerRadius(Theme.radiusSM)
                 .overlay(RoundedRectangle(cornerRadius: Theme.radiusSM).stroke(Theme.border, lineWidth: 1))
             }
-            .buttonStyle(.plain)
+            .menuStyle(.borderlessButton)
+            .fixedSize()
 
             // Link (copy markdown)
             Button {
                 ShareService.copyAsMarkdown(meeting: meeting)
+                showCopiedFeedback()
             } label: {
                 Image(systemName: "link")
                     .font(.system(size: 13))
@@ -180,15 +320,59 @@ struct NotepadView: View {
             } label: {
                 Image(systemName: "bubble.left.and.bubble.right")
                     .font(.system(size: 13))
-                    .foregroundStyle(showChatSidebar ? Theme.accentGreen : Theme.textSecondary)
+                    .foregroundStyle(showChatSidebar ? Theme.accent : Theme.textSecondary)
                     .padding(6)
                     .background(Theme.bgCard)
                     .cornerRadius(Theme.radiusSM)
             }
             .buttonStyle(.plain)
 
-            // More
-            Button { } label: {
+            // More menu
+            Menu {
+                // Template selector
+                Menu("Template") {
+                    ForEach(NoteTemplateChoice.allCases) { template in
+                        Button {
+                            selectedTemplate = template
+                            meeting.templateID = template.rawValue
+                        } label: {
+                            HStack {
+                                Image(systemName: template.icon)
+                                Text(template.rawValue)
+                                if selectedTemplate == template {
+                                    Image(systemName: "checkmark")
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Divider()
+
+                Button {
+                    ShareService.copyAsMarkdown(meeting: meeting)
+                    showCopiedFeedback()
+                } label: {
+                    Label("Copy as Markdown", systemImage: "doc.richtext")
+                }
+
+                Button {
+                    ShareService.copyAsPlainText(meeting: meeting)
+                    showCopiedFeedback()
+                } label: {
+                    Label("Copy as Plain Text", systemImage: "doc.plaintext")
+                }
+
+                if meeting.transcriptRaw != nil {
+                    Button {
+                        if let url = ShareService.exportTranscript(meeting: meeting) {
+                            NSWorkspace.shared.activateFileViewerSelecting([url])
+                        }
+                    } label: {
+                        Label("Export Transcript", systemImage: "square.and.arrow.up")
+                    }
+                }
+            } label: {
                 Image(systemName: "ellipsis")
                     .font(.system(size: 13))
                     .foregroundStyle(Theme.textSecondary)
@@ -196,7 +380,8 @@ struct NotepadView: View {
                     .background(Theme.bgCard)
                     .cornerRadius(Theme.radiusSM)
             }
-            .buttonStyle(.plain)
+            .menuStyle(.borderlessButton)
+            .fixedSize()
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
@@ -221,85 +406,16 @@ struct NotepadView: View {
                 metadataPill(icon: "person.2", text: "Me")
             }
 
-            // Template selector
-            Button { showTemplateSelector.toggle() } label: {
-                HStack(spacing: 4) {
-                    Image(systemName: selectedTemplate.icon)
-                        .font(.system(size: 10))
-                    Text(selectedTemplate.rawValue)
-                        .font(.system(size: 12))
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 8))
-                }
-                .foregroundStyle(Theme.textSecondary)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 5)
-                .background(Theme.bgCard)
-                .cornerRadius(Theme.radiusPill)
-                .overlay(RoundedRectangle(cornerRadius: Theme.radiusPill).stroke(Theme.border, lineWidth: 1))
-            }
-            .buttonStyle(.plain)
-            .popover(isPresented: $showTemplateSelector) {
-                templatePopover
+            if let platform = meeting.platform {
+                metadataPill(icon: "video", text: platform)
             }
 
-            Button { } label: {
-                HStack(spacing: 4) {
-                    Image(systemName: "plus").font(.system(size: 10))
-                    Text("Add to folder").font(.system(size: 12))
-                }
-                .foregroundStyle(Theme.textSecondary)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 5)
-                .background(Theme.bgCard)
-                .cornerRadius(Theme.radiusPill)
-                .overlay(RoundedRectangle(cornerRadius: Theme.radiusPill).stroke(Theme.border, lineWidth: 1))
+            if let dur = meeting.durationSeconds, dur > 0 {
+                metadataPill(icon: "clock", text: meeting.formattedDuration)
             }
-            .buttonStyle(.plain)
 
             Spacer()
         }
-    }
-
-    // MARK: - Template Popover
-    private var templatePopover: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text("Template")
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(Theme.textSecondary)
-                .padding(.horizontal, 12)
-                .padding(.top, 8)
-
-            ForEach(NoteTemplate.allCases) { template in
-                Button {
-                    selectedTemplate = template
-                    meeting.templateID = template.rawValue
-                    showTemplateSelector = false
-                } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: template.icon)
-                            .font(.system(size: 12))
-                            .frame(width: 20)
-                        Text(template.rawValue)
-                            .font(.system(size: 13))
-                        Spacer()
-                        if selectedTemplate == template {
-                            Image(systemName: "checkmark")
-                                .font(.system(size: 11))
-                                .foregroundStyle(Theme.accentGreen)
-                        }
-                    }
-                    .foregroundStyle(Theme.textPrimary)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .frame(width: 220)
-        .padding(.vertical, 4)
-        .background(Theme.bgCard)
     }
 
     private func metadataPill(icon: String, text: String) -> some View {
@@ -313,6 +429,17 @@ struct NotepadView: View {
         .background(Theme.bgCard)
         .cornerRadius(Theme.radiusPill)
         .overlay(RoundedRectangle(cornerRadius: Theme.radiusPill).stroke(Theme.border, lineWidth: 1))
+    }
+
+    // MARK: - Notes Tab
+    private var notesTabContent: some View {
+        Group {
+            if let enhanced = meeting.enhancedNotes, !enhanced.isEmpty {
+                enhancedContent(enhanced)
+            } else {
+                noteEditor
+            }
+        }
     }
 
     // MARK: - Note Editor
@@ -332,6 +459,220 @@ struct NotepadView: View {
                         .allowsHitTesting(false)
                 }
             }
+    }
+
+    // MARK: - Transcript Tab (Chat-style bubbles)
+    private var transcriptTabContent: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if sessionManager.liveTranscriptSegments.isEmpty && (meeting.transcriptRaw ?? "").isEmpty {
+                VStack(spacing: 12) {
+                    Image(systemName: "waveform")
+                        .font(.system(size: 36))
+                        .foregroundStyle(Theme.textMuted)
+                    Text("No transcript yet")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(Theme.textSecondary)
+                    Text("Start recording to see real-time transcription")
+                        .font(.system(size: 12))
+                        .foregroundStyle(Theme.textMuted)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 60)
+            } else if isActiveRecording {
+                // Live transcript segments as chat bubbles
+                ForEach(sessionManager.liveTranscriptSegments) { segment in
+                    transcriptBubble(segment: segment)
+                }
+
+                // Show interim text
+                if !sessionManager.interimText.isEmpty {
+                    HStack {
+                        Text(sessionManager.interimText)
+                            .font(.system(size: 13))
+                            .foregroundStyle(Theme.textMuted)
+                            .italic()
+                            .padding(10)
+                            .background(Theme.bgCard.opacity(0.3))
+                            .cornerRadius(Theme.radiusMD)
+                        Spacer()
+                    }
+                }
+            } else {
+                // Parse saved transcript into lines
+                let lines = parseTranscriptLines(meeting.transcriptRaw ?? "")
+                ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
+                    savedTranscriptBubble(speaker: line.speaker, text: line.text, isUser: line.isUser)
+                }
+            }
+        }
+        .padding(.bottom, 16)
+    }
+
+    private func transcriptBubble(segment: MeetingSessionManager.TranscriptSegmentData) -> some View {
+        let isUser = segment.isUser
+        return HStack(alignment: .top, spacing: 8) {
+            if !isUser { Spacer(minLength: 40) }
+
+            VStack(alignment: isUser ? .trailing : .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Text(segment.speaker)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(Theme.textMuted)
+                    Text(formatTime(segment.timestamp))
+                        .font(.system(size: 10))
+                        .foregroundStyle(Theme.textMuted)
+                }
+
+                Text(segment.text)
+                    .font(.system(size: 14))
+                    .foregroundStyle(Theme.textPrimary)
+                    .padding(10)
+                    .background(isUser ? Theme.bgCard : Theme.bgCard.opacity(0.5))
+                    .cornerRadius(Theme.radiusMD)
+                    .textSelection(.enabled)
+            }
+
+            if isUser { Spacer(minLength: 40) }
+        }
+    }
+
+    private func savedTranscriptBubble(speaker: String, text: String, isUser: Bool) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            if isUser { Spacer(minLength: 40) }
+
+            VStack(alignment: isUser ? .trailing : .leading, spacing: 4) {
+                Text(speaker)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(Theme.textMuted)
+
+                Text(text)
+                    .font(.system(size: 14))
+                    .foregroundStyle(Theme.textPrimary)
+                    .padding(10)
+                    .background(isUser ? Theme.bgCard : Theme.bgCard.opacity(0.5))
+                    .cornerRadius(Theme.radiusMD)
+                    .textSelection(.enabled)
+            }
+
+            if !isUser { Spacer(minLength: 40) }
+        }
+    }
+
+    // MARK: - Summary Tab
+    private var summaryTabContent: some View {
+        Group {
+            if let summaryData = meeting.summaryJSON,
+               let summary = try? JSONDecoder().decode(EnhancementService.MeetingSummary.self, from: summaryData) {
+                VStack(alignment: .leading, spacing: 20) {
+                    if !summary.overview.isEmpty {
+                        summarySection(title: "Overview", icon: "doc.text") {
+                            Text(summary.overview)
+                                .font(.system(size: 14))
+                                .foregroundStyle(Theme.textSecondary)
+                        }
+                    }
+
+                    if !summary.keyPoints.isEmpty {
+                        summarySection(title: "Key Points", icon: "list.bullet") {
+                            ForEach(summary.keyPoints, id: \.self) { point in
+                                HStack(alignment: .top, spacing: 8) {
+                                    Text("*")
+                                        .font(.system(size: 14, weight: .bold))
+                                        .foregroundStyle(Theme.textMuted)
+                                    Text(point)
+                                        .font(.system(size: 14))
+                                        .foregroundStyle(Theme.textPrimary)
+                                }
+                            }
+                        }
+                    }
+
+                    if !summary.actionItems.isEmpty {
+                        summarySection(title: "Action Items", icon: "checkmark.circle") {
+                            ForEach(summary.actionItems, id: \.task) { item in
+                                HStack(alignment: .top, spacing: 8) {
+                                    Image(systemName: "circle")
+                                        .font(.system(size: 12))
+                                        .foregroundStyle(Theme.textMuted)
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(item.task)
+                                            .font(.system(size: 14))
+                                            .foregroundStyle(Theme.textPrimary)
+                                        if let assignee = item.assignee {
+                                            Text("@\(assignee)")
+                                                .font(.system(size: 12))
+                                                .foregroundStyle(Theme.textSecondary)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if !summary.decisions.isEmpty {
+                        summarySection(title: "Decisions", icon: "checkmark.seal") {
+                            ForEach(summary.decisions, id: \.self) { decision in
+                                HStack(alignment: .top, spacing: 8) {
+                                    Text("-")
+                                        .foregroundStyle(Theme.textMuted)
+                                    Text(decision)
+                                        .font(.system(size: 14))
+                                        .foregroundStyle(Theme.textPrimary)
+                                }
+                            }
+                        }
+                    }
+
+                    if !summary.topics.isEmpty {
+                        summarySection(title: "Topics", icon: "tag") {
+                            FlowLayout(spacing: 6) {
+                                ForEach(summary.topics, id: \.self) { topic in
+                                    Text(topic)
+                                        .font(.system(size: 12))
+                                        .foregroundStyle(Theme.textSecondary)
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 4)
+                                        .background(Theme.bgCard)
+                                        .cornerRadius(Theme.radiusPill)
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                VStack(spacing: 12) {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 36))
+                        .foregroundStyle(Theme.textMuted)
+                    Text("No summary available")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(Theme.textSecondary)
+                    Text("Enhance your notes to generate a summary")
+                        .font(.system(size: 12))
+                        .foregroundStyle(Theme.textMuted)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 60)
+            }
+        }
+    }
+
+    private func summarySection<Content: View>(title: String, icon: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.system(size: 13))
+                    .foregroundStyle(Theme.textMuted)
+                Text(title)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(Theme.textPrimary)
+            }
+            content()
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.bgCard.opacity(0.4))
+        .cornerRadius(Theme.radiusMD)
     }
 
     // MARK: - Enhanced Content
@@ -365,11 +706,11 @@ struct NotepadView: View {
                     .foregroundStyle(Theme.textPrimary)
             }
             .padding(.top, 8)
-        } else if trimmed.hasPrefix("- ") || trimmed.hasPrefix("• ") {
+        } else if trimmed.hasPrefix("- ") || trimmed.hasPrefix("* ") {
             bulletLine(String(trimmed.dropFirst(2)), isAI: line.contains("[AI]"), indent: 0)
-        } else if trimmed.hasPrefix("  - ") || trimmed.hasPrefix("  • ") || trimmed.hasPrefix("  ○ ") {
+        } else if trimmed.hasPrefix("  - ") || trimmed.hasPrefix("  * ") {
             bulletLine(String(trimmed.dropFirst(4)), isAI: line.contains("[AI]"), indent: 1)
-        } else if trimmed.hasPrefix("    - ") || trimmed.hasPrefix("    ○ ") {
+        } else if trimmed.hasPrefix("    - ") || trimmed.hasPrefix("    * ") {
             bulletLine(String(trimmed.dropFirst(6)), isAI: line.contains("[AI]"), indent: 2)
         } else {
             let isAI = line.contains("[AI]")
@@ -387,7 +728,7 @@ struct NotepadView: View {
 
     private func bulletLine(_ text: String, isAI: Bool, indent: Int) -> some View {
         HStack(alignment: .top, spacing: 6) {
-            Text(indent == 0 ? "•" : "○")
+            Text(indent == 0 ? "*" : "-")
                 .font(.system(size: indent == 0 ? 14 : 12))
                 .foregroundStyle(Theme.textMuted)
             Text(text
@@ -469,9 +810,13 @@ struct NotepadView: View {
                 .cornerRadius(Theme.radiusPill)
                 .overlay(RoundedRectangle(cornerRadius: Theme.radiusPill).stroke(Theme.border, lineWidth: 1))
 
-                Button { } label: {
+                Button {
+                    chatInput = "Write follow up email"
+                    withAnimation { showChatSidebar = true }
+                    sendChatMessage()
+                } label: {
                     HStack(spacing: 4) {
-                        Text("/").font(.system(size: 12, weight: .bold)).foregroundStyle(Theme.accentGreen)
+                        Text("/").font(.system(size: 12, weight: .bold)).foregroundStyle(Theme.accent)
                         Text("Write follow up email").font(.system(size: 12)).foregroundStyle(Theme.textPrimary)
                     }
                     .padding(.horizontal, 12)
@@ -500,6 +845,13 @@ struct NotepadView: View {
                     .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(Theme.textPrimary)
                 Spacer()
+                Text("J")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(Theme.textMuted)
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 2)
+                    .background(Theme.bgCard)
+                    .cornerRadius(4)
                 Button { withAnimation { showChatSidebar = false } } label: {
                     Image(systemName: "xmark")
                         .font(.system(size: 12))
@@ -557,7 +909,7 @@ struct NotepadView: View {
                 Button { sendChatMessage() } label: {
                     Image(systemName: "arrow.up.circle.fill")
                         .font(.system(size: 20))
-                        .foregroundStyle(chatInput.isEmpty ? Theme.textMuted : Theme.accentGreen)
+                        .foregroundStyle(chatInput.isEmpty ? Theme.textMuted : Theme.accent)
                 }
                 .buttonStyle(.plain)
                 .disabled(chatInput.isEmpty)
@@ -580,7 +932,38 @@ struct NotepadView: View {
         }
     }
 
+    private func showCopiedFeedback() {
+        copiedToClipboard = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { copiedToClipboard = false }
+    }
+
     private func isToday(_ date: Date) -> Bool {
         Calendar.current.isDateInToday(date)
+    }
+
+    private func formatTime(_ date: Date) -> String {
+        let f = DateFormatter()
+        f.dateFormat = "h:mm:ss a"
+        return f.string(from: date)
+    }
+
+    // MARK: - Transcript Parsing
+    private struct TranscriptLine {
+        let speaker: String
+        let text: String
+        let isUser: Bool
+    }
+
+    private func parseTranscriptLines(_ raw: String) -> [TranscriptLine] {
+        let lines = raw.components(separatedBy: "\n").filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+        return lines.compactMap { line in
+            if let colonRange = line.range(of: ": ") {
+                let speaker = String(line[line.startIndex..<colonRange.lowerBound])
+                let text = String(line[colonRange.upperBound...])
+                let isUser = speaker.lowercased().contains("you") || speaker == "Speaker 0"
+                return TranscriptLine(speaker: speaker, text: text, isUser: isUser)
+            }
+            return TranscriptLine(speaker: "Speaker", text: line, isUser: false)
+        }
     }
 }

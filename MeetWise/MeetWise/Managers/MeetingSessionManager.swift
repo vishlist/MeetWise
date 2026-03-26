@@ -25,9 +25,54 @@ final class MeetingSessionManager {
         let id = UUID()
         let speaker: String
         let text: String
+        let timestamp: Date
+        let isUser: Bool
+
+        init(speaker: String, text: String, timestamp: Date = Date(), isUser: Bool = false) {
+            self.speaker = speaker
+            self.text = text
+            self.timestamp = timestamp
+            self.isUser = isUser
+        }
     }
 
-    func startRecording(modelContext: ModelContext) async {
+    // MARK: - Meeting Detection Integration
+
+    /// Called when MeetingDetectionService detects a meeting window.
+    /// Auto-creates a Meeting and optionally starts recording.
+    func handleMeetingDetected(
+        _ detected: MeetingDetectionService.DetectedMeeting,
+        autoRecord: Bool,
+        modelContext: ModelContext
+    ) async {
+        // Don't create a new meeting if we're already recording
+        guard !isRecording else { return }
+
+        if autoRecord {
+            await startRecording(modelContext: modelContext, title: detected.windowTitle, platform: detected.platform.rawValue)
+        }
+    }
+
+    /// Called when MeetingDetectionService detects that the meeting has ended.
+    func handleMeetingEnded(modelContext: ModelContext) async {
+        guard isRecording else { return }
+        await stopRecording(modelContext: modelContext)
+    }
+
+    // MARK: - Quick Note (no recording)
+
+    /// Creates a meeting without starting audio recording — just a notepad.
+    func startQuickNote(modelContext: ModelContext) -> Meeting {
+        let meeting = Meeting(title: "Quick Note", startedAt: Date())
+        meeting.status = "completed"
+        modelContext.insert(meeting)
+        try? modelContext.save()
+        return meeting
+    }
+
+    // MARK: - Recording
+
+    func startRecording(modelContext: ModelContext, title: String? = nil, platform: String? = nil) async {
         guard !isRecording else { return }
 
         error = nil
@@ -36,7 +81,8 @@ final class MeetingSessionManager {
         interimText = ""
 
         // Create meeting
-        let meeting = Meeting(title: "New Meeting", startedAt: Date())
+        let meeting = Meeting(title: title ?? "New Meeting", startedAt: Date())
+        meeting.platform = platform
         modelContext.insert(meeting)
         try? modelContext.save()
         currentMeeting = meeting
@@ -54,7 +100,7 @@ final class MeetingSessionManager {
         self.audioService = audio
         self.transcriptionService = transcription
 
-        // Wire audio data → Deepgram
+        // Wire audio data -> Deepgram
         audio.onAudioData = { [weak transcription] data in
             transcription?.sendAudioData(data)
         }
@@ -66,7 +112,13 @@ final class MeetingSessionManager {
                 let speaker = segment.speaker ?? "Speaker"
                 let line = "\(speaker): \(segment.text)\n"
                 self.liveTranscriptText += line
-                self.liveTranscriptSegments.append(TranscriptSegmentData(speaker: speaker, text: segment.text))
+                self.liveTranscriptSegments.append(
+                    TranscriptSegmentData(
+                        speaker: speaker,
+                        text: segment.text,
+                        isUser: speaker.lowercased().contains("you") || speaker == "Speaker 0"
+                    )
+                )
                 self.interimText = ""
             }
         }

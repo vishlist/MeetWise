@@ -6,6 +6,10 @@ struct SidebarView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Folder.position) private var folders: [Folder]
+    @State private var editingFolder: Folder?
+    @State private var editingFolderName = ""
+    @State private var showDeleteConfirm = false
+    @State private var folderToDelete: Folder?
 
     var body: some View {
         @Bindable var state = appState
@@ -16,6 +20,22 @@ struct SidebarView: View {
                 .padding(.horizontal, 12)
                 .padding(.top, 12)
                 .padding(.bottom, 8)
+
+            // Recording indicator
+            if sessionManager.isRecording {
+                recordingIndicator
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 8)
+            }
+
+            // Meeting detection status
+            if appState.showMeetingDetectionBanner,
+               let detected = appState.meetingDetectionService.detectedMeeting,
+               !sessionManager.isRecording {
+                detectionIndicator(detected)
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 8)
+            }
 
             // Main nav items
             VStack(spacing: 2) {
@@ -51,10 +71,87 @@ struct SidebarView: View {
             bottomSection
         }
         .background(Theme.bgSidebar)
+        .alert("Delete Folder?", isPresented: $showDeleteConfirm) {
+            Button("Cancel", role: .cancel) { folderToDelete = nil }
+            Button("Delete", role: .destructive) {
+                if let folder = folderToDelete {
+                    modelContext.delete(folder)
+                    try? modelContext.save()
+                    folderToDelete = nil
+                }
+            }
+        } message: {
+            Text("This will remove the folder but not the meetings inside it.")
+        }
+    }
+
+    // MARK: - Recording Indicator
+    private var recordingIndicator: some View {
+        HStack(spacing: 8) {
+            Circle()
+                .fill(.red)
+                .frame(width: 8, height: 8)
+                .shadow(color: .red.opacity(0.5), radius: 3)
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text(sessionManager.currentMeeting?.title ?? "Recording")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(Theme.textPrimary)
+                    .lineLimit(1)
+                Text(sessionManager.formattedDuration)
+                    .font(.system(size: 11).monospacedDigit())
+                    .foregroundStyle(Theme.textSecondary)
+            }
+
+            Spacer()
+
+            // Mini waveform
+            HStack(spacing: 1) {
+                ForEach(0..<5, id: \.self) { i in
+                    RoundedRectangle(cornerRadius: 1)
+                        .fill(Color.red.opacity(0.6))
+                        .frame(width: 2, height: max(3, CGFloat(sessionManager.audioLevel) * 12 * CGFloat(abs(sin(Double(i) * 0.7)))))
+                }
+            }
+        }
+        .padding(8)
+        .background(Color.red.opacity(0.08))
+        .cornerRadius(Theme.radiusSM)
+        .overlay(RoundedRectangle(cornerRadius: Theme.radiusSM).stroke(Color.red.opacity(0.2), lineWidth: 1))
+        .onTapGesture {
+            if let meeting = sessionManager.currentMeeting {
+                appState.selectedMeeting = meeting
+            }
+        }
+    }
+
+    // MARK: - Detection Indicator
+    private func detectionIndicator(_ detected: MeetingDetectionService.DetectedMeeting) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: "video.fill")
+                .font(.system(size: 10))
+                .foregroundStyle(Theme.accent)
+
+            Text(detected.platform.rawValue)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(Theme.textSecondary)
+                .lineLimit(1)
+
+            Spacer()
+
+            Circle()
+                .fill(Theme.accent)
+                .frame(width: 5, height: 5)
+        }
+        .padding(8)
+        .background(Theme.bgCard)
+        .cornerRadius(Theme.radiusSM)
     }
 
     private var searchBar: some View {
-        Button { } label: {
+        Button {
+            appState.isSearchPresented = true
+        } label: {
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: 13))
@@ -63,7 +160,7 @@ struct SidebarView: View {
                     .font(.system(size: 13))
                     .foregroundStyle(Theme.textMuted)
                 Spacer()
-                Text("⌘K")
+                Text("K")
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(Theme.textMuted)
                     .padding(.horizontal, 6)
@@ -98,7 +195,7 @@ struct SidebarView: View {
             HStack(spacing: 8) {
                 Image(systemName: icon)
                     .font(.system(size: 12))
-                    .foregroundStyle(isPersonal ? Theme.accentGreen : Theme.accent)
+                    .foregroundStyle(isPersonal ? Theme.accent : Theme.accent)
                 Text(name)
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary)
@@ -109,20 +206,12 @@ struct SidebarView: View {
 
             let spaceFolders = folders.filter { isPersonal ? $0.spaceType == "personal" : $0.spaceType == "team" }
             ForEach(spaceFolders) { folder in
-                SidebarNavButton(
-                    icon: "folder.fill", label: folder.name,
-                    isSelected: appState.selectedNavItem == .folder(folder.id)
-                ) {
-                    appState.selectedNavItem = .folder(folder.id)
-                    appState.selectedMeeting = nil
-                }
-                .padding(.leading, 12)
+                folderRow(folder)
+                    .padding(.leading, 12)
             }
 
             Button {
-                let folder = Folder(name: "New Folder", spaceType: isPersonal ? "personal" : "team")
-                modelContext.insert(folder)
-                try? modelContext.save()
+                createFolder(isPersonal: isPersonal)
             } label: {
                 HStack(spacing: 6) {
                     Image(systemName: "plus").font(.system(size: 10))
@@ -135,6 +224,77 @@ struct SidebarView: View {
             }
             .buttonStyle(.plain)
         }
+    }
+
+    // MARK: - Folder Row with Context Menu
+    private func folderRow(_ folder: Folder) -> some View {
+        Group {
+            if editingFolder?.id == folder.id {
+                // Inline rename
+                HStack(spacing: 10) {
+                    Image(systemName: "folder.fill")
+                        .font(.system(size: 14))
+                        .foregroundStyle(Theme.textSecondary)
+                        .frame(width: 20)
+                    TextField("Folder name", text: $editingFolderName)
+                        .textFieldStyle(.plain)
+                        .font(.system(size: 13))
+                        .onSubmit {
+                            commitRename(folder)
+                        }
+                        .onExitCommand {
+                            editingFolder = nil
+                        }
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 7)
+                .background(Theme.bgActive)
+                .cornerRadius(Theme.radiusSM)
+            } else {
+                SidebarNavButton(
+                    icon: "folder.fill", label: folder.name,
+                    isSelected: appState.selectedNavItem == .folder(folder.id)
+                ) {
+                    appState.selectedNavItem = .folder(folder.id)
+                    appState.selectedMeeting = nil
+                }
+                .contextMenu {
+                    Button {
+                        editingFolder = folder
+                        editingFolderName = folder.name
+                    } label: {
+                        Label("Rename", systemImage: "pencil")
+                    }
+
+                    Button(role: .destructive) {
+                        folderToDelete = folder
+                        showDeleteConfirm = true
+                    } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
+                }
+            }
+        }
+    }
+
+    private func createFolder(isPersonal: Bool) {
+        let folder = Folder(name: "New Folder", spaceType: isPersonal ? "personal" : "team")
+        folder.position = folders.count
+        modelContext.insert(folder)
+        try? modelContext.save()
+
+        // Start editing immediately
+        editingFolder = folder
+        editingFolderName = folder.name
+    }
+
+    private func commitRename(_ folder: Folder) {
+        let trimmed = editingFolderName.trimmingCharacters(in: .whitespaces)
+        if !trimmed.isEmpty {
+            folder.name = trimmed
+            try? modelContext.save()
+        }
+        editingFolder = nil
     }
 
     private var bottomSection: some View {
@@ -167,7 +327,7 @@ struct SidebarView: View {
                     .fill(Theme.accent.opacity(0.2))
                     .frame(width: 28, height: 28)
                     .overlay(
-                        Text("VA")
+                        Text(appState.currentUser?.initials ?? "U")
                             .font(.system(size: 10, weight: .bold))
                             .foregroundStyle(Theme.accent)
                     )

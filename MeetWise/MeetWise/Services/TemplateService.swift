@@ -1,76 +1,42 @@
 import Foundation
 
-enum NoteTemplate: String, CaseIterable, Identifiable {
-    case auto = "Auto"
-    case meetingNotes = "Meeting Notes"
-    case oneOnOne = "1:1 Meeting"
-    case standup = "Stand-up"
-    case retrospective = "Sprint Retrospective"
-    case kickoff = "Project Kick-Off"
-    case salesCall = "Sales Call"
-    case customerDiscovery = "Customer Discovery"
-    case userInterview = "User Interview"
-    case pipelineReview = "Pipeline Review"
-    case investorPitch = "Investor Pitch"
-    case boardMeeting = "Board Meeting"
-    case brainstorm = "Brainstorm"
-    case designReview = "Design Review"
-    case allHands = "All Hands"
+/// Built-in note templates for different meeting types
+struct TemplateService {
+    static let templates: [NoteTemplate] = [
+        NoteTemplate(name: "Blank", icon: "doc", category: .basic, content: ""),
+        NoteTemplate(name: "Meeting Notes", icon: "note.text", category: .basic, content: "# Meeting Notes\n\n## Attendees\n- \n\n## Agenda\n1. \n\n## Discussion\n- \n\n## Action Items\n- [ ] \n\n## Next Steps\n- "),
+        NoteTemplate(name: "1:1 Meeting", icon: "person.2", category: .oneOnOne, content: "# 1:1 Meeting\n\n## Check-in\n- How are things going?\n\n## Updates\n- \n\n## Blockers\n- \n\n## Career Development\n- \n\n## Action Items\n- [ ] "),
+        NoteTemplate(name: "Sprint Planning", icon: "arrow.triangle.2.circlepath", category: .agile, content: "# Sprint Planning\n\n## Sprint Goal\n\n\n## User Stories\n- [ ] Story 1 (X points)\n- [ ] Story 2 (X points)\n\n## Risks & Dependencies\n- \n\n## Total Points: "),
+        NoteTemplate(name: "Standup", icon: "sunrise", category: .agile, content: "# Daily Standup\n\n## Yesterday\n- \n\n## Today\n- \n\n## Blockers\n- "),
+        NoteTemplate(name: "Retrospective", icon: "arrow.counterclockwise", category: .agile, content: "# Retrospective\n\n## What went well 🎉\n- \n\n## What could improve 🔧\n- \n\n## Action items 🎯\n- [ ] "),
+        NoteTemplate(name: "Design Review", icon: "paintbrush", category: .design, content: "# Design Review\n\n## Design Being Reviewed\n\n\n## Feedback\n### Visual\n- \n### UX\n- \n### Accessibility\n- \n\n## Changes Requested\n- [ ] \n\n## Approved: Yes / No"),
+        NoteTemplate(name: "Client Call", icon: "phone", category: .external, content: "# Client Call\n\n## Client:\n## Attendees:\n\n## Agenda\n1. \n\n## Discussion\n- \n\n## Client Requests\n- \n\n## Commitments Made\n- [ ] \n\n## Follow Up By:"),
+        NoteTemplate(name: "Interview", icon: "person.badge.plus", category: .hr, content: "# Interview Notes\n\n## Candidate:\n## Role:\n\n## Technical Skills (1-5):\n## Communication (1-5):\n## Culture Fit (1-5):\n\n## Notes\n- \n\n## Recommendation: Hire / No Hire / Maybe"),
+        NoteTemplate(name: "Product Review", icon: "shippingbox", category: .product, content: "# Product Review\n\n## Feature/Product:\n## Status:\n\n## Demo Notes\n- \n\n## Feedback\n- \n\n## Decisions\n- \n\n## Next Steps\n- [ ] "),
+        NoteTemplate(name: "Brainstorm", icon: "lightbulb", category: .creative, content: "# Brainstorm Session\n\n## Topic:\n\n## Ideas\n1. \n2. \n3. \n\n## Top 3 to Pursue\n1. \n2. \n3. \n\n## Next Steps\n- [ ] "),
+        NoteTemplate(name: "Project Kickoff", icon: "flag", category: .project, content: "# Project Kickoff\n\n## Project Name:\n## Timeline:\n## Team:\n\n## Goals\n- \n\n## Scope\n- In scope:\n- Out of scope:\n\n## Milestones\n1. \n2. \n\n## Risks\n- "),
+        NoteTemplate(name: "Sales Call", icon: "dollarsign.circle", category: .sales, content: "# Sales Call\n\n## Prospect:\n## Company:\n## Stage:\n\n## Pain Points\n- \n\n## Our Solution\n- \n\n## Objections\n- \n\n## Next Steps\n- [ ] \n\n## Deal Value: $"),
+        NoteTemplate(name: "Board Meeting", icon: "building.2", category: .external, content: "# Board Meeting\n\n## Financial Update\n- \n\n## Key Metrics\n- \n\n## Strategic Decisions\n- \n\n## Risks & Concerns\n- \n\n## Action Items\n- [ ] ")
+    ]
 
-    var id: String { rawValue }
-
-    var icon: String {
-        switch self {
-        case .auto: return "sparkles"
-        case .meetingNotes: return "doc.text"
-        case .oneOnOne: return "person.2"
-        case .standup: return "figure.stand"
-        case .retrospective: return "arrow.counterclockwise"
-        case .kickoff: return "flag"
-        case .salesCall: return "phone"
-        case .customerDiscovery: return "magnifyingglass"
-        case .userInterview: return "mic"
-        case .pipelineReview: return "chart.bar"
-        case .investorPitch: return "dollarsign.circle"
-        case .boardMeeting: return "building.columns"
-        case .brainstorm: return "lightbulb"
-        case .designReview: return "paintbrush"
-        case .allHands: return "person.3"
-        }
+    enum TemplateCategory: String, CaseIterable {
+        case basic = "Basic"
+        case oneOnOne = "1:1"
+        case agile = "Agile"
+        case design = "Design"
+        case external = "External"
+        case hr = "HR"
+        case product = "Product"
+        case creative = "Creative"
+        case project = "Project"
+        case sales = "Sales"
     }
+}
 
-    var promptSuffix: String {
-        switch self {
-        case .auto:
-            return "Auto-detect the best structure for these notes."
-        case .meetingNotes:
-            return "Structure as: Key Discussion Points, Decisions Made, Action Items, Next Steps."
-        case .oneOnOne:
-            return "Structure as: Check-in, Discussion Topics, Feedback, Action Items, Personal Notes."
-        case .standup:
-            return "Structure as: What I Did Yesterday, What I'm Doing Today, Blockers."
-        case .retrospective:
-            return "Structure as: What Went Well, What Could Be Improved, Action Items."
-        case .kickoff:
-            return "Structure as: Project Overview, Goals & Success Metrics, Roles & Responsibilities, Timeline, Risks, Next Steps."
-        case .salesCall:
-            return "Structure as: Prospect Overview, Pain Points, Solution Fit, Objections, Next Steps, Deal Notes."
-        case .customerDiscovery:
-            return "Structure as: Customer Profile, Problems Discussed, Current Solutions, Insights, Opportunities."
-        case .userInterview:
-            return "Structure as: Participant Background, Key Quotes, Pain Points, Feature Requests, Insights."
-        case .pipelineReview:
-            return "Structure as: Deal Updates, At Risk, Won/Lost, Forecast, Action Items."
-        case .investorPitch:
-            return "Structure as: Pitch Highlights, Questions Asked, Concerns Raised, Follow-up Items, Investor Sentiment."
-        case .boardMeeting:
-            return "Structure as: Agenda Items, Discussion Summary, Decisions, Votes, Action Items."
-        case .brainstorm:
-            return "Structure as: Problem Statement, Ideas Generated, Top Ideas to Explore, Next Steps."
-        case .designReview:
-            return "Structure as: Design Overview, Feedback, Approved Changes, Remaining Questions, Next Steps."
-        case .allHands:
-            return "Structure as: Company Updates, Team Highlights, Q&A, Announcements."
-        }
-    }
+struct NoteTemplate: Identifiable {
+    let id = UUID()
+    let name: String
+    let icon: String
+    let category: TemplateService.TemplateCategory
+    let content: String
 }

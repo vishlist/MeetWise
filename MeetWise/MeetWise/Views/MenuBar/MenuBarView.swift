@@ -1,7 +1,9 @@
 import SwiftUI
+import SwiftData
 
 struct MenuBarView: View {
     @Environment(AppState.self) private var appState
+    @Query(sort: \Meeting.startedAt, order: .reverse) private var recentMeetings: [Meeting]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -9,11 +11,18 @@ struct MenuBarView: View {
             HStack {
                 Image(systemName: "waveform.circle.fill")
                     .font(.system(size: 16))
-                    .foregroundStyle(Theme.accentGreen)
+                    .foregroundStyle(Theme.accent)
                 Text("MeetWise")
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary)
                 Spacer()
+
+                // Meeting detection status
+                if appState.meetingDetectionService.isMonitoring {
+                    Circle()
+                        .fill(Theme.accent.opacity(0.3))
+                        .frame(width: 6, height: 6)
+                }
             }
             .padding(.horizontal, 12)
             .padding(.top, 8)
@@ -23,7 +32,10 @@ struct MenuBarView: View {
             if appState.isRecording {
                 // Recording state
                 HStack(spacing: 8) {
-                    Circle().fill(.red).frame(width: 8, height: 8)
+                    Circle()
+                        .fill(.red)
+                        .frame(width: 8, height: 8)
+                        .shadow(color: .red.opacity(0.5), radius: 3)
                     Text("Recording")
                         .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(Theme.textPrimary)
@@ -39,7 +51,7 @@ struct MenuBarView: View {
                 HStack(spacing: 2) {
                     ForEach(0..<20, id: \.self) { i in
                         RoundedRectangle(cornerRadius: 1)
-                            .fill(Float(i) / 20.0 < appState.audioLevel ? Theme.accentGreen : Theme.bgCard)
+                            .fill(Float(i) / 20.0 < appState.audioLevel ? Theme.accent : Theme.bgCard)
                             .frame(width: 8, height: 12)
                     }
                 }
@@ -64,6 +76,29 @@ struct MenuBarView: View {
                 .buttonStyle(.plain)
                 .padding(.horizontal, 12)
             } else {
+                // Detected meeting info
+                if let detected = appState.meetingDetectionService.detectedMeeting {
+                    HStack(spacing: 8) {
+                        Circle()
+                            .fill(Theme.accent)
+                            .frame(width: 6, height: 6)
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(detected.platform.rawValue)
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(Theme.textPrimary)
+                            Text(detected.windowTitle)
+                                .font(.system(size: 11))
+                                .foregroundStyle(Theme.textMuted)
+                                .lineLimit(1)
+                        }
+                        Spacer()
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+
+                    Divider()
+                }
+
                 // Quick Note button
                 Button {
                     appState.isRecording = true
@@ -77,27 +112,50 @@ struct MenuBarView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 6)
-                    .background(Theme.accentGreen.opacity(0.15))
-                    .foregroundStyle(Theme.accentGreen)
+                    .background(Theme.accent.opacity(0.12))
+                    .foregroundStyle(Theme.accent)
                     .cornerRadius(Theme.radiusSM)
                 }
                 .buttonStyle(.plain)
                 .padding(.horizontal, 12)
 
                 // Recent meetings
-                if let recent = appState.recentMeetingTitle {
+                if !recentMeetings.isEmpty {
                     Divider()
-                    HStack(spacing: 8) {
-                        Image(systemName: "doc.text")
-                            .font(.system(size: 12))
-                            .foregroundStyle(Theme.textMuted)
-                        Text(recent)
-                            .font(.system(size: 12))
-                            .foregroundStyle(Theme.textSecondary)
-                            .lineLimit(1)
+
+                    Text("Recent")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(Theme.textMuted)
+                        .tracking(0.5)
+                        .padding(.horizontal, 12)
+                        .padding(.top, 4)
+
+                    ForEach(recentMeetings.prefix(5)) { meeting in
+                        Button {
+                            appState.selectedMeeting = meeting
+                            NSApp.activate(ignoringOtherApps: true)
+                        } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: "doc.text")
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(Theme.textMuted)
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text(meeting.title)
+                                        .font(.system(size: 12))
+                                        .foregroundStyle(Theme.textPrimary)
+                                        .lineLimit(1)
+                                    Text(meeting.formattedDate)
+                                        .font(.system(size: 10))
+                                        .foregroundStyle(Theme.textMuted)
+                                }
+                                Spacer()
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 3)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 4)
                 }
             }
 
@@ -110,7 +168,7 @@ struct MenuBarView: View {
                     Text("Open MeetWise")
                         .font(.system(size: 13))
                     Spacer()
-                    Text("⌘O")
+                    Text("O")
                         .font(.system(size: 11))
                         .foregroundStyle(Theme.textMuted)
                 }
@@ -141,7 +199,7 @@ struct MenuBarView: View {
                     Text("Quit MeetWise")
                         .font(.system(size: 13))
                     Spacer()
-                    Text("⌘Q")
+                    Text("Q")
                         .font(.system(size: 11))
                         .foregroundStyle(Theme.textMuted)
                 }
@@ -154,7 +212,7 @@ struct MenuBarView: View {
 
             Spacer().frame(height: 4)
         }
-        .frame(width: 250)
+        .frame(width: 260)
         .background(Theme.bgPrimary)
     }
 

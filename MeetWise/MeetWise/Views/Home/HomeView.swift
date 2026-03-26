@@ -6,9 +6,13 @@ struct HomeView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Meeting.startedAt, order: .reverse) private var recentMeetings: [Meeting]
-    @State private var calendarService = CalendarService()
     @State private var homeChat = ""
     @State private var appeared = false
+    @State private var homeChatMessages: [(role: String, content: String)] = []
+
+    private var calendarService: CalendarService {
+        appState.calendarService
+    }
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -54,7 +58,7 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - Calendar Card (Glass)
+    // MARK: - Calendar Card
     private var calendarCard: some View {
         VStack(spacing: 0) {
             HStack(alignment: .top, spacing: 16) {
@@ -111,51 +115,87 @@ struct HomeView: View {
             } else {
                 VStack(spacing: 0) {
                     ForEach(calendarService.todayEvents) { event in
-                        HStack(spacing: 12) {
-                            RoundedRectangle(cornerRadius: 2)
-                                .fill(Theme.accent)
-                                .frame(width: 3, height: 32)
-
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(event.title)
-                                    .font(.system(size: 14, weight: .medium))
-                                    .foregroundStyle(Theme.textPrimary)
-                                Text(event.formattedTimeRange)
-                                    .font(.system(size: 12))
-                                    .foregroundStyle(Theme.textSecondary)
-                            }
-                            Spacer()
-
-                            if event.meetingURL != nil {
-                                Button {
-                                    Task {
-                                        await sessionManager.startRecording(modelContext: modelContext)
-                                        if let meeting = sessionManager.currentMeeting {
-                                            meeting.title = event.title
-                                            try? modelContext.save()
-                                            appState.selectedMeeting = meeting
-                                        }
-                                    }
-                                } label: {
-                                    Text("Join & Note")
-                                        .font(.system(size: 12, weight: .semibold))
-                                        .foregroundStyle(Theme.accent)
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 5)
-                                        .background(Theme.accent.opacity(0.12))
-                                        .cornerRadius(Theme.radiusPill)
-                                }
-                                .buttonStyle(.plain)
-                                .hoverScale(1.05)
-                            }
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 10)
+                        calendarEventRow(event)
                     }
                 }
                 .glassCard(cornerRadius: Theme.radiusLG)
             }
         }
+    }
+
+    private func calendarEventRow(_ event: CalendarService.CalendarEvent) -> some View {
+        HStack(spacing: 12) {
+            RoundedRectangle(cornerRadius: 2)
+                .fill(Theme.accent)
+                .frame(width: 3, height: 32)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(event.title)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(Theme.textPrimary)
+
+                HStack(spacing: 6) {
+                    Text(event.formattedTimeRange)
+                        .font(.system(size: 12))
+                        .foregroundStyle(Theme.textSecondary)
+
+                    if !event.attendees.isEmpty {
+                        Text("*")
+                            .foregroundStyle(Theme.textMuted)
+                        Text(event.attendees.prefix(3).map(\.name).joined(separator: ", "))
+                            .font(.system(size: 12))
+                            .foregroundStyle(Theme.textMuted)
+                            .lineLimit(1)
+                    }
+                }
+            }
+            Spacer()
+
+            // Meeting link indicator
+            if event.meetingURL != nil {
+                Image(systemName: "video.fill")
+                    .font(.system(size: 11))
+                    .foregroundStyle(Theme.textMuted)
+            }
+
+            // Auto-start recording button for upcoming meetings
+            if event.meetingURL != nil {
+                Button {
+                    Task {
+                        await sessionManager.startRecording(
+                            modelContext: modelContext,
+                            title: event.title
+                        )
+                        if let meeting = sessionManager.currentMeeting {
+                            // Add attendees as participants
+                            for attendee in event.attendees {
+                                let participant = MeetingParticipant(name: attendee.name, email: attendee.email)
+                                participant.meeting = meeting
+                                modelContext.insert(participant)
+                            }
+                            meeting.calendarEventID = event.id
+                            if let url = event.meetingURL {
+                                meeting.meetingURL = url
+                            }
+                            try? modelContext.save()
+                            appState.selectedMeeting = meeting
+                        }
+                    }
+                } label: {
+                    Text("Join & Note")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(Theme.accent)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 5)
+                        .background(Theme.accent.opacity(0.12))
+                        .cornerRadius(Theme.radiusPill)
+                }
+                .buttonStyle(.plain)
+                .hoverScale(1.05)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
     }
 
     // MARK: - Notes Section
@@ -189,9 +229,15 @@ struct HomeView: View {
                     RoundedRectangle(cornerRadius: Theme.radiusSM)
                         .fill(Theme.bgCard)
                         .frame(width: 36, height: 36)
-                    Image(systemName: "doc.text.fill")
-                        .font(.system(size: 15))
-                        .foregroundStyle(Theme.accent.opacity(0.6))
+
+                    // Show recording indicator if active
+                    if sessionManager.isRecording && sessionManager.currentMeeting?.id == meeting.id {
+                        Circle().fill(.red).frame(width: 8, height: 8)
+                    } else {
+                        Image(systemName: "doc.text.fill")
+                            .font(.system(size: 15))
+                            .foregroundStyle(Theme.accent.opacity(0.6))
+                    }
                 }
 
                 VStack(alignment: .leading, spacing: 2) {
@@ -209,9 +255,11 @@ struct HomeView: View {
                     PillTag("Enhanced", icon: "sparkles", color: Theme.accent)
                 }
 
-                Image(systemName: "lock.fill")
-                    .font(.system(size: 10))
-                    .foregroundStyle(Theme.textMuted)
+                if meeting.platform != nil {
+                    Image(systemName: "video.fill")
+                        .font(.system(size: 10))
+                        .foregroundStyle(Theme.textMuted)
+                }
 
                 Text(meeting.formattedTime)
                     .font(.mono(12))
@@ -244,12 +292,8 @@ struct HomeView: View {
                 .foregroundStyle(Theme.textSecondary)
 
             Button {
-                Task {
-                    await sessionManager.startRecording(modelContext: modelContext)
-                    if let meeting = sessionManager.currentMeeting {
-                        appState.selectedMeeting = meeting
-                    }
-                }
+                let meeting = sessionManager.startQuickNote(modelContext: modelContext)
+                appState.selectedMeeting = meeting
             } label: {
                 HStack(spacing: 6) {
                     Image(systemName: "plus").font(.system(size: 12))
@@ -282,17 +326,25 @@ struct HomeView: View {
                         .textFieldStyle(.plain)
                         .font(.system(size: 13))
                         .foregroundStyle(Theme.textPrimary)
+                        .onSubmit { sendHomeChatMessage() }
                     Spacer()
+
+                    if appState.chatService.isLoading {
+                        ProgressView().controlSize(.small)
+                    }
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
                 .glassCard(cornerRadius: Theme.radiusPill)
 
-                Button { } label: {
+                Button {
+                    homeChat = "List recent todos"
+                    sendHomeChatMessage()
+                } label: {
                     HStack(spacing: 4) {
                         Text("/")
                             .font(.system(size: 12, weight: .bold))
-                            .foregroundStyle(Theme.accentGreen)
+                            .foregroundStyle(Theme.accent)
                         Text("List recent todos")
                             .font(.system(size: 12))
                             .foregroundStyle(Theme.textPrimary)
@@ -307,6 +359,22 @@ struct HomeView: View {
             .padding(.horizontal, 24)
             .padding(.vertical, 10)
             .background(Theme.bgPrimary)
+        }
+    }
+
+    // MARK: - Actions
+    private func sendHomeChatMessage() {
+        guard !homeChat.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+        let question = homeChat
+        homeChat = ""
+
+        // Navigate to chat view with the question
+        appState.selectedNavItem = .chat
+        appState.selectedMeeting = nil
+
+        // The ChatView will pick this up -- for now just trigger chat service
+        Task {
+            let _ = await appState.chatService.askAcrossMeetings(question, meetings: recentMeetings)
         }
     }
 

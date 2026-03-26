@@ -47,6 +47,7 @@
 		A1B2C3D400000026 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D500000029 /* NotificationService.swift */; };
 		A1B2C3D400000027 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D50000002A /* OnboardingView.swift */; };
 		A1B2C3D400000028 /* FlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D50000002B /* FlowLayout.swift */; };
+		A1B2C3D400000029 /* MeetingDetectionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D50000002C /* MeetingDetectionService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -93,6 +94,7 @@
 		A1B2C3D500000029 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		A1B2C3D50000002A /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		A1B2C3D50000002B /* FlowLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowLayout.swift; sourceTree = "<group>"; };
+		A1B2C3D50000002C /* MeetingDetectionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingDetectionService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -274,6 +276,7 @@
 				A1B2C3D500000024 /* CalendarService.swift */,
 				A1B2C3D500000025 /* ChatService.swift */,
 				A1B2C3D500000020 /* EnhancementService.swift */,
+				A1B2C3D50000002C /* MeetingDetectionService.swift */,
 				A1B2C3D500000029 /* NotificationService.swift */,
 				A1B2C3D500000026 /* RecipeService.swift */,
 				A1B2C3D500000028 /* ShareService.swift */,
@@ -431,6 +434,7 @@
 				A1B2C3D400000026 /* NotificationService.swift in Sources */,
 				A1B2C3D400000027 /* OnboardingView.swift in Sources */,
 				A1B2C3D400000028 /* FlowLayout.swift in Sources */,
+				A1B2C3D400000029 /* MeetingDetectionService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

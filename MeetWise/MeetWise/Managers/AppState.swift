@@ -1,7 +1,7 @@
 import SwiftUI
 import Foundation
 
-@Observable
+@MainActor @Observable
 final class AppState {
     // Navigation
     var selectedNavItem: NavItem = .home
@@ -20,6 +20,7 @@ final class AppState {
 
     // Chat
     var isChatSidebarOpen = false
+    var showChatSidebar = false
 
     // User
     var currentUser: UserProfile?
@@ -28,9 +29,51 @@ final class AppState {
     // Menu bar
     var recentMeetingTitle: String?
 
+    // Services
+    var meetingDetectionService = MeetingDetectionService()
+    var calendarService = CalendarService()
+    var chatService = ChatService()
+
+    // Meeting detection
+    var detectedMeetingPlatform: String?
+    var detectedMeetingTitle: String?
+    var showMeetingDetectionBanner = false
+
     // Onboarding
     var onboardingComplete: Bool {
         UserDefaults.standard.bool(forKey: "onboardingComplete")
+    }
+
+    var showOnboarding: Bool {
+        !onboardingComplete
+    }
+
+    /// The currently detected meeting (convenience accessor)
+    var detectedMeetingBanner: MeetingDetectionService.DetectedMeeting? {
+        meetingDetectionService.detectedMeeting
+    }
+
+    /// Initialize meeting detection and calendar on app launch
+    func initializeServices() {
+        meetingDetectionService.onMeetingStarted = { [weak self] detected in
+            guard let self else { return }
+            self.detectedMeetingPlatform = detected.platform.rawValue
+            self.detectedMeetingTitle = detected.windowTitle
+            self.showMeetingDetectionBanner = true
+        }
+
+        meetingDetectionService.onMeetingEnded = { [weak self] in
+            guard let self else { return }
+            self.detectedMeetingPlatform = nil
+            self.detectedMeetingTitle = nil
+            self.showMeetingDetectionBanner = false
+        }
+
+        meetingDetectionService.startMonitoring()
+
+        Task {
+            await calendarService.requestAccess()
+        }
     }
 }
 
