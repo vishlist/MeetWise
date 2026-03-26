@@ -9,6 +9,7 @@ struct HomeView: View {
     @State private var homeChat = ""
     @State private var appeared = false
     @State private var homeChatMessages: [(role: String, content: String)] = []
+    @State private var calendarAuthorized = false
 
     private var calendarService: CalendarService {
         appState.calendarService
@@ -54,6 +55,7 @@ struct HomeView: View {
         .background(Theme.bgPrimary)
         .task {
             await calendarService.requestAccess()
+            calendarAuthorized = calendarService.isAuthorized
             withAnimation { appeared = true }
         }
     }
@@ -82,7 +84,55 @@ struct HomeView: View {
             .background(Theme.bgCard)
             .clipShape(UnevenRoundedRectangle(topLeadingRadius: Theme.radiusLG, topTrailingRadius: Theme.radiusLG))
 
-            if calendarService.todayEvents.isEmpty {
+            if !calendarAuthorized {
+                // Calendar not authorized
+                VStack(spacing: 12) {
+                    Image(systemName: "calendar.badge.exclamationmark")
+                        .font(.system(size: 28))
+                        .foregroundStyle(Theme.textMuted)
+                    Text("Calendar not connected")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(Theme.textSecondary)
+                    Text("Connect your calendar to see upcoming meetings")
+                        .font(.system(size: 12))
+                        .foregroundStyle(Theme.textMuted)
+
+                    HStack(spacing: 12) {
+                        Button("Connect Calendar") {
+                            Task {
+                                await calendarService.requestAccess()
+                                calendarAuthorized = calendarService.isAuthorized
+                            }
+                        }
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(.black)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 6)
+                        .background(Color.white)
+                        .cornerRadius(Theme.radiusSM)
+                        .buttonStyle(.plain)
+                        .hoverScale(1.05)
+
+                        Button("Calendar Settings") {
+                            NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.datetime")!)
+                        }
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(Theme.accent)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 6)
+                        .background(Theme.accent.opacity(0.1))
+                        .cornerRadius(Theme.radiusSM)
+                        .buttonStyle(.plain)
+                    }
+                    .padding(.top, 4)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 24)
+                .overlay(
+                    UnevenRoundedRectangle(bottomLeadingRadius: Theme.radiusLG, bottomTrailingRadius: Theme.radiusLG)
+                        .stroke(Theme.border, style: StrokeStyle(lineWidth: 1, dash: [6]))
+                )
+            } else if calendarService.todayEvents.isEmpty {
                 VStack(spacing: 10) {
                     Image(systemName: "calendar.badge.clock")
                         .font(.system(size: 28))
@@ -94,8 +144,8 @@ struct HomeView: View {
                         .font(.system(size: 12))
                         .foregroundStyle(Theme.textMuted)
 
-                    Button("Calendar settings") {
-                        appState.selectedNavItem = .settings
+                    Button("Calendar Settings") {
+                        NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.datetime")!)
                     }
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(Theme.accent)
@@ -196,6 +246,7 @@ struct HomeView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
+        .hoverHighlight()
     }
 
     // MARK: - Notes Section
@@ -372,7 +423,7 @@ struct HomeView: View {
         appState.selectedNavItem = .chat
         appState.selectedMeeting = nil
 
-        // The ChatView will pick this up -- for now just trigger chat service
+        // The ChatView will pick this up
         Task {
             let _ = await appState.chatService.askAcrossMeetings(question, meetings: recentMeetings)
         }

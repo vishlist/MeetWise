@@ -48,6 +48,8 @@
 		A1B2C3D400000027 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D50000002A /* OnboardingView.swift */; };
 		A1B2C3D400000028 /* FlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D50000002B /* FlowLayout.swift */; };
 		A1B2C3D400000029 /* MeetingDetectionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D50000002C /* MeetingDetectionService.swift */; };
+		A1B2C3D40000002A /* PricingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D50000002D /* PricingView.swift */; };
+		A1B2C3D40000002B /* StripeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D50000002E /* StripeService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -95,6 +97,8 @@
 		A1B2C3D50000002A /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		A1B2C3D50000002B /* FlowLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowLayout.swift; sourceTree = "<group>"; };
 		A1B2C3D50000002C /* MeetingDetectionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingDetectionService.swift; sourceTree = "<group>"; };
+		A1B2C3D50000002D /* PricingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PricingView.swift; sourceTree = "<group>"; };
+		A1B2C3D50000002E /* StripeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StripeService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -189,6 +193,7 @@
 				A1B2C3D700000014 /* Notepad */,
 				A1B2C3D700000016 /* Onboarding */,
 				A1B2C3D70000000D /* People */,
+				A1B2C3D700000017 /* Pricing */,
 				A1B2C3D700000011 /* Settings */,
 				A1B2C3D700000015 /* Shared */,
 				A1B2C3D700000012 /* SharedWithMe */,
@@ -280,6 +285,7 @@
 				A1B2C3D500000029 /* NotificationService.swift */,
 				A1B2C3D500000026 /* RecipeService.swift */,
 				A1B2C3D500000028 /* ShareService.swift */,
+				A1B2C3D50000002E /* StripeService.swift */,
 				A1B2C3D500000027 /* TemplateService.swift */,
 				A1B2C3D50000001F /* TranscriptionService.swift */,
 			);
@@ -308,6 +314,14 @@
 				A1B2C3D50000002A /* OnboardingView.swift */,
 			);
 			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		A1B2C3D700000017 /* Pricing */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D50000002D /* PricingView.swift */,
+			);
+			path = Pricing;
 			sourceTree = "<group>";
 		};
 		A1B2C3D70000000F /* Resources */ = {
@@ -435,6 +449,8 @@
 				A1B2C3D400000027 /* OnboardingView.swift in Sources */,
 				A1B2C3D400000028 /* FlowLayout.swift in Sources */,
 				A1B2C3D400000029 /* MeetingDetectionService.swift in Sources */,
+				A1B2C3D40000002A /* PricingView.swift in Sources */,
+				A1B2C3D40000002B /* StripeService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

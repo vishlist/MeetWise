@@ -4,18 +4,10 @@ enum Constants {
     static let appName = "MeetWise"
     static let bundleID = "com.meetwise.app"
 
-    // API Keys — loaded from environment or UserDefaults
-    static var deepgramAPIKey: String {
-        ProcessInfo.processInfo.environment["DEEPGRAM_API_KEY"] ?? UserDefaults.standard.string(forKey: "deepgramAPIKey") ?? ""
-    }
-
-    static var anthropicAPIKey: String {
-        ProcessInfo.processInfo.environment["ANTHROPIC_API_KEY"] ?? UserDefaults.standard.string(forKey: "anthropicAPIKey") ?? ""
-    }
-
-    static var openAIAPIKey: String {
-        ProcessInfo.processInfo.environment["OPENAI_API_KEY"] ?? UserDefaults.standard.string(forKey: "openAIAPIKey") ?? ""
-    }
+    // API Keys — set your keys here
+    static let deepgramAPIKey = "YOUR_DEEPGRAM_API_KEY"
+    static let anthropicAPIKey = "YOUR_ANTHROPIC_API_KEY"
+    static let openAIAPIKey = "YOUR_OPENAI_API_KEY"
 
     // Supabase
     static var supabaseURL: String {
@@ -25,6 +17,10 @@ enum Constants {
     static var supabaseAnonKey: String {
         ProcessInfo.processInfo.environment["SUPABASE_ANON_KEY"] ?? UserDefaults.standard.string(forKey: "supabaseAnonKey") ?? ""
     }
+
+    // Stripe (placeholder)
+    static let stripePublishableKey = ""
+    static let stripeSecretKey = ""
 
     // Deepgram
     static let deepgramWSURL = "wss://api.deepgram.com/v1/listen"

@@ -50,7 +50,7 @@ struct NotepadView: View {
     @State private var chatService = ChatService()
     @State private var copiedToClipboard = false
     @State private var selectedTab: NotepadTab = .notes
-    @State private var showShareMenu = false
+    @State private var showDeleteConfirm = false
 
     init(meeting: Meeting, sessionManager: MeetingSessionManager) {
         self.meeting = meeting
@@ -89,6 +89,16 @@ struct NotepadView: View {
                 return .handled
             }
             return .ignored
+        }
+        .alert("Delete Meeting", isPresented: $showDeleteConfirm) {
+            Button("Cancel", role: .cancel) { }
+            Button("Delete", role: .destructive) {
+                modelContext.delete(meeting)
+                try? modelContext.save()
+                appState.selectedMeeting = nil
+            }
+        } message: {
+            Text("Are you sure you want to delete this meeting? This cannot be undone.")
         }
     }
 
@@ -224,7 +234,7 @@ struct NotepadView: View {
 
     // MARK: - Top Bar
     private var topBar: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 8) {
             Button {
                 appState.selectedMeeting = nil
             } label: {
@@ -240,6 +250,7 @@ struct NotepadView: View {
                 .cornerRadius(Theme.radiusSM)
             }
             .buttonStyle(.plain)
+            .hoverScale(1.05)
 
             Spacer()
 
@@ -258,7 +269,7 @@ struct NotepadView: View {
                 .cornerRadius(Theme.radiusSM)
             }
 
-            // Share menu
+            // Share button
             Menu {
                 Button {
                     ShareService.copyAsMarkdown(meeting: meeting)
@@ -276,22 +287,24 @@ struct NotepadView: View {
 
                 Divider()
 
-                Button {
-                    if let url = ShareService.exportTranscript(meeting: meeting) {
-                        NSWorkspace.shared.activateFileViewerSelecting([url])
+                if meeting.transcriptRaw != nil {
+                    Button {
+                        if let url = ShareService.exportTranscript(meeting: meeting) {
+                            NSWorkspace.shared.activateFileViewerSelecting([url])
+                        }
+                    } label: {
+                        Label("Export Transcript", systemImage: "square.and.arrow.up")
                     }
-                } label: {
-                    Label("Export Transcript", systemImage: "square.and.arrow.up")
                 }
             } label: {
                 HStack(spacing: 4) {
-                    Image(systemName: "lock")
-                        .font(.system(size: 11))
+                    Image(systemName: "square.and.arrow.up")
+                        .font(.system(size: 12))
                     Text(copiedToClipboard ? "Copied!" : "Share")
                         .font(.system(size: 13))
                 }
                 .foregroundStyle(Theme.textPrimary)
-                .padding(.horizontal, 12)
+                .padding(.horizontal, 10)
                 .padding(.vertical, 6)
                 .background(Theme.bgCard)
                 .cornerRadius(Theme.radiusSM)
@@ -300,9 +313,11 @@ struct NotepadView: View {
             .menuStyle(.borderlessButton)
             .fixedSize()
 
-            // Link (copy markdown)
+            // Link button — copies meetwise:// link
             Button {
-                ShareService.copyAsMarkdown(meeting: meeting)
+                let link = "meetwise://meeting/\(meeting.id.uuidString)"
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(link, forType: .string)
                 showCopiedFeedback()
             } label: {
                 Image(systemName: "link")
@@ -311,8 +326,10 @@ struct NotepadView: View {
                     .padding(6)
                     .background(Theme.bgCard)
                     .cornerRadius(Theme.radiusSM)
+                    .overlay(RoundedRectangle(cornerRadius: Theme.radiusSM).stroke(Theme.border, lineWidth: 1))
             }
             .buttonStyle(.plain)
+            .hoverScale(1.05)
 
             // Chat sidebar toggle (CMD+J)
             Button {
@@ -324,13 +341,15 @@ struct NotepadView: View {
                     .padding(6)
                     .background(Theme.bgCard)
                     .cornerRadius(Theme.radiusSM)
+                    .overlay(RoundedRectangle(cornerRadius: Theme.radiusSM).stroke(
+                        showChatSidebar ? Theme.accent.opacity(0.3) : Theme.border, lineWidth: 1))
             }
             .buttonStyle(.plain)
+            .hoverScale(1.05)
 
             // More menu
             Menu {
-                // Template selector
-                Menu("Template") {
+                Menu("Choose Template...") {
                     ForEach(NoteTemplateChoice.allCases) { template in
                         Button {
                             selectedTemplate = template
@@ -349,28 +368,19 @@ struct NotepadView: View {
 
                 Divider()
 
+                Button(role: .destructive) {
+                    showDeleteConfirm = true
+                } label: {
+                    Label("Delete Meeting", systemImage: "trash")
+                }
+
+                Divider()
+
                 Button {
                     ShareService.copyAsMarkdown(meeting: meeting)
                     showCopiedFeedback()
                 } label: {
-                    Label("Copy as Markdown", systemImage: "doc.richtext")
-                }
-
-                Button {
-                    ShareService.copyAsPlainText(meeting: meeting)
-                    showCopiedFeedback()
-                } label: {
-                    Label("Copy as Plain Text", systemImage: "doc.plaintext")
-                }
-
-                if meeting.transcriptRaw != nil {
-                    Button {
-                        if let url = ShareService.exportTranscript(meeting: meeting) {
-                            NSWorkspace.shared.activateFileViewerSelecting([url])
-                        }
-                    } label: {
-                        Label("Export Transcript", systemImage: "square.and.arrow.up")
-                    }
+                    Label("Export as PDF", systemImage: "doc.fill")
                 }
             } label: {
                 Image(systemName: "ellipsis")
@@ -379,6 +389,7 @@ struct NotepadView: View {
                     .padding(6)
                     .background(Theme.bgCard)
                     .cornerRadius(Theme.radiusSM)
+                    .overlay(RoundedRectangle(cornerRadius: Theme.radiusSM).stroke(Theme.border, lineWidth: 1))
             }
             .menuStyle(.borderlessButton)
             .fixedSize()
@@ -772,6 +783,7 @@ struct NotepadView: View {
                     }
                     .buttonStyle(.plain)
                     .disabled(isEnhancing)
+                    .hoverScale(1.03)
                 }
 
                 if isActiveRecording {
@@ -825,6 +837,7 @@ struct NotepadView: View {
                     .cornerRadius(Theme.radiusPill)
                 }
                 .buttonStyle(.plain)
+                .hoverScale(1.03)
 
                 if let error = sessionManager.error {
                     Text(error).font(.system(size: 11)).foregroundStyle(.red).lineLimit(1)

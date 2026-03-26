@@ -9,6 +9,8 @@ struct ContentView: View {
     @State private var onboardingComplete = UserDefaults.standard.bool(forKey: "onboardingComplete")
 
     var body: some View {
+        @Bindable var state = appState
+
         Group {
             if onboardingComplete {
                 mainAppView
@@ -17,10 +19,19 @@ struct ContentView: View {
             }
         }
         .preferredColorScheme(.dark)
+        .sheet(isPresented: $state.showPricing) {
+            PricingView()
+                .environment(appState)
+        }
         .onAppear {
             setupInitialData()
             appState.initializeServices()
             wireMeetingDetection()
+        }
+        .onChange(of: onboardingComplete) { _, newValue in
+            if newValue {
+                setupInitialData()
+            }
         }
     }
 
@@ -234,6 +245,8 @@ struct ContentView: View {
         } else {
             appState.currentUser = profiles.first
         }
+
+        appState.isAuthenticated = true
 
         // Seed recipes if needed
         RecipeService.seedRecipes(modelContext: modelContext)

@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 import Foundation
 
 @MainActor @Observable
@@ -25,6 +26,15 @@ final class AppState {
     // User
     var currentUser: UserProfile?
     var isAuthenticated = false
+
+    // Pricing
+    var showPricing = false
+
+    // Profile menu
+    var showProfileMenu = false
+
+    // Settings tab
+    var settingsTab: SettingsTab = .account
 
     // Menu bar
     var recentMeetingTitle: String?
@@ -75,6 +85,33 @@ final class AppState {
             await calendarService.requestAccess()
         }
     }
+
+    /// Sign out: clear all user state
+    func signOut(modelContext: ModelContext) {
+        // Clear onboarding
+        UserDefaults.standard.set(false, forKey: "onboardingComplete")
+        UserDefaults.standard.removeObject(forKey: "userPlan")
+
+        // Delete user profiles from SwiftData
+        let descriptor = FetchDescriptor<UserProfile>()
+        if let profiles = try? modelContext.fetch(descriptor) {
+            for profile in profiles {
+                modelContext.delete(profile)
+            }
+            try? modelContext.save()
+        }
+
+        // Reset state
+        currentUser = nil
+        isAuthenticated = false
+        selectedNavItem = .home
+        selectedMeeting = nil
+        selectedFolder = nil
+        showChatSidebar = false
+        showPricing = false
+        showProfileMenu = false
+        isRecording = false
+    }
 }
 
 enum NavItem: Hashable {
@@ -85,4 +122,20 @@ enum NavItem: Hashable {
     case people
     case companies
     case settings
+}
+
+enum SettingsTab: String, CaseIterable {
+    case account = "Account"
+    case preferences = "Preferences"
+    case shortcuts = "Shortcuts"
+    case about = "About"
+
+    var icon: String {
+        switch self {
+        case .account: return "person.circle"
+        case .preferences: return "gearshape"
+        case .shortcuts: return "keyboard"
+        case .about: return "info.circle"
+        }
+    }
 }

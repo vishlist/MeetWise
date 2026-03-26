@@ -10,6 +10,11 @@ struct SidebarView: View {
     @State private var editingFolderName = ""
     @State private var showDeleteConfirm = false
     @State private var folderToDelete: Folder?
+    @State private var showProfilePopover = false
+    @State private var showSignOutAlert = false
+    @State private var isCreatingFolder: Bool = false
+    @State private var newFolderName: String = ""
+    @State private var newFolderIsPersonal: Bool = true
 
     var body: some View {
         @Bindable var state = appState
@@ -82,6 +87,14 @@ struct SidebarView: View {
             }
         } message: {
             Text("This will remove the folder but not the meetings inside it.")
+        }
+        .alert("Sign Out", isPresented: $showSignOutAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Sign Out", role: .destructive) {
+                appState.signOut(modelContext: modelContext)
+            }
+        } message: {
+            Text("Are you sure you want to sign out?")
         }
     }
 
@@ -195,7 +208,7 @@ struct SidebarView: View {
             HStack(spacing: 8) {
                 Image(systemName: icon)
                     .font(.system(size: 12))
-                    .foregroundStyle(isPersonal ? Theme.accent : Theme.accent)
+                    .foregroundStyle(Theme.accent)
                 Text(name)
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary)
@@ -210,8 +223,36 @@ struct SidebarView: View {
                     .padding(.leading, 12)
             }
 
+            // Inline folder creation
+            if isCreatingFolder && newFolderIsPersonal == isPersonal {
+                HStack(spacing: 10) {
+                    Image(systemName: "folder.fill")
+                        .font(.system(size: 14))
+                        .foregroundStyle(Theme.textSecondary)
+                        .frame(width: 20)
+                    TextField("Folder name", text: $newFolderName)
+                        .textFieldStyle(.plain)
+                        .font(.system(size: 13))
+                        .foregroundStyle(Theme.textPrimary)
+                        .onSubmit {
+                            commitNewFolder(isPersonal: isPersonal)
+                        }
+                        .onExitCommand {
+                            isCreatingFolder = false
+                            newFolderName = ""
+                        }
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 7)
+                .padding(.leading, 12)
+                .background(Theme.bgActive)
+                .cornerRadius(Theme.radiusSM)
+            }
+
             Button {
-                createFolder(isPersonal: isPersonal)
+                newFolderIsPersonal = isPersonal
+                newFolderName = ""
+                isCreatingFolder = true
             } label: {
                 HStack(spacing: 6) {
                     Image(systemName: "plus").font(.system(size: 10))
@@ -223,6 +264,7 @@ struct SidebarView: View {
                 .padding(.leading, 12)
             }
             .buttonStyle(.plain)
+            .hoverHighlight()
         }
     }
 
@@ -277,15 +319,18 @@ struct SidebarView: View {
         }
     }
 
-    private func createFolder(isPersonal: Bool) {
-        let folder = Folder(name: "New Folder", spaceType: isPersonal ? "personal" : "team")
+    private func commitNewFolder(isPersonal: Bool) {
+        let trimmed = newFolderName.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else {
+            isCreatingFolder = false
+            return
+        }
+        let folder = Folder(name: trimmed, spaceType: isPersonal ? "personal" : "team")
         folder.position = folders.count
         modelContext.insert(folder)
         try? modelContext.save()
-
-        // Start editing immediately
-        editingFolder = folder
-        editingFolderName = folder.name
+        isCreatingFolder = false
+        newFolderName = ""
     }
 
     private func commitRename(_ folder: Folder) {
@@ -297,65 +342,143 @@ struct SidebarView: View {
         editingFolder = nil
     }
 
+    // MARK: - Bottom Section
     private var bottomSection: some View {
         VStack(spacing: 0) {
             Rectangle().fill(Theme.divider).frame(height: 1).padding(.horizontal, 16)
 
-            HStack(spacing: 0) {
-                bottomIcon("gearshape.fill", item: .settings)
-                bottomIcon("person.fill", item: .people)
-                bottomIcon("building.2.fill", item: .companies)
-                Spacer()
+            // Upgrade button
+            Button {
+                appState.showPricing = true
+            } label: {
+                HStack {
+                    Text(appState.currentUser?.planDisplayName ?? "Free Plan")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(Theme.textSecondary)
+                    Spacer()
+                    Text("Upgrade")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(Theme.accent)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .contentShape(Rectangle())
             }
-            .padding(.horizontal, 8)
-            .padding(.top, 8)
+            .buttonStyle(.plain)
+            .hoverHighlight()
 
-            HStack {
-                Text("Free Plan")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(Theme.textSecondary)
-                Spacer()
-                Text("Upgrade")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(Theme.accent)
+            // Profile area
+            Button {
+                showProfilePopover.toggle()
+            } label: {
+                HStack(spacing: 8) {
+                    Circle()
+                        .fill(Theme.bgCard)
+                        .frame(width: 28, height: 28)
+                        .overlay(
+                            Text(appState.currentUser?.initials ?? "U")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundStyle(Theme.accent)
+                        )
+                        .overlay(Circle().stroke(Theme.border, lineWidth: 1))
+                    Text(appState.currentUser?.fullName ?? "User")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(Theme.textPrimary)
+                        .lineLimit(1)
+                    Spacer()
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.system(size: 9))
+                        .foregroundStyle(Theme.textMuted)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .contentShape(Rectangle())
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-
-            HStack(spacing: 8) {
-                Circle()
-                    .fill(Theme.accent.opacity(0.2))
-                    .frame(width: 28, height: 28)
-                    .overlay(
-                        Text(appState.currentUser?.initials ?? "U")
-                            .font(.system(size: 10, weight: .bold))
-                            .foregroundStyle(Theme.accent)
-                    )
-                Text(appState.currentUser?.fullName ?? "User")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(Theme.textPrimary)
-                    .lineLimit(1)
-                Spacer()
-                Image(systemName: "chevron.up.chevron.down")
-                    .font(.system(size: 9))
-                    .foregroundStyle(Theme.textMuted)
+            .buttonStyle(.plain)
+            .hoverHighlight()
+            .popover(isPresented: $showProfilePopover, arrowEdge: .top) {
+                profilePopoverContent
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
         }
     }
 
-    private func bottomIcon(_ icon: String, item: NavItem) -> some View {
-        Button {
-            appState.selectedNavItem = item
-            appState.selectedMeeting = nil
-        } label: {
-            Image(systemName: icon)
-                .font(.system(size: 14))
-                .foregroundStyle(appState.selectedNavItem == item ? Theme.accent : Theme.textMuted)
-                .frame(width: 32, height: 32)
+    private var profilePopoverContent: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // User info
+            VStack(alignment: .leading, spacing: 4) {
+                Text(appState.currentUser?.fullName ?? "User")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(Theme.textPrimary)
+                if let email = appState.currentUser?.email, !email.isEmpty {
+                    Text(email)
+                        .font(.system(size: 12))
+                        .foregroundStyle(Theme.textSecondary)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+
+            Divider().background(Theme.divider)
+
+            Button {
+                showProfilePopover = false
+                appState.selectedNavItem = .settings
+                appState.selectedMeeting = nil
+                appState.settingsTab = .account
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "gearshape").font(.system(size: 12))
+                    Text("Settings").font(.system(size: 13))
+                    Spacer()
+                }
+                .foregroundStyle(Theme.textPrimary)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .hoverHighlight()
+
+            Button {
+                showProfilePopover = false
+                appState.selectedNavItem = .settings
+                appState.selectedMeeting = nil
+                appState.settingsTab = .shortcuts
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "keyboard").font(.system(size: 12))
+                    Text("Keyboard Shortcuts").font(.system(size: 13))
+                    Spacer()
+                }
+                .foregroundStyle(Theme.textPrimary)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .hoverHighlight()
+
+            Divider().background(Theme.divider)
+
+            Button {
+                showProfilePopover = false
+                showSignOutAlert = true
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "rectangle.portrait.and.arrow.right").font(.system(size: 12))
+                    Text("Sign Out").font(.system(size: 13))
+                    Spacer()
+                }
+                .foregroundStyle(Theme.accentRed)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .hoverHighlight()
         }
-        .buttonStyle(.plain)
+        .frame(width: 220)
+        .background(Theme.bgElevated)
     }
 }
 
@@ -389,11 +512,13 @@ struct SidebarNavButton: View {
                 RoundedRectangle(cornerRadius: Theme.radiusSM)
                     .stroke(isSelected ? Theme.accent.opacity(0.2) : .clear, lineWidth: 1)
             )
+            .scaleEffect(isHovering && !isSelected ? 1.01 : 1.0)
+            .brightness(isHovering ? 0.03 : 0)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .onHover { hovering in
-            withAnimation(.easeOut(duration: 0.15)) { isHovering = hovering }
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { isHovering = hovering }
         }
     }
 }

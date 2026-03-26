@@ -9,17 +9,12 @@ struct OnboardingView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var currentStep = 0
     @State private var fullName = ""
-    @State private var role = ""
-    @State private var focusAreas = ""
     @State private var screenRecordingGranted = false
     @State private var microphoneGranted = false
     @State private var calendarGranted = false
     @State private var notificationsGranted = false
-    @State private var deepgramKey = ""
-    @State private var anthropicKey = ""
-    @State private var openAIKey = ""
 
-    private let totalSteps = 6
+    private let totalSteps = 5
 
     var body: some View {
         VStack(spacing: 0) {
@@ -29,6 +24,7 @@ struct OnboardingView: View {
                     Circle()
                         .fill(step <= currentStep ? Theme.accent : Theme.bgCard)
                         .frame(width: 8, height: 8)
+                        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: currentStep)
                 }
             }
             .padding(.top, 40)
@@ -37,11 +33,10 @@ struct OnboardingView: View {
 
             switch currentStep {
             case 0: welcomeStep
-            case 1: screenRecordingStep
+            case 1: permissionsStep
             case 2: calendarStep
-            case 3: apiKeysStep
-            case 4: profileStep
-            case 5: tipsStep
+            case 3: profileStep
+            case 4: tipsStep
             default: tipsStep
             }
 
@@ -51,7 +46,7 @@ struct OnboardingView: View {
             HStack {
                 if currentStep > 0 {
                     Button("Back") {
-                        withAnimation { currentStep -= 1 }
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { currentStep -= 1 }
                     }
                     .buttonStyle(.plain)
                     .foregroundStyle(Theme.textSecondary)
@@ -59,18 +54,9 @@ struct OnboardingView: View {
 
                 Spacer()
 
-                if currentStep == 3 {
-                    Button("Skip") {
-                        withAnimation { currentStep += 1 }
-                    }
-                    .buttonStyle(.plain)
-                    .foregroundStyle(Theme.textSecondary)
-                    .padding(.trailing, 8)
-                }
-
                 Button {
                     if currentStep < totalSteps - 1 {
-                        withAnimation { currentStep += 1 }
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { currentStep += 1 }
                     } else {
                         completeOnboarding()
                     }
@@ -84,6 +70,7 @@ struct OnboardingView: View {
                         .cornerRadius(Theme.radiusPill)
                 }
                 .buttonStyle(.plain)
+                .hoverScale(1.05)
             }
             .padding(.horizontal, 48)
             .padding(.bottom, 40)
@@ -112,14 +99,14 @@ struct OnboardingView: View {
         .padding(.horizontal, 48)
     }
 
-    // MARK: - Step 2: Screen Recording Permission
-    private var screenRecordingStep: some View {
+    // MARK: - Step 2: Permissions (Screen Recording + Microphone)
+    private var permissionsStep: some View {
         VStack(alignment: .leading, spacing: 20) {
-            Text("Screen Recording")
+            Text("Permissions")
                 .font(.heading(24))
                 .foregroundStyle(Theme.textHeading)
 
-            Text("MeetWise captures system audio from meeting apps. This requires Screen Recording permission.")
+            Text("MeetWise needs a couple of permissions to capture meeting audio.")
                 .font(.system(size: 14))
                 .foregroundStyle(Theme.textSecondary)
 
@@ -198,100 +185,35 @@ struct OnboardingView: View {
         .padding(.horizontal, 48)
     }
 
-    // MARK: - Step 4: API Keys
-    private var apiKeysStep: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            Text("API Keys")
-                .font(.heading(24))
-                .foregroundStyle(Theme.textHeading)
-
-            Text("Enter API keys for transcription and AI features. You can skip this and add them later in Settings.")
-                .font(.system(size: 14))
-                .foregroundStyle(Theme.textSecondary)
-
-            VStack(alignment: .leading, spacing: 16) {
-                apiKeyField(title: "Deepgram", placeholder: "dg-...", binding: $deepgramKey, description: "For real-time transcription")
-                apiKeyField(title: "Anthropic", placeholder: "sk-ant-...", binding: $anthropicKey, description: "For AI enhancement & chat")
-                apiKeyField(title: "OpenAI (optional)", placeholder: "sk-...", binding: $openAIKey, description: "For embeddings search")
-            }
-        }
-        .padding(.horizontal, 48)
-    }
-
-    private func apiKeyField(title: String, placeholder: String, binding: Binding<String>, description: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Text(title)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(Theme.textSecondary)
-                Spacer()
-                Text(description)
-                    .font(.system(size: 11))
-                    .foregroundStyle(Theme.textMuted)
-            }
-            SecureField(placeholder, text: binding)
-                .textFieldStyle(.plain)
-                .font(.system(size: 13, design: .monospaced))
-                .padding(8)
-                .background(Theme.bgCard)
-                .cornerRadius(Theme.radiusSM)
-                .overlay(RoundedRectangle(cornerRadius: Theme.radiusSM).stroke(Theme.border, lineWidth: 1))
-        }
-    }
-
-    // MARK: - Step 5: Profile
+    // MARK: - Step 4: Profile (simplified)
     private var profileStep: some View {
         VStack(alignment: .leading, spacing: 20) {
             Text("About you")
                 .font(.heading(24))
                 .foregroundStyle(Theme.textHeading)
 
-            Text("This helps MeetWise provide more relevant insights.")
+            Text("What should we call you?")
                 .font(.system(size: 14))
                 .foregroundStyle(Theme.textSecondary)
 
-            VStack(alignment: .leading, spacing: 16) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Full Name")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(Theme.textSecondary)
-                    TextField("e.g. Vishal Adhlakha", text: $fullName)
-                        .textFieldStyle(.plain)
-                        .font(.system(size: 14))
-                        .padding(10)
-                        .background(Theme.bgCard)
-                        .cornerRadius(Theme.radiusSM)
-                }
-
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Role")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(Theme.textSecondary)
-                    TextField("e.g. Product Designer, CEO, Engineer", text: $role)
-                        .textFieldStyle(.plain)
-                        .font(.system(size: 14))
-                        .padding(10)
-                        .background(Theme.bgCard)
-                        .cornerRadius(Theme.radiusSM)
-                }
-
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Focus Areas")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(Theme.textSecondary)
-                    TextField("e.g. design, strategy, client management", text: $focusAreas)
-                        .textFieldStyle(.plain)
-                        .font(.system(size: 14))
-                        .padding(10)
-                        .background(Theme.bgCard)
-                        .cornerRadius(Theme.radiusSM)
-                }
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Full Name")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(Theme.textSecondary)
+                TextField("e.g. Vishal Adhlakha", text: $fullName)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 14))
+                    .foregroundStyle(Theme.textPrimary)
+                    .padding(10)
+                    .background(Theme.bgCard)
+                    .cornerRadius(Theme.radiusSM)
+                    .overlay(RoundedRectangle(cornerRadius: Theme.radiusSM).stroke(Theme.border, lineWidth: 1))
             }
         }
         .padding(.horizontal, 48)
     }
 
-    // MARK: - Step 6: Quick Tips
+    // MARK: - Step 5: Tips
     private var tipsStep: some View {
         VStack(spacing: 20) {
             Image(systemName: "checkmark.circle.fill")
@@ -313,9 +235,10 @@ struct OnboardingView: View {
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(Theme.textSecondary)
 
+                shortcutRow(keys: "N", description: "Create quick note")
                 shortcutRow(keys: "J", description: "Toggle AI chat sidebar")
                 shortcutRow(keys: "K", description: "Search all meetings")
-                shortcutRow(keys: "N", description: "Create quick note")
+                shortcutRow(keys: "R", description: "Start/stop recording")
             }
             .padding(20)
             .background(Theme.bgCard.opacity(0.5))
@@ -445,24 +368,11 @@ struct OnboardingView: View {
 
     // MARK: - Complete
     private func completeOnboarding() {
-        // Save API keys if provided
-        if !deepgramKey.trimmingCharacters(in: .whitespaces).isEmpty {
-            UserDefaults.standard.set(deepgramKey.trimmingCharacters(in: .whitespaces), forKey: "deepgramAPIKey")
-        }
-        if !anthropicKey.trimmingCharacters(in: .whitespaces).isEmpty {
-            UserDefaults.standard.set(anthropicKey.trimmingCharacters(in: .whitespaces), forKey: "anthropicAPIKey")
-        }
-        if !openAIKey.trimmingCharacters(in: .whitespaces).isEmpty {
-            UserDefaults.standard.set(openAIKey.trimmingCharacters(in: .whitespaces), forKey: "openAIAPIKey")
-        }
-
         // Save profile
         let descriptor = FetchDescriptor<UserProfile>()
         let profiles = (try? modelContext.fetch(descriptor)) ?? []
         if let profile = profiles.first {
             profile.fullName = fullName.isEmpty ? "User" : fullName
-            profile.role = role.isEmpty ? nil : role
-            profile.focusAreas = focusAreas.isEmpty ? nil : focusAreas
         }
         try? modelContext.save()
 

@@ -12,6 +12,11 @@ final class UserProfile {
     var googleRefreshToken: String?
     var supabaseAccessToken: String?
 
+    // Plan
+    var plan: String = "free"
+    var planExpiresAt: Date?
+    var stripeCustomerId: String?
+
     // Settings stored as individual fields for simplicity
     var autoRecord: Bool = true
     var defaultLanguage: String = "en"
@@ -19,6 +24,8 @@ final class UserProfile {
     var transcriptNotifications: Bool = true
     var aiModelTrainingOptOut: Bool = false
     var headsUpEnabled: Bool = false
+    var startAtLogin: Bool = false
+    var audioQuality: String = "standard"
 
     init() {
         self.id = UUID()
@@ -35,5 +42,21 @@ final class UserProfile {
             return "\(parts[0].prefix(1))\(parts[1].prefix(1))".uppercased()
         }
         return String(name.prefix(2)).uppercased()
+    }
+
+    var isPro: Bool {
+        plan == "pro"
+    }
+
+    var isTeam: Bool {
+        plan == "team"
+    }
+
+    var planDisplayName: String {
+        switch plan {
+        case "pro": return "Pro"
+        case "team": return "Team"
+        default: return "Free Plan"
+        }
     }
 }
