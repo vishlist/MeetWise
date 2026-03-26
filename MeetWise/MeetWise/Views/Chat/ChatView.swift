@@ -13,7 +13,6 @@ struct ChatView: View {
         appState.chatService
     }
 
-    /// Filter meetings based on scope
     private var scopedMeetings: [Meeting] {
         switch selectedScope {
         case "My notes":
@@ -29,10 +28,9 @@ struct ChatView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 24) {
                         // Header
-                        Text("Ask anything")
-                            .font(.heading(32))
-                            .foregroundStyle(Theme.textHeading)
-                            .padding(.top, 40)
+                        if messages.isEmpty {
+                            emptyStateHeader
+                        }
 
                         // Chat messages
                         if !messages.isEmpty {
@@ -42,26 +40,27 @@ struct ChatView: View {
                             }
 
                             if chatService.isLoading {
-                                HStack(spacing: 8) {
-                                    ProgressView().controlSize(.small)
-                                    Text("Thinking...")
-                                        .font(.system(size: 13))
-                                        .foregroundStyle(Theme.textMuted)
+                                HStack(alignment: .top, spacing: 10) {
+                                    botAvatar
+                                    TypingIndicator()
+                                        .padding(.top, 8)
                                 }
-                                .padding(.leading, 38)
+                                .padding(.leading, 4)
                                 .id("loading")
                             }
                         }
 
-                        // Chat input card
+                        // Chat input card (always visible)
                         chatInputCard
 
-                        // Recipes
+                        // Recipes (show when no messages)
                         if messages.isEmpty {
                             recipesSection
                         }
                     }
                     .padding(.horizontal, 48)
+                    .padding(.top, messages.isEmpty ? 60 : 24)
+                    .padding(.bottom, 40)
                 }
                 .onChange(of: messages.count) { _, _ in
                     withAnimation {
@@ -72,6 +71,39 @@ struct ChatView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.bgPrimary)
+    }
+
+    // MARK: - Empty State Header
+    private var emptyStateHeader: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 10) {
+                botAvatar
+                Text("MeetWise AI")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(Theme.textPrimary)
+            }
+
+            Text("Ask anything")
+                .font(.heading(32))
+                .foregroundStyle(Theme.textHeading)
+
+            Text("I can help you search across your meetings, find action items, write follow-ups, and more.")
+                .font(.system(size: 14))
+                .foregroundStyle(Theme.textSecondary)
+                .lineSpacing(3)
+        }
+    }
+
+    // MARK: - Bot Avatar
+    private var botAvatar: some View {
+        Circle()
+            .fill(Color(hex: "#333333"))
+            .frame(width: 32, height: 32)
+            .overlay(
+                Text("MW")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(Theme.textPrimary)
+            )
     }
 
     // MARK: - Chat Input Card
@@ -119,7 +151,6 @@ struct ChatView: View {
             // Bottom toolbar
             HStack(spacing: 12) {
                 Spacer()
-
                 Text("Powered by Claude")
                     .font(.system(size: 10))
                     .foregroundStyle(Theme.textMuted)
@@ -138,7 +169,7 @@ struct ChatView: View {
     // MARK: - Recipes Section
     private var recipesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Recipes")
+            Text("Suggested")
                 .font(.system(size: 14, weight: .medium))
                 .foregroundStyle(Theme.textSecondary)
 
@@ -154,11 +185,14 @@ struct ChatView: View {
 
     private var defaultRecipePills: [(String, Color)] {
         [
-            ("List recent todos", Theme.accent),
+            ("List action items", Theme.accent),
+            ("Show pending tasks", Theme.accent),
+            ("Write follow up email", Theme.accentOrange),
             ("Coach me", Theme.accent),
-            ("Write weekly recap", Theme.accentOrange),
-            ("Streamline my calendar", Theme.accent),
-            ("Blind spots", Theme.accentYellow)
+            ("Weekly recap", Theme.accentYellow),
+            ("Blind spots", Theme.accent),
+            ("Streamline my calendar", Theme.accentOrange),
+            ("Summarize last meeting", Theme.accent),
         ]
     }
 
@@ -180,11 +214,9 @@ struct ChatView: View {
 
     private func recipePill(_ title: String, color: Color) -> some View {
         Button {
-            // Find matching recipe and execute, or use default prompt
             if let recipe = recipes.first(where: { $0.name == title }) {
                 executeRecipe(recipe)
             } else {
-                // Use the title as a prompt directly
                 chatInput = title
                 sendMessage()
             }
@@ -201,38 +233,46 @@ struct ChatView: View {
             .padding(.vertical, 8)
             .background(Theme.bgCard)
             .cornerRadius(Theme.radiusPill)
+            .overlay(
+                RoundedRectangle(cornerRadius: Theme.radiusPill)
+                    .stroke(Theme.border, lineWidth: 1)
+            )
         }
         .buttonStyle(.plain)
+        .hoverScale(1.03)
     }
 
     private func chatBubble(role: String, content: String) -> some View {
         HStack(alignment: .top, spacing: 10) {
             if role == "assistant" {
-                Image(systemName: "sparkles")
-                    .font(.system(size: 14))
-                    .foregroundStyle(Theme.accent)
+                Circle()
+                    .fill(Color(hex: "#333333"))
                     .frame(width: 28, height: 28)
-                    .background(Theme.accent.opacity(0.15))
-                    .cornerRadius(14)
+                    .overlay(
+                        Text("MW")
+                            .font(.system(size: 8, weight: .bold))
+                            .foregroundStyle(Theme.textPrimary)
+                    )
             }
 
             Text(content)
                 .font(.system(size: 14))
                 .foregroundStyle(role == "user" ? Theme.textPrimary : Theme.textSecondary)
                 .textSelection(.enabled)
+                .lineSpacing(3)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(12)
-                .background(role == "user" ? Theme.bgCard : Theme.bgCard.opacity(0.5))
+                .background(role == "user" ? Theme.bgCard : Color(hex: "#1a1a1a"))
                 .cornerRadius(Theme.radiusMD)
 
             if role == "user" {
                 Circle()
-                    .fill(Theme.accent)
+                    .fill(Theme.textMuted)
                     .frame(width: 28, height: 28)
                     .overlay(
                         Text(appState.currentUser?.initials ?? "U")
                             .font(.system(size: 10, weight: .medium))
-                            .foregroundStyle(Color.black)
+                            .foregroundStyle(Theme.bgPrimary)
                     )
             }
         }

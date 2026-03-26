@@ -15,32 +15,92 @@ struct HomeView: View {
         appState.calendarService
     }
 
+    // MARK: - Computed Stats
+    private var activeNotesCount: Int {
+        recentMeetings.filter { $0.status != "failed" }.count
+    }
+
+    private var completedCount: Int {
+        recentMeetings.filter { $0.status == "completed" }.count
+    }
+
+    private var thisWeekMeetings: [Meeting] {
+        let cal = Calendar.current
+        let startOfWeek = cal.dateInterval(of: .weekOfYear, for: Date())?.start ?? Date()
+        return recentMeetings.filter { $0.startedAt >= startOfWeek }
+    }
+
+    private var actionItemsCount: Int {
+        var count = 0
+        for meeting in recentMeetings {
+            if let data = meeting.summaryJSON,
+               let summary = try? JSONDecoder().decode(EnhancementService.MeetingSummary.self, from: data) {
+                count += summary.actionItems.count
+            }
+        }
+        return count
+    }
+
+    private var todayActionItems: [(task: String, assignee: String?, meetingTitle: String)] {
+        var items: [(task: String, assignee: String?, meetingTitle: String)] = []
+        let todayMeetings = recentMeetings.filter { Calendar.current.isDateInToday($0.startedAt) }
+        for meeting in todayMeetings {
+            if let data = meeting.summaryJSON,
+               let summary = try? JSONDecoder().decode(EnhancementService.MeetingSummary.self, from: data) {
+                for item in summary.actionItems {
+                    items.append((task: item.task, assignee: item.assignee, meetingTitle: meeting.title))
+                }
+            }
+        }
+        return items
+    }
+
     var body: some View {
         ZStack(alignment: .bottom) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 28) {
-                    // Coming up
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("Coming up")
-                            .font(.heading(28))
-                            .foregroundStyle(Theme.textHeading)
+                    // Greeting
+                    greetingSection
+                        .opacity(appeared ? 1 : 0)
+                        .offset(y: appeared ? 0 : 12)
+                        .animation(.spring(response: 0.5, dampingFraction: 0.8), value: appeared)
 
-                        calendarCard
-                            .opacity(appeared ? 1 : 0)
-                            .offset(y: appeared ? 0 : 12)
-                            .animation(.spring(response: 0.5, dampingFraction: 0.8).delay(0.1), value: appeared)
-                    }
+                    // Stats cards
+                    statsCardsRow
+                        .opacity(appeared ? 1 : 0)
+                        .offset(y: appeared ? 0 : 12)
+                        .animation(.spring(response: 0.5, dampingFraction: 0.8).delay(0.05), value: appeared)
 
-                    // Notes
-                    if !recentMeetings.isEmpty {
-                        notesSection
-                            .opacity(appeared ? 1 : 0)
-                            .offset(y: appeared ? 0 : 12)
-                            .animation(.spring(response: 0.5, dampingFraction: 0.8).delay(0.2), value: appeared)
-                    } else {
-                        emptyNotesState
-                            .opacity(appeared ? 1 : 0)
-                            .animation(.easeOut(duration: 0.4).delay(0.2), value: appeared)
+                    // Main content: calendar + tasks side by side
+                    HStack(alignment: .top, spacing: 24) {
+                        VStack(alignment: .leading, spacing: 24) {
+                            // Calendar
+                            calendarCard
+                                .opacity(appeared ? 1 : 0)
+                                .offset(y: appeared ? 0 : 12)
+                                .animation(.spring(response: 0.5, dampingFraction: 0.8).delay(0.1), value: appeared)
+
+                            // Recent notes
+                            if !recentMeetings.isEmpty {
+                                notesSection
+                                    .opacity(appeared ? 1 : 0)
+                                    .offset(y: appeared ? 0 : 12)
+                                    .animation(.spring(response: 0.5, dampingFraction: 0.8).delay(0.15), value: appeared)
+                            } else {
+                                emptyNotesState
+                                    .opacity(appeared ? 1 : 0)
+                                    .animation(.easeOut(duration: 0.4).delay(0.15), value: appeared)
+                            }
+                        }
+
+                        // Today's tasks column
+                        if !todayActionItems.isEmpty {
+                            todayTasksColumn
+                                .frame(width: 280)
+                                .opacity(appeared ? 1 : 0)
+                                .offset(y: appeared ? 0 : 12)
+                                .animation(.spring(response: 0.5, dampingFraction: 0.8).delay(0.2), value: appeared)
+                        }
                     }
 
                     Spacer(minLength: 80)
@@ -57,6 +117,48 @@ struct HomeView: View {
             await calendarService.requestAccess()
             calendarAuthorized = calendarService.isAuthorized
             withAnimation { appeared = true }
+        }
+    }
+
+    // MARK: - Greeting
+    private var greetingSection: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Hello, \(appState.currentUser?.fullName ?? "there")")
+                .font(.heading(28))
+                .foregroundStyle(Theme.textHeading)
+            Text("You have \(thisWeekMeetings.count) meeting\(thisWeekMeetings.count == 1 ? "" : "s") this week")
+                .font(.system(size: 14))
+                .foregroundStyle(Theme.textSecondary)
+        }
+    }
+
+    // MARK: - Stats Cards Row
+    private var statsCardsRow: some View {
+        HStack(spacing: 12) {
+            StatsCard(
+                title: "Active Notes",
+                value: "\(activeNotesCount)",
+                subtitle: "Total meetings",
+                icon: "doc.text.fill"
+            )
+            StatsCard(
+                title: "Completed",
+                value: "\(completedCount)/\(recentMeetings.count)",
+                subtitle: completedCount == recentMeetings.count ? "All done" : "\(recentMeetings.count - completedCount) remaining",
+                icon: "checkmark.circle.fill"
+            )
+            StatsCard(
+                title: "This Week",
+                value: "\(thisWeekMeetings.count)",
+                subtitle: "Meetings",
+                icon: "calendar"
+            )
+            StatsCard(
+                title: "Action Items",
+                value: "\(actionItemsCount)",
+                subtitle: "Pending tasks",
+                icon: "checklist"
+            )
         }
     }
 
@@ -85,7 +187,6 @@ struct HomeView: View {
             .clipShape(UnevenRoundedRectangle(topLeadingRadius: Theme.radiusLG, topTrailingRadius: Theme.radiusLG))
 
             if !calendarAuthorized {
-                // Calendar not authorized
                 VStack(spacing: 12) {
                     Image(systemName: "calendar.badge.exclamationmark")
                         .font(.system(size: 28))
@@ -201,14 +302,12 @@ struct HomeView: View {
             }
             Spacer()
 
-            // Meeting link indicator
             if event.meetingURL != nil {
                 Image(systemName: "video.fill")
                     .font(.system(size: 11))
                     .foregroundStyle(Theme.textMuted)
             }
 
-            // Auto-start recording button for upcoming meetings
             if event.meetingURL != nil {
                 Button {
                     Task {
@@ -217,7 +316,6 @@ struct HomeView: View {
                             title: event.title
                         )
                         if let meeting = sessionManager.currentMeeting {
-                            // Add attendees as participants
                             for attendee in event.attendees {
                                 let participant = MeetingParticipant(name: attendee.name, email: attendee.email)
                                 participant.meeting = meeting
@@ -249,9 +347,13 @@ struct HomeView: View {
         .hoverHighlight()
     }
 
-    // MARK: - Notes Section
+    // MARK: - Notes Section (Recent Notes)
     private var notesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
+            Text("Recent Notes")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(Theme.textPrimary)
+
             let grouped = Dictionary(grouping: recentMeetings) { meeting in
                 Calendar.current.startOfDay(for: meeting.startedAt)
             }
@@ -275,46 +377,59 @@ struct HomeView: View {
 
     private func noteRow(_ meeting: Meeting) -> some View {
         Button { appState.selectedMeeting = meeting } label: {
-            HStack(spacing: 12) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: Theme.radiusSM)
-                        .fill(Theme.bgCard)
-                        .frame(width: 36, height: 36)
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 12) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: Theme.radiusSM)
+                            .fill(Theme.bgCard)
+                            .frame(width: 36, height: 36)
 
-                    // Show recording indicator if active
-                    if sessionManager.isRecording && sessionManager.currentMeeting?.id == meeting.id {
-                        Circle().fill(.red).frame(width: 8, height: 8)
-                    } else {
-                        Image(systemName: "doc.text.fill")
-                            .font(.system(size: 15))
-                            .foregroundStyle(Theme.accent.opacity(0.6))
+                        if sessionManager.isRecording && sessionManager.currentMeeting?.id == meeting.id {
+                            Circle().fill(Theme.accentRed).frame(width: 8, height: 8)
+                        } else {
+                            Image(systemName: "doc.text.fill")
+                                .font(.system(size: 15))
+                                .foregroundStyle(Theme.accent.opacity(0.6))
+                        }
                     }
-                }
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(meeting.title)
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(Theme.textPrimary)
-                    Text(meeting.participants?.map(\.name).joined(separator: ", ") ?? "Me")
-                        .font(.system(size: 12))
-                        .foregroundStyle(Theme.textSecondary)
-                }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(meeting.title)
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(Theme.textPrimary)
+                        Text(meeting.participants?.map(\.name).joined(separator: ", ") ?? "Me")
+                            .font(.system(size: 12))
+                            .foregroundStyle(Theme.textSecondary)
+                    }
 
-                Spacer()
+                    Spacer()
 
-                if meeting.enhancedNotes != nil {
-                    PillTag("Enhanced", icon: "sparkles", color: Theme.accent)
-                }
+                    if meeting.enhancedNotes != nil {
+                        PillTag("Enhanced", icon: "sparkles", color: Theme.accent)
+                    }
 
-                if meeting.platform != nil {
-                    Image(systemName: "video.fill")
-                        .font(.system(size: 10))
+                    if meeting.platform != nil {
+                        Image(systemName: "video.fill")
+                            .font(.system(size: 10))
+                            .foregroundStyle(Theme.textMuted)
+                    }
+
+                    Text(meeting.formattedTime)
+                        .font(.mono(12))
                         .foregroundStyle(Theme.textMuted)
                 }
 
-                Text(meeting.formattedTime)
-                    .font(.mono(12))
-                    .foregroundStyle(Theme.textMuted)
+                // Tags row: extract topics from summary
+                if let data = meeting.summaryJSON,
+                   let summary = try? JSONDecoder().decode(EnhancementService.MeetingSummary.self, from: data),
+                   !summary.topics.isEmpty {
+                    HStack(spacing: 4) {
+                        ForEach(summary.topics.prefix(4), id: \.self) { topic in
+                            TagPill(text: topic)
+                        }
+                    }
+                    .padding(.leading, 48)
+                }
             }
             .padding(.vertical, 10)
             .padding(.horizontal, 14)
@@ -325,6 +440,43 @@ struct HomeView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(HoverButtonStyle(cornerRadius: Theme.radiusMD))
+    }
+
+    // MARK: - Today's Tasks Column
+    private var todayTasksColumn: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "checklist")
+                    .font(.system(size: 13))
+                    .foregroundStyle(Theme.textMuted)
+                Text("Today's Tasks")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(Theme.textPrimary)
+                Spacer()
+                Text("\(todayActionItems.count)")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(Theme.textMuted)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Theme.bgCard)
+                    .cornerRadius(Theme.radiusPill)
+            }
+
+            ForEach(Array(todayActionItems.prefix(8).enumerated()), id: \.offset) { _, item in
+                ActionItemRow(
+                    task: item.task,
+                    assignee: item.assignee,
+                    deadline: nil
+                )
+            }
+        }
+        .padding(16)
+        .background(Theme.bgCard)
+        .cornerRadius(Theme.radiusMD)
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.radiusMD)
+                .stroke(Theme.border, lineWidth: 1)
+        )
     }
 
     // MARK: - Empty State
@@ -419,11 +571,9 @@ struct HomeView: View {
         let question = homeChat
         homeChat = ""
 
-        // Navigate to chat view with the question
         appState.selectedNavItem = .chat
         appState.selectedMeeting = nil
 
-        // The ChatView will pick this up
         Task {
             let _ = await appState.chatService.askAcrossMeetings(question, meetings: recentMeetings)
         }

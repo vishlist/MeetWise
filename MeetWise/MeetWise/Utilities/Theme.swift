@@ -1,6 +1,6 @@
 import SwiftUI
 
-// MARK: - MeetWise Design System — Monochrome Black & White
+// MARK: - MeetWise Design System — Monochrome Dark Theme
 
 enum Theme {
     // --- Backgrounds ---
@@ -67,6 +67,18 @@ enum Theme {
     static func glow(_ color: Color = .white, radius: CGFloat = 12) -> some View {
         color.opacity(0.08).blur(radius: radius)
     }
+
+    // --- Attendee colors (subtle, for telling people apart) ---
+    static let attendeeColors: [Color] = [
+        Color(hex: "#666666"),
+        Color(hex: "#777777"),
+        Color(hex: "#555555"),
+        Color(hex: "#888888"),
+        Color(hex: "#999999"),
+        Color(hex: "#6a6a6a"),
+        Color(hex: "#7a7a7a"),
+        Color(hex: "#5a5a5a"),
+    ]
 }
 
 // MARK: - Fonts
@@ -292,5 +304,293 @@ struct PillTag: View {
         .padding(.vertical, 5)
         .background(color.opacity(0.1))
         .cornerRadius(Theme.radiusPill)
+    }
+}
+
+// MARK: - Collapsible Section
+struct CollapsibleSection<Content: View>: View {
+    let title: String
+    let icon: String
+    @State private var isExpanded: Bool
+    let content: () -> Content
+
+    init(title: String, icon: String, defaultExpanded: Bool = true, @ViewBuilder content: @escaping () -> Content) {
+        self.title = title
+        self.icon = icon
+        self._isExpanded = State(initialValue: defaultExpanded)
+        self.content = content
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    isExpanded.toggle()
+                }
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: icon)
+                        .font(.system(size: 13))
+                        .foregroundStyle(Theme.textMuted)
+                        .frame(width: 18)
+                    Text(title)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(Theme.textPrimary)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(Theme.textMuted)
+                        .rotationEffect(.degrees(isExpanded ? 90 : 0))
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            if isExpanded {
+                VStack(alignment: .leading, spacing: 8) {
+                    content()
+                }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 16)
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+        .background(Theme.bgCard)
+        .cornerRadius(Theme.radiusMD)
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.radiusMD)
+                .stroke(Theme.border, lineWidth: 1)
+        )
+    }
+}
+
+// MARK: - Stats Card
+struct StatsCard: View {
+    let title: String
+    let value: String
+    let subtitle: String
+    let icon: String
+    @State private var isHovering = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Spacer()
+                Image(systemName: icon)
+                    .font(.system(size: 14))
+                    .foregroundStyle(Theme.textMuted)
+            }
+
+            Text(value)
+                .font(.system(size: 28, weight: .bold, design: .rounded))
+                .foregroundStyle(Theme.textHeading)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(Theme.textPrimary)
+                Text(subtitle)
+                    .font(.system(size: 11))
+                    .foregroundStyle(Theme.textMuted)
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.bgCard)
+        .cornerRadius(Theme.radiusMD)
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.radiusMD)
+                .stroke(isHovering ? Color.white.opacity(0.1) : Theme.border, lineWidth: 1)
+        )
+        .scaleEffect(isHovering ? 1.02 : 1.0)
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isHovering)
+        .onHover { isHovering = $0 }
+    }
+}
+
+// MARK: - Attendee Pill
+struct AttendeePill: View {
+    let name: String
+    let color: Color
+    let onRemove: (() -> Void)?
+    @State private var isHovering = false
+
+    init(name: String, color: Color = Theme.textSecondary, onRemove: (() -> Void)? = nil) {
+        self.name = name
+        self.color = color
+        self.onRemove = onRemove
+    }
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Circle()
+                .fill(color)
+                .frame(width: 18, height: 18)
+                .overlay(
+                    Text(String(name.prefix(1)).uppercased())
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(Theme.bgPrimary)
+                )
+
+            Text(name)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(Theme.textPrimary)
+
+            if let onRemove {
+                Button(action: onRemove) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundStyle(Theme.textMuted)
+                }
+                .buttonStyle(.plain)
+                .opacity(isHovering ? 1 : 0.5)
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+        .background(Theme.bgCard)
+        .cornerRadius(Theme.radiusPill)
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.radiusPill)
+                .stroke(Theme.border, lineWidth: 1)
+        )
+        .onHover { isHovering = $0 }
+    }
+}
+
+// MARK: - Tag Pill
+struct TagPill: View {
+    let text: String
+
+    var body: some View {
+        Text("#\(text)")
+            .font(.system(size: 11, weight: .medium))
+            .foregroundStyle(Theme.textSecondary)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(Color(hex: "#2a2a2a"))
+            .cornerRadius(Theme.radiusPill)
+    }
+}
+
+// MARK: - Action Item Row
+struct ActionItemRow: View {
+    let task: String
+    let assignee: String?
+    let deadline: String?
+    @State var isCompleted: Bool = false
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) { isCompleted.toggle() }
+            } label: {
+                Image(systemName: isCompleted ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 16))
+                    .foregroundStyle(isCompleted ? Theme.textSecondary : Theme.textMuted)
+            }
+            .buttonStyle(.plain)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(task)
+                    .font(.system(size: 14))
+                    .foregroundStyle(isCompleted ? Theme.textMuted : Theme.textPrimary)
+                    .strikethrough(isCompleted)
+
+                HStack(spacing: 8) {
+                    if let assignee, !assignee.isEmpty {
+                        HStack(spacing: 4) {
+                            Circle()
+                                .fill(Theme.textMuted)
+                                .frame(width: 14, height: 14)
+                                .overlay(
+                                    Text(String(assignee.prefix(1)).uppercased())
+                                        .font(.system(size: 7, weight: .bold))
+                                        .foregroundStyle(Theme.bgPrimary)
+                                )
+                            Text(assignee)
+                                .font(.system(size: 11))
+                                .foregroundStyle(Theme.textSecondary)
+                        }
+                    }
+                    if let deadline, !deadline.isEmpty {
+                        HStack(spacing: 3) {
+                            Image(systemName: "calendar")
+                                .font(.system(size: 9))
+                            Text(deadline)
+                                .font(.system(size: 11))
+                        }
+                        .foregroundStyle(Theme.textMuted)
+                    }
+                }
+            }
+
+            Spacer()
+        }
+        .padding(.vertical, 6)
+        .padding(.horizontal, 10)
+        .background(
+            RoundedRectangle(cornerRadius: Theme.radiusSM)
+                .fill(Theme.bgCard.opacity(0.5))
+        )
+    }
+}
+
+// MARK: - Typing Indicator (3 animated dots)
+struct TypingIndicator: View {
+    @State private var phase: CGFloat = 0
+
+    var body: some View {
+        HStack(spacing: 4) {
+            ForEach(0..<3, id: \.self) { index in
+                Circle()
+                    .fill(Theme.textMuted)
+                    .frame(width: 6, height: 6)
+                    .offset(y: sin(phase + Double(index) * 0.8) * 4)
+            }
+        }
+        .onAppear {
+            withAnimation(.linear(duration: 1.0).repeatForever(autoreverses: false)) {
+                phase = .pi * 2
+            }
+        }
+    }
+}
+
+// MARK: - Status Dot
+struct StatusDot: View {
+    let status: String
+
+    private var dotColor: Color {
+        switch status {
+        case "completed": return Color(hex: "#666666")
+        case "processing": return Color(hex: "#888888")
+        case "failed": return Theme.accentRed
+        case "recording": return Theme.accentRed
+        default: return Theme.textMuted
+        }
+    }
+
+    var body: some View {
+        Circle()
+            .fill(dotColor)
+            .frame(width: 6, height: 6)
+    }
+}
+
+// MARK: - Count Badge
+struct CountBadge: View {
+    let count: Int
+
+    var body: some View {
+        Text("\(count)")
+            .font(.system(size: 10, weight: .medium))
+            .foregroundStyle(Theme.textMuted)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(Color(hex: "#2a2a2a"))
+            .cornerRadius(Theme.radiusPill)
     }
 }

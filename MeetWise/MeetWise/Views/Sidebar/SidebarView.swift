@@ -6,6 +6,7 @@ struct SidebarView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Folder.position) private var folders: [Folder]
+    @Query(sort: \Meeting.startedAt, order: .reverse) private var allMeetings: [Meeting]
     @State private var editingFolder: Folder?
     @State private var editingFolderName = ""
     @State private var showDeleteConfirm = false
@@ -57,18 +58,20 @@ struct SidebarView: View {
                 .padding(.vertical, 10)
 
             // Spaces
-            VStack(alignment: .leading, spacing: 2) {
-                Text("SPACES")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(Theme.textMuted)
-                    .tracking(1.2)
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 6)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("SPACES")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(Theme.textMuted)
+                        .tracking(1.2)
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 6)
 
-                spaceSection(name: "My notes", icon: "lock.fill", isPersonal: true)
-                spaceSection(name: "Vishal HQ", icon: "person.3.fill", isPersonal: false)
+                    spaceSection(name: "My notes", icon: "lock.fill", isPersonal: true)
+                    spaceSection(name: "Vishal HQ", icon: "person.3.fill", isPersonal: false)
+                }
+                .padding(.horizontal, 8)
             }
-            .padding(.horizontal, 8)
 
             Spacer()
 
@@ -118,7 +121,6 @@ struct SidebarView: View {
 
             Spacer()
 
-            // Mini waveform
             HStack(spacing: 1) {
                 ForEach(0..<5, id: \.self) { i in
                     RoundedRectangle(cornerRadius: 1)
@@ -223,6 +225,17 @@ struct SidebarView: View {
                     .padding(.leading, 12)
             }
 
+            // Recent meetings under this space (unfiled ones)
+            let recentUnfiled = allMeetings
+                .filter { $0.folder == nil }
+                .prefix(5)
+            if !recentUnfiled.isEmpty && isPersonal {
+                ForEach(Array(recentUnfiled)) { meeting in
+                    meetingNavRow(meeting)
+                        .padding(.leading, 12)
+                }
+            }
+
             // Inline folder creation
             if isCreatingFolder && newFolderIsPersonal == isPersonal {
                 HStack(spacing: 10) {
@@ -268,11 +281,41 @@ struct SidebarView: View {
         }
     }
 
-    // MARK: - Folder Row with Context Menu
+    // MARK: - Meeting Nav Row (with status dot)
+    private func meetingNavRow(_ meeting: Meeting) -> some View {
+        Button {
+            appState.selectedMeeting = meeting
+        } label: {
+            HStack(spacing: 8) {
+                StatusDot(status: meeting.status)
+
+                Text(meeting.title)
+                    .font(.system(size: 12))
+                    .foregroundStyle(appState.selectedMeeting?.id == meeting.id ? Theme.textPrimary : Theme.textSecondary)
+                    .lineLimit(1)
+
+                Spacer()
+
+                Text(meeting.formattedTime)
+                    .font(.system(size: 10))
+                    .foregroundStyle(Theme.textMuted)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(
+                RoundedRectangle(cornerRadius: Theme.radiusSM)
+                    .fill(appState.selectedMeeting?.id == meeting.id ? Theme.accent.opacity(0.08) : .clear)
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .hoverHighlight()
+    }
+
+    // MARK: - Folder Row with Context Menu + Count Badge
     private func folderRow(_ folder: Folder) -> some View {
         Group {
             if editingFolder?.id == folder.id {
-                // Inline rename
                 HStack(spacing: 10) {
                     Image(systemName: "folder.fill")
                         .font(.system(size: 14))
@@ -293,13 +336,41 @@ struct SidebarView: View {
                 .background(Theme.bgActive)
                 .cornerRadius(Theme.radiusSM)
             } else {
-                SidebarNavButton(
-                    icon: "folder.fill", label: folder.name,
-                    isSelected: appState.selectedNavItem == .folder(folder.id)
-                ) {
+                Button {
                     appState.selectedNavItem = .folder(folder.id)
                     appState.selectedMeeting = nil
+                } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: "folder.fill")
+                            .font(.system(size: 14))
+                            .foregroundStyle(appState.selectedNavItem == .folder(folder.id) ? Theme.accent : Theme.textSecondary)
+                            .frame(width: 20)
+                        Text(folder.name)
+                            .font(.system(size: 13, weight: appState.selectedNavItem == .folder(folder.id) ? .semibold : .regular))
+                            .foregroundStyle(appState.selectedNavItem == .folder(folder.id) ? Theme.textPrimary : Theme.textSecondary)
+                            .lineLimit(1)
+                        Spacer()
+
+                        // Count badge
+                        let meetingCount = folder.meetings?.count ?? 0
+                        if meetingCount > 0 {
+                            CountBadge(count: meetingCount)
+                        }
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 7)
+                    .background(
+                        RoundedRectangle(cornerRadius: Theme.radiusSM)
+                            .fill(appState.selectedNavItem == .folder(folder.id) ? Theme.accent.opacity(0.12) : .clear)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: Theme.radiusSM)
+                            .stroke(appState.selectedNavItem == .folder(folder.id) ? Theme.accent.opacity(0.2) : .clear, lineWidth: 1)
+                    )
+                    .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
+                .hoverHighlight()
                 .contextMenu {
                     Button {
                         editingFolder = folder
@@ -347,7 +418,6 @@ struct SidebarView: View {
         VStack(spacing: 0) {
             Rectangle().fill(Theme.divider).frame(height: 1).padding(.horizontal, 16)
 
-            // Upgrade button
             Button {
                 appState.showPricing = true
             } label: {
@@ -367,7 +437,6 @@ struct SidebarView: View {
             .buttonStyle(.plain)
             .hoverHighlight()
 
-            // Profile area
             Button {
                 showProfilePopover.toggle()
             } label: {
@@ -404,7 +473,6 @@ struct SidebarView: View {
 
     private var profilePopoverContent: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // User info
             VStack(alignment: .leading, spacing: 4) {
                 Text(appState.currentUser?.fullName ?? "User")
                     .font(.system(size: 14, weight: .semibold))

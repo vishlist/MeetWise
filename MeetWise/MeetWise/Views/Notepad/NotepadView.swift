@@ -1,11 +1,11 @@
 import SwiftUI
 import SwiftData
 
-// MARK: - Tab Enum for Notes/Transcript/Summary
+// MARK: - Tab Enum for Summary/Transcript/Notes
 enum NotepadTab: String, CaseIterable {
-    case notes = "Notes"
-    case transcript = "Transcript"
     case summary = "Summary"
+    case transcript = "Transcript"
+    case notes = "Notes"
 }
 
 // MARK: - Template Picker Enum
@@ -51,11 +51,17 @@ struct NotepadView: View {
     @State private var copiedToClipboard = false
     @State private var selectedTab: NotepadTab = .notes
     @State private var showDeleteConfirm = false
+    @State private var newAttendee = ""
+    @State private var showAddAttendee = false
 
     init(meeting: Meeting, sessionManager: MeetingSessionManager) {
         self.meeting = meeting
         self.sessionManager = sessionManager
         self._userNotes = State(initialValue: meeting.userNotes)
+        // Default to summary tab if enhanced
+        if meeting.enhancedNotes != nil || meeting.summaryJSON != nil {
+            self._selectedTab = State(initialValue: .summary)
+        }
     }
 
     private var isActiveRecording: Bool {
@@ -64,10 +70,8 @@ struct NotepadView: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            // Main note area
             mainContent
 
-            // CMD+J Chat sidebar
             if showChatSidebar {
                 Divider().background(Theme.divider)
                 chatSidebar
@@ -105,7 +109,6 @@ struct NotepadView: View {
     // MARK: - Main Content
     private var mainContent: some View {
         VStack(spacing: 0) {
-            // Recording indicator
             if isActiveRecording {
                 recordingBanner
             }
@@ -113,33 +116,37 @@ struct NotepadView: View {
             topBar
             Divider().background(Theme.divider)
 
-            // Tab bar
-            tabBar
-
             ZStack(alignment: .bottom) {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
+                        // Title
                         meetingHeader
                             .padding(.horizontal, 48)
                             .padding(.top, 24)
 
-                        metadataPills
+                        // Date + Attendee pills
+                        metadataAndAttendees
                             .padding(.horizontal, 48)
                             .padding(.top, 12)
 
+                        // Tab bar
+                        tabBar
+                            .padding(.horizontal, 48)
+                            .padding(.top, 16)
+
                         // Tab content
                         switch selectedTab {
-                        case .notes:
-                            notesTabContent
-                                .padding(.horizontal, 44)
+                        case .summary:
+                            summaryTabContent
+                                .padding(.horizontal, 48)
                                 .padding(.top, 16)
                         case .transcript:
                             transcriptTabContent
                                 .padding(.horizontal, 32)
                                 .padding(.top, 16)
-                        case .summary:
-                            summaryTabContent
-                                .padding(.horizontal, 48)
+                        case .notes:
+                            notesTabContent
+                                .padding(.horizontal, 44)
                                 .padding(.top, 16)
                         }
 
@@ -160,7 +167,6 @@ struct NotepadView: View {
                 .frame(width: 8, height: 8)
                 .shadow(color: .red.opacity(0.6), radius: 4)
 
-            // Waveform visualization
             HStack(spacing: 2) {
                 ForEach(0..<12, id: \.self) { i in
                     RoundedRectangle(cornerRadius: 1)
@@ -228,13 +234,15 @@ struct NotepadView: View {
             }
             Spacer()
         }
-        .padding(.horizontal, 16)
-        .background(Theme.bgPrimary)
+        .overlay(alignment: .bottom) {
+            Rectangle().fill(Theme.border).frame(height: 1)
+        }
     }
 
-    // MARK: - Top Bar
+    // MARK: - Top Bar (Header)
     private var topBar: some View {
         HStack(spacing: 8) {
+            // Back + Home
             Button {
                 appState.selectedMeeting = nil
             } label: {
@@ -251,6 +259,20 @@ struct NotepadView: View {
             }
             .buttonStyle(.plain)
             .hoverScale(1.05)
+
+            // Breadcrumb
+            HStack(spacing: 4) {
+                Text("Meetings")
+                    .font(.system(size: 12))
+                    .foregroundStyle(Theme.textMuted)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 9))
+                    .foregroundStyle(Theme.textMuted)
+                Text(meeting.title)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(Theme.textSecondary)
+                    .lineLimit(1)
+            }
 
             Spacer()
 
@@ -269,7 +291,7 @@ struct NotepadView: View {
                 .cornerRadius(Theme.radiusSM)
             }
 
-            // Share button
+            // Share
             Menu {
                 Button {
                     ShareService.copyAsMarkdown(meeting: meeting)
@@ -313,7 +335,7 @@ struct NotepadView: View {
             .menuStyle(.borderlessButton)
             .fixedSize()
 
-            // Link button — copies meetwise:// link
+            // Link
             Button {
                 let link = "meetwise://meeting/\(meeting.id.uuidString)"
                 NSPasteboard.general.clearContents()
@@ -331,7 +353,7 @@ struct NotepadView: View {
             .buttonStyle(.plain)
             .hoverScale(1.05)
 
-            // Chat sidebar toggle (CMD+J)
+            // Chat sidebar toggle
             Button {
                 withAnimation(.easeInOut(duration: 0.2)) { showChatSidebar.toggle() }
             } label: {
@@ -406,26 +428,83 @@ struct NotepadView: View {
             .textSelection(.enabled)
     }
 
-    // MARK: - Metadata Pills
-    private var metadataPills: some View {
-        HStack(spacing: 8) {
-            metadataPill(icon: "calendar", text: isToday(meeting.startedAt) ? "Today" : meeting.formattedDate)
+    // MARK: - Metadata + Attendees
+    private var metadataAndAttendees: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            // Date pill
+            HStack(spacing: 8) {
+                metadataPill(icon: "calendar", text: formatDateFull(meeting.startedAt))
 
-            if let participants = meeting.participants, !participants.isEmpty {
-                metadataPill(icon: "person.2", text: participants.map(\.name).joined(separator: ", "))
-            } else {
-                metadataPill(icon: "person.2", text: "Me")
+                if let platform = meeting.platform {
+                    metadataPill(icon: "video", text: platform)
+                }
+
+                if let dur = meeting.durationSeconds, dur > 0 {
+                    metadataPill(icon: "clock", text: meeting.formattedDuration)
+                }
             }
 
-            if let platform = meeting.platform {
-                metadataPill(icon: "video", text: platform)
-            }
+            // Attendee pills
+            HStack(spacing: 6) {
+                let participants = meeting.participants ?? []
+                ForEach(Array(participants.enumerated()), id: \.element.id) { index, participant in
+                    AttendeePill(
+                        name: participant.name,
+                        color: Theme.attendeeColors[index % Theme.attendeeColors.count],
+                        onRemove: {
+                            modelContext.delete(participant)
+                            try? modelContext.save()
+                        }
+                    )
+                }
 
-            if let dur = meeting.durationSeconds, dur > 0 {
-                metadataPill(icon: "clock", text: meeting.formattedDuration)
-            }
+                if participants.isEmpty {
+                    AttendeePill(name: "Me", color: Theme.textMuted)
+                }
 
-            Spacer()
+                // Add attendee button
+                if showAddAttendee {
+                    HStack(spacing: 4) {
+                        TextField("Name", text: $newAttendee)
+                            .textFieldStyle(.plain)
+                            .font(.system(size: 12))
+                            .foregroundStyle(Theme.textPrimary)
+                            .frame(width: 100)
+                            .onSubmit { addAttendee() }
+                            .onExitCommand {
+                                showAddAttendee = false
+                                newAttendee = ""
+                            }
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Theme.bgCard)
+                    .cornerRadius(Theme.radiusPill)
+                    .overlay(RoundedRectangle(cornerRadius: Theme.radiusPill).stroke(Theme.border, lineWidth: 1))
+                } else {
+                    Button {
+                        showAddAttendee = true
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "plus")
+                                .font(.system(size: 10))
+                            Text("Add attendee")
+                                .font(.system(size: 11))
+                        }
+                        .foregroundStyle(Theme.textMuted)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 5)
+                        .background(Theme.bgCard)
+                        .cornerRadius(Theme.radiusPill)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: Theme.radiusPill)
+                                .stroke(Theme.border, style: StrokeStyle(lineWidth: 1, dash: [4]))
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .hoverScale(1.05)
+                }
+            }
         }
     }
 
@@ -472,7 +551,7 @@ struct NotepadView: View {
             }
     }
 
-    // MARK: - Transcript Tab (Chat-style bubbles)
+    // MARK: - Transcript Tab
     private var transcriptTabContent: some View {
         VStack(alignment: .leading, spacing: 12) {
             if sessionManager.liveTranscriptSegments.isEmpty && (meeting.transcriptRaw ?? "").isEmpty {
@@ -490,12 +569,10 @@ struct NotepadView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 60)
             } else if isActiveRecording {
-                // Live transcript segments as chat bubbles
                 ForEach(sessionManager.liveTranscriptSegments) { segment in
                     transcriptBubble(segment: segment)
                 }
 
-                // Show interim text
                 if !sessionManager.interimText.isEmpty {
                     HStack {
                         Text(sessionManager.interimText)
@@ -509,7 +586,6 @@ struct NotepadView: View {
                     }
                 }
             } else {
-                // Parse saved transcript into lines
                 let lines = parseTranscriptLines(meeting.transcriptRaw ?? "")
                 ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
                     savedTranscriptBubble(speaker: line.speaker, text: line.text, isUser: line.isUser)
@@ -569,82 +645,97 @@ struct NotepadView: View {
         }
     }
 
-    // MARK: - Summary Tab
+    // MARK: - Summary Tab (Collapsible Sections)
     private var summaryTabContent: some View {
         Group {
             if let summaryData = meeting.summaryJSON,
                let summary = try? JSONDecoder().decode(EnhancementService.MeetingSummary.self, from: summaryData) {
-                VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: 12) {
+                    // Meeting Purpose
                     if !summary.overview.isEmpty {
-                        summarySection(title: "Overview", icon: "doc.text") {
+                        CollapsibleSection(title: "Meeting Purpose", icon: "doc.text") {
                             Text(summary.overview)
                                 .font(.system(size: 14))
                                 .foregroundStyle(Theme.textSecondary)
+                                .lineSpacing(4)
                         }
                     }
 
+                    // Key Takeaways
                     if !summary.keyPoints.isEmpty {
-                        summarySection(title: "Key Points", icon: "list.bullet") {
+                        CollapsibleSection(title: "Key Takeaways", icon: "lightbulb") {
                             ForEach(summary.keyPoints, id: \.self) { point in
                                 HStack(alignment: .top, spacing: 8) {
-                                    Text("*")
-                                        .font(.system(size: 14, weight: .bold))
-                                        .foregroundStyle(Theme.textMuted)
+                                    Circle()
+                                        .fill(Theme.textMuted)
+                                        .frame(width: 5, height: 5)
+                                        .padding(.top, 7)
                                     Text(point)
                                         .font(.system(size: 14))
                                         .foregroundStyle(Theme.textPrimary)
                                 }
+                                .padding(10)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(Theme.bgPrimary.opacity(0.5))
+                                .cornerRadius(Theme.radiusSM)
                             }
                         }
                     }
 
-                    if !summary.actionItems.isEmpty {
-                        summarySection(title: "Action Items", icon: "checkmark.circle") {
-                            ForEach(summary.actionItems, id: \.task) { item in
-                                HStack(alignment: .top, spacing: 8) {
-                                    Image(systemName: "circle")
-                                        .font(.system(size: 12))
-                                        .foregroundStyle(Theme.textMuted)
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text(item.task)
-                                            .font(.system(size: 14))
-                                            .foregroundStyle(Theme.textPrimary)
-                                        if let assignee = item.assignee {
-                                            Text("@\(assignee)")
-                                                .font(.system(size: 12))
-                                                .foregroundStyle(Theme.textSecondary)
-                                        }
-                                    }
+                    // Topics
+                    if !summary.topics.isEmpty {
+                        CollapsibleSection(title: "Topics", icon: "tag") {
+                            FlowLayout(spacing: 6) {
+                                ForEach(summary.topics, id: \.self) { topic in
+                                    TagPill(text: topic)
                                 }
                             }
                         }
                     }
 
+                    // Action Items (Table-like)
+                    if !summary.actionItems.isEmpty {
+                        CollapsibleSection(title: "Action Items", icon: "checkmark.circle") {
+                            VStack(spacing: 2) {
+                                // Header row
+                                HStack(spacing: 0) {
+                                    Text("Task")
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                    Text("Assignee")
+                                        .frame(width: 120, alignment: .leading)
+                                    Text("Deadline")
+                                        .frame(width: 100, alignment: .leading)
+                                }
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(Theme.textMuted)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 6)
+
+                                Rectangle().fill(Theme.border).frame(height: 1)
+
+                                ForEach(summary.actionItems, id: \.task) { item in
+                                    ActionItemRow(
+                                        task: item.task,
+                                        assignee: item.assignee,
+                                        deadline: item.deadline
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Decisions Made
                     if !summary.decisions.isEmpty {
-                        summarySection(title: "Decisions", icon: "checkmark.seal") {
+                        CollapsibleSection(title: "Decisions Made", icon: "checkmark.seal") {
                             ForEach(summary.decisions, id: \.self) { decision in
                                 HStack(alignment: .top, spacing: 8) {
-                                    Text("-")
+                                    Image(systemName: "checkmark")
+                                        .font(.system(size: 10, weight: .bold))
                                         .foregroundStyle(Theme.textMuted)
+                                        .padding(.top, 3)
                                     Text(decision)
                                         .font(.system(size: 14))
                                         .foregroundStyle(Theme.textPrimary)
-                                }
-                            }
-                        }
-                    }
-
-                    if !summary.topics.isEmpty {
-                        summarySection(title: "Topics", icon: "tag") {
-                            FlowLayout(spacing: 6) {
-                                ForEach(summary.topics, id: \.self) { topic in
-                                    Text(topic)
-                                        .font(.system(size: 12))
-                                        .foregroundStyle(Theme.textSecondary)
-                                        .padding(.horizontal, 10)
-                                        .padding(.vertical, 4)
-                                        .background(Theme.bgCard)
-                                        .cornerRadius(Theme.radiusPill)
                                 }
                             }
                         }
@@ -668,25 +759,7 @@ struct NotepadView: View {
         }
     }
 
-    private func summarySection<Content: View>(title: String, icon: String, @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 6) {
-                Image(systemName: icon)
-                    .font(.system(size: 13))
-                    .foregroundStyle(Theme.textMuted)
-                Text(title)
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(Theme.textPrimary)
-            }
-            content()
-        }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.bgCard.opacity(0.4))
-        .cornerRadius(Theme.radiusMD)
-    }
-
-    // MARK: - Enhanced Content
+    // MARK: - Enhanced Content (Markdown-like rendering)
     private func enhancedContent(_ content: String) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             let lines = content.components(separatedBy: "\n")
@@ -758,6 +831,7 @@ struct NotepadView: View {
         VStack(spacing: 0) {
             Divider().background(Theme.divider)
             HStack(spacing: 12) {
+                // Enhance button
                 if !isActiveRecording && meeting.enhancedNotes == nil {
                     Button {
                         isEnhancing = true
@@ -803,6 +877,7 @@ struct NotepadView: View {
                     .buttonStyle(.plain)
                 }
 
+                // Ask anything input
                 HStack(spacing: 8) {
                     TextField("Ask anything", text: $chatInput)
                         .textFieldStyle(.plain)
@@ -822,6 +897,7 @@ struct NotepadView: View {
                 .cornerRadius(Theme.radiusPill)
                 .overlay(RoundedRectangle(cornerRadius: Theme.radiusPill).stroke(Theme.border, lineWidth: 1))
 
+                // Recipe pill
                 Button {
                     chatInput = "Write follow up email"
                     withAnimation { showChatSidebar = true }
@@ -840,7 +916,10 @@ struct NotepadView: View {
                 .hoverScale(1.03)
 
                 if let error = sessionManager.error {
-                    Text(error).font(.system(size: 11)).foregroundStyle(.red).lineLimit(1)
+                    Text(error)
+                        .font(.system(size: 11))
+                        .foregroundStyle(Theme.accentRed)
+                        .lineLimit(1)
                 }
             }
             .padding(.horizontal, 16)
@@ -849,11 +928,21 @@ struct NotepadView: View {
         }
     }
 
-    // MARK: - Chat Sidebar (CMD+J)
+    // MARK: - Chat Sidebar
     private var chatSidebar: some View {
         VStack(spacing: 0) {
             // Header
             HStack {
+                // Bot avatar
+                Circle()
+                    .fill(Color(hex: "#333333"))
+                    .frame(width: 24, height: 24)
+                    .overlay(
+                        Text("MW")
+                            .font(.system(size: 8, weight: .bold))
+                            .foregroundStyle(Theme.textPrimary)
+                    )
+
                 Text("Ask about this meeting")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(Theme.textPrimary)
@@ -887,22 +976,20 @@ struct NotepadView: View {
                     }
 
                     ForEach(Array(chatMessages.enumerated()), id: \.offset) { _, msg in
-                        VStack(alignment: msg.role == "user" ? .trailing : .leading, spacing: 4) {
-                            Text(msg.content)
-                                .font(.system(size: 13))
-                                .foregroundStyle(msg.role == "user" ? Theme.textPrimary : Theme.textSecondary)
-                                .padding(10)
-                                .background(msg.role == "user" ? Theme.bgCard : Theme.bgCard.opacity(0.5))
-                                .cornerRadius(Theme.radiusMD)
-                                .textSelection(.enabled)
-                        }
-                        .frame(maxWidth: .infinity, alignment: msg.role == "user" ? .trailing : .leading)
+                        sidebarChatBubble(role: msg.role, content: msg.content)
                     }
 
                     if chatService.isLoading {
-                        HStack(spacing: 6) {
-                            ProgressView().controlSize(.small)
-                            Text("Thinking...").font(.system(size: 12)).foregroundStyle(Theme.textMuted)
+                        HStack(spacing: 8) {
+                            Circle()
+                                .fill(Color(hex: "#333333"))
+                                .frame(width: 22, height: 22)
+                                .overlay(
+                                    Text("MW")
+                                        .font(.system(size: 7, weight: .bold))
+                                        .foregroundStyle(Theme.textPrimary)
+                                )
+                            TypingIndicator()
                         }
                         .padding(10)
                     }
@@ -910,11 +997,38 @@ struct NotepadView: View {
                 .padding(12)
             }
 
+            // Suggested actions
+            if chatMessages.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 6) {
+                        ForEach(["List action items", "Show pending tasks", "When is the next meeting?"], id: \.self) { prompt in
+                            Button {
+                                chatInput = prompt
+                                sendChatMessage()
+                            } label: {
+                                Text(prompt)
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(Theme.textSecondary)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 5)
+                                    .background(Theme.bgCard)
+                                    .cornerRadius(Theme.radiusPill)
+                                    .overlay(RoundedRectangle(cornerRadius: Theme.radiusPill).stroke(Theme.border, lineWidth: 1))
+                            }
+                            .buttonStyle(.plain)
+                            .hoverScale(1.03)
+                        }
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 8)
+                }
+            }
+
             Divider().background(Theme.divider)
 
             // Input
             HStack(spacing: 8) {
-                TextField("Ask about this meeting...", text: $chatInput)
+                TextField("Ask me anything...", text: $chatInput)
                     .textFieldStyle(.plain)
                     .font(.system(size: 13))
                     .onSubmit { sendChatMessage() }
@@ -932,6 +1046,41 @@ struct NotepadView: View {
         .background(Theme.bgPrimary)
     }
 
+    private func sidebarChatBubble(role: String, content: String) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            if role == "assistant" {
+                Circle()
+                    .fill(Color(hex: "#333333"))
+                    .frame(width: 22, height: 22)
+                    .overlay(
+                        Text("MW")
+                            .font(.system(size: 7, weight: .bold))
+                            .foregroundStyle(Theme.textPrimary)
+                    )
+            }
+
+            Text(content)
+                .font(.system(size: 13))
+                .foregroundStyle(role == "user" ? Theme.textPrimary : Theme.textSecondary)
+                .padding(10)
+                .background(role == "user" ? Theme.bgCard : Color(hex: "#1a1a1a"))
+                .cornerRadius(Theme.radiusMD)
+                .textSelection(.enabled)
+                .frame(maxWidth: .infinity, alignment: role == "user" ? .trailing : .leading)
+
+            if role == "user" {
+                Circle()
+                    .fill(Theme.textMuted)
+                    .frame(width: 22, height: 22)
+                    .overlay(
+                        Text(appState.currentUser?.initials ?? "U")
+                            .font(.system(size: 8, weight: .medium))
+                            .foregroundStyle(Theme.bgPrimary)
+                    )
+            }
+        }
+    }
+
     // MARK: - Actions
     private func sendChatMessage() {
         guard !chatInput.trimmingCharacters(in: .whitespaces).isEmpty else { return }
@@ -945,13 +1094,29 @@ struct NotepadView: View {
         }
     }
 
+    private func addAttendee() {
+        let trimmed = newAttendee.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else {
+            showAddAttendee = false
+            return
+        }
+        let participant = MeetingParticipant(name: trimmed)
+        participant.meeting = meeting
+        modelContext.insert(participant)
+        try? modelContext.save()
+        newAttendee = ""
+        showAddAttendee = false
+    }
+
     private func showCopiedFeedback() {
         copiedToClipboard = true
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) { copiedToClipboard = false }
     }
 
-    private func isToday(_ date: Date) -> Bool {
-        Calendar.current.isDateInToday(date)
+    private func formatDateFull(_ date: Date) -> String {
+        let f = DateFormatter()
+        f.dateFormat = "MMM d, h:mm a"
+        return f.string(from: date)
     }
 
     private func formatTime(_ date: Date) -> String {
