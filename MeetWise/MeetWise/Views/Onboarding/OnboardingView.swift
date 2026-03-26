@@ -22,7 +22,7 @@ struct OnboardingView: View {
             HStack(spacing: 8) {
                 ForEach(0..<totalSteps, id: \.self) { step in
                     Circle()
-                        .fill(step <= currentStep ? Theme.accent : Theme.bgCard)
+                        .fill(step <= currentStep ? Theme.accent : Theme.pastelLavender)
                         .frame(width: 8, height: 8)
                         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: currentStep)
                 }
@@ -63,10 +63,10 @@ struct OnboardingView: View {
                 } label: {
                     Text(currentStep == totalSteps - 1 ? "Get Started" : "Continue")
                         .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(.black)
+                        .foregroundStyle(Color.white)
                         .padding(.horizontal, 24)
                         .padding(.vertical, 10)
-                        .background(Color.white)
+                        .background(Theme.accent)
                         .cornerRadius(Theme.radiusPill)
                 }
                 .buttonStyle(.plain)
@@ -79,7 +79,7 @@ struct OnboardingView: View {
         .background(Theme.bgPrimary)
     }
 
-    // MARK: - Step 1: Welcome
+    // MARK: - Step 1: Welcome (Georgia Bold serif)
     private var welcomeStep: some View {
         VStack(spacing: 20) {
             Image(systemName: "waveform.circle.fill")
@@ -91,7 +91,7 @@ struct OnboardingView: View {
                 .foregroundStyle(Theme.textHeading)
 
             Text("AI-powered meeting notes that work in the background.\nNo bots, no recordings visible to participants.")
-                .font(.system(size: 15))
+                .font(.system(size: 15, weight: .light))
                 .foregroundStyle(Theme.textSecondary)
                 .multilineTextAlignment(.center)
                 .lineSpacing(4)
@@ -99,7 +99,7 @@ struct OnboardingView: View {
         .padding(.horizontal, 48)
     }
 
-    // MARK: - Step 2: Permissions (Screen Recording + Microphone)
+    // MARK: - Step 2: Permissions
     private var permissionsStep: some View {
         VStack(alignment: .leading, spacing: 20) {
             Text("Permissions")
@@ -107,7 +107,7 @@ struct OnboardingView: View {
                 .foregroundStyle(Theme.textHeading)
 
             Text("MeetWise needs a couple of permissions to capture meeting audio.")
-                .font(.system(size: 14))
+                .font(.system(size: 14, weight: .light))
                 .foregroundStyle(Theme.textSecondary)
 
             VStack(spacing: 12) {
@@ -133,7 +133,7 @@ struct OnboardingView: View {
                     .font(.system(size: 12))
                     .foregroundStyle(Theme.textMuted)
                 Text("You can also grant these in System Settings > Privacy & Security")
-                    .font(.system(size: 12))
+                    .font(.system(size: 12, weight: .light))
                     .foregroundStyle(Theme.textMuted)
             }
 
@@ -145,7 +145,7 @@ struct OnboardingView: View {
                     .foregroundStyle(Theme.accent)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 6)
-                    .background(Theme.accent.opacity(0.1))
+                    .background(Theme.pastelLavender)
                     .cornerRadius(Theme.radiusSM)
             }
             .buttonStyle(.plain)
@@ -161,7 +161,7 @@ struct OnboardingView: View {
                 .foregroundStyle(Theme.textHeading)
 
             Text("MeetWise shows upcoming meetings and auto-detects when you join a call.")
-                .font(.system(size: 14))
+                .font(.system(size: 14, weight: .light))
                 .foregroundStyle(Theme.textSecondary)
 
             VStack(spacing: 12) {
@@ -185,7 +185,7 @@ struct OnboardingView: View {
         .padding(.horizontal, 48)
     }
 
-    // MARK: - Step 4: Profile (simplified)
+    // MARK: - Step 4: Profile
     private var profileStep: some View {
         VStack(alignment: .leading, spacing: 20) {
             Text("About you")
@@ -193,7 +193,7 @@ struct OnboardingView: View {
                 .foregroundStyle(Theme.textHeading)
 
             Text("What should we call you?")
-                .font(.system(size: 14))
+                .font(.system(size: 14, weight: .light))
                 .foregroundStyle(Theme.textSecondary)
 
             VStack(alignment: .leading, spacing: 6) {
@@ -202,12 +202,12 @@ struct OnboardingView: View {
                     .foregroundStyle(Theme.textSecondary)
                 TextField("e.g. Vishal Adhlakha", text: $fullName)
                     .textFieldStyle(.plain)
-                    .font(.system(size: 14))
+                    .font(.system(size: 14, weight: .light))
                     .foregroundStyle(Theme.textPrimary)
                     .padding(10)
                     .background(Theme.bgCard)
                     .cornerRadius(Theme.radiusSM)
-                    .overlay(RoundedRectangle(cornerRadius: Theme.radiusSM).stroke(Theme.border, lineWidth: 1))
+                    .shadow(color: Color.black.opacity(0.04), radius: 4, y: 1)
             }
         }
         .padding(.horizontal, 48)
@@ -218,21 +218,21 @@ struct OnboardingView: View {
         VStack(spacing: 20) {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 64))
-                .foregroundStyle(Theme.accent)
+                .foregroundStyle(Theme.accentGreen)
 
             Text("You're all set!")
                 .font(.heading(28))
                 .foregroundStyle(Theme.textHeading)
 
             Text("Join a meeting and MeetWise will automatically\nstart capturing and transcribing.")
-                .font(.system(size: 15))
+                .font(.system(size: 15, weight: .light))
                 .foregroundStyle(Theme.textSecondary)
                 .multilineTextAlignment(.center)
                 .lineSpacing(4)
 
             VStack(alignment: .leading, spacing: 10) {
                 Text("Keyboard Shortcuts")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.custom("Georgia", size: 13))
                     .foregroundStyle(Theme.textSecondary)
 
                 shortcutRow(keys: "N", description: "Create quick note")
@@ -241,8 +241,9 @@ struct OnboardingView: View {
                 shortcutRow(keys: "R", description: "Start/stop recording")
             }
             .padding(20)
-            .background(Theme.bgCard.opacity(0.5))
+            .background(Theme.bgCard)
             .cornerRadius(Theme.radiusMD)
+            .shadow(color: Color.black.opacity(0.04), radius: 6, y: 2)
 
             VStack(alignment: .leading, spacing: 8) {
                 tipRow(icon: "sparkles", text: "Click \"Enhance Notes\" after meetings")
@@ -261,7 +262,7 @@ struct OnboardingView: View {
                     .foregroundStyle(Theme.textMuted)
                     .padding(.horizontal, 5)
                     .padding(.vertical, 2)
-                    .background(Theme.bgCard)
+                    .background(Theme.pastelLavender)
                     .cornerRadius(3)
                 Text("+")
                     .font(.system(size: 10))
@@ -271,11 +272,11 @@ struct OnboardingView: View {
                     .foregroundStyle(Theme.textMuted)
                     .padding(.horizontal, 5)
                     .padding(.vertical, 2)
-                    .background(Theme.bgCard)
+                    .background(Theme.pastelLavender)
                     .cornerRadius(3)
             }
             Text(description)
-                .font(.system(size: 13))
+                .font(.system(size: 13, weight: .light))
                 .foregroundStyle(Theme.textSecondary)
         }
     }
@@ -286,7 +287,7 @@ struct OnboardingView: View {
                 .font(.system(size: 12))
                 .foregroundStyle(Theme.accent)
             Text(text)
-                .font(.system(size: 13))
+                .font(.system(size: 13, weight: .light))
                 .foregroundStyle(Theme.textSecondary)
         }
     }
@@ -296,9 +297,9 @@ struct OnboardingView: View {
         HStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.system(size: 16))
-                .foregroundStyle(isGranted ? Theme.accent : Theme.textSecondary)
+                .foregroundStyle(isGranted ? Theme.accentGreen : Theme.textSecondary)
                 .frame(width: 32, height: 32)
-                .background(Theme.bgCard)
+                .background(isGranted ? Theme.pastelMint : Theme.bgCard)
                 .cornerRadius(Theme.radiusSM)
 
             VStack(alignment: .leading, spacing: 2) {
@@ -306,7 +307,7 @@ struct OnboardingView: View {
                     .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(Theme.textPrimary)
                 Text(description)
-                    .font(.system(size: 12))
+                    .font(.system(size: 12, weight: .light))
                     .foregroundStyle(Theme.textSecondary)
             }
 
@@ -314,22 +315,22 @@ struct OnboardingView: View {
 
             if isGranted {
                 Image(systemName: "checkmark.circle.fill")
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentGreen)
             } else {
                 Button("Grant") { action() }
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(Theme.textPrimary)
+                    .foregroundStyle(Theme.accent)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 4)
-                    .background(Theme.bgCard)
+                    .background(Theme.pastelLavender)
                     .cornerRadius(Theme.radiusSM)
-                    .overlay(RoundedRectangle(cornerRadius: Theme.radiusSM).stroke(Theme.border, lineWidth: 1))
                     .buttonStyle(.plain)
             }
         }
         .padding(12)
-        .background(Theme.bgCard.opacity(0.5))
+        .background(Theme.bgCard)
         .cornerRadius(Theme.radiusMD)
+        .shadow(color: Color.black.opacity(0.03), radius: 4, y: 1)
     }
 
     // MARK: - Permission Requests
@@ -393,7 +394,7 @@ struct OnboardingView: View {
             let recipe = Recipe(
                 name: template.name,
                 prompt: template.prompt,
-                iconColor: "#ffffff",
+                iconColor: "#7C6BC4",
                 category: "builtin"
             )
             recipe.position = index

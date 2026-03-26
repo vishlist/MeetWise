@@ -39,12 +39,11 @@ struct CompaniesView: View {
                             Text("Add Company")
                                 .font(.system(size: 12, weight: .medium))
                         }
-                        .foregroundStyle(Theme.textPrimary)
+                        .foregroundStyle(Theme.accent)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
-                        .background(Theme.bgCard)
+                        .background(Theme.pastelLavender)
                         .cornerRadius(Theme.radiusSM)
-                        .overlay(RoundedRectangle(cornerRadius: Theme.radiusSM).stroke(Theme.border, lineWidth: 1))
                     }
                     .buttonStyle(.plain)
                 }
@@ -57,12 +56,12 @@ struct CompaniesView: View {
                         .foregroundStyle(Theme.textMuted)
                     TextField("Search companies...", text: $searchText)
                         .textFieldStyle(.plain)
-                        .font(.system(size: 14))
+                        .font(.system(size: 14, weight: .light))
                 }
                 .padding(10)
                 .background(Theme.bgCard)
                 .cornerRadius(Theme.radiusSM)
-                .overlay(RoundedRectangle(cornerRadius: Theme.radiusSM).stroke(Theme.border, lineWidth: 1))
+                .shadow(color: Color.black.opacity(0.04), radius: 4, y: 1)
 
                 if filteredCompanies.isEmpty {
                     emptyState
@@ -88,7 +87,7 @@ struct CompaniesView: View {
             } label: {
                 HStack(spacing: 12) {
                     RoundedRectangle(cornerRadius: 6)
-                        .fill(Theme.accent.opacity(0.15))
+                        .fill(Theme.pastelLavender)
                         .frame(width: 36, height: 36)
                         .overlay(
                             Text(String(company.name.prefix(2)).uppercased())
@@ -102,7 +101,7 @@ struct CompaniesView: View {
                             .foregroundStyle(Theme.textPrimary)
                         if let domain = company.domain {
                             Text(domain)
-                                .font(.system(size: 12))
+                                .font(.system(size: 12, weight: .light))
                                 .foregroundStyle(Theme.textSecondary)
                         }
                     }
@@ -111,12 +110,12 @@ struct CompaniesView: View {
 
                     if let contacts = company.contacts {
                         Text("\(contacts.count) people")
-                            .font(.system(size: 12))
+                            .font(.system(size: 12, weight: .light))
                             .foregroundStyle(Theme.textMuted)
                     }
 
                     Text("\(company.meetingCount) meetings")
-                        .font(.system(size: 12))
+                        .font(.system(size: 12, weight: .light))
                         .foregroundStyle(Theme.textMuted)
 
                     Image(systemName: selectedCompany?.id == company.id ? "chevron.up" : "chevron.down")
@@ -133,7 +132,7 @@ struct CompaniesView: View {
                 VStack(spacing: 0) {
                     if let contacts = company.contacts, !contacts.isEmpty {
                         Text("People")
-                            .font(.system(size: 11, weight: .semibold))
+                            .font(.custom("Georgia", size: 11))
                             .foregroundStyle(Theme.textMuted)
                             .padding(.horizontal, 16)
                             .padding(.top, 8)
@@ -142,7 +141,7 @@ struct CompaniesView: View {
                         ForEach(contacts) { contact in
                             HStack(spacing: 8) {
                                 Circle()
-                                    .fill(Theme.accent.opacity(0.15))
+                                    .fill(Theme.pastelBlue)
                                     .frame(width: 20, height: 20)
                                     .overlay(
                                         Text(contact.initials)
@@ -150,12 +149,12 @@ struct CompaniesView: View {
                                             .foregroundStyle(Theme.accent)
                                     )
                                 Text(contact.name)
-                                    .font(.system(size: 13))
+                                    .font(.system(size: 13, weight: .light))
                                     .foregroundStyle(Theme.textPrimary)
                                 Spacer()
                                 if let email = contact.email {
                                     Text(email)
-                                        .font(.system(size: 11))
+                                        .font(.system(size: 11, weight: .light))
                                         .foregroundStyle(Theme.textMuted)
                                 }
                             }
@@ -172,7 +171,7 @@ struct CompaniesView: View {
 
                     if !companyMeetings.isEmpty {
                         Text("Recent Meetings")
-                            .font(.system(size: 11, weight: .semibold))
+                            .font(.custom("Georgia", size: 11))
                             .foregroundStyle(Theme.textMuted)
                             .padding(.horizontal, 16)
                             .padding(.top, 8)
@@ -185,11 +184,11 @@ struct CompaniesView: View {
                                         .font(.system(size: 12))
                                         .foregroundStyle(Theme.textMuted)
                                     Text(meeting.title)
-                                        .font(.system(size: 13))
+                                        .font(.system(size: 13, weight: .light))
                                         .foregroundStyle(Theme.textPrimary)
                                     Spacer()
                                     Text(meeting.formattedDate)
-                                        .font(.system(size: 12))
+                                        .font(.system(size: 12, weight: .light))
                                         .foregroundStyle(Theme.textMuted)
                                 }
                                 .padding(.horizontal, 16)
@@ -201,11 +200,12 @@ struct CompaniesView: View {
                     }
                 }
                 .padding(.bottom, 8)
-                .background(Theme.bgCard.opacity(0.3))
+                .background(Theme.bgPrimary.opacity(0.5))
             }
         }
-        .background(Theme.bgCard.opacity(0.3))
+        .background(Theme.bgCard)
         .cornerRadius(Theme.radiusMD)
+        .shadow(color: Color.black.opacity(0.04), radius: 6, y: 2)
     }
 
     private var emptyState: some View {
@@ -214,10 +214,10 @@ struct CompaniesView: View {
                 .font(.system(size: 36))
                 .foregroundStyle(Theme.textMuted)
             Text("No companies yet")
-                .font(.system(size: 14))
+                .font(.custom("Georgia", size: 14))
                 .foregroundStyle(Theme.textSecondary)
             Text("Companies from your meetings will appear here")
-                .font(.system(size: 12))
+                .font(.system(size: 12, weight: .light))
                 .foregroundStyle(Theme.textMuted)
 
             Button {
@@ -229,10 +229,10 @@ struct CompaniesView: View {
                     Text("Add Company")
                         .font(.system(size: 12, weight: .medium))
                 }
-                .foregroundStyle(Color.black)
+                .foregroundStyle(Color.white)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
-                .background(Color.white)
+                .background(Theme.accent)
                 .cornerRadius(Theme.radiusPill)
             }
             .buttonStyle(.plain)
@@ -246,7 +246,7 @@ struct CompaniesView: View {
     private var createCompanySheet: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Add Company")
-                .font(.system(size: 16, weight: .semibold))
+                .font(.custom("Georgia", size: 16))
                 .foregroundStyle(Theme.textPrimary)
 
             VStack(alignment: .leading, spacing: 6) {
@@ -255,10 +255,11 @@ struct CompaniesView: View {
                     .foregroundStyle(Theme.textSecondary)
                 TextField("Company name", text: $newCompanyName)
                     .textFieldStyle(.plain)
-                    .font(.system(size: 14))
+                    .font(.system(size: 14, weight: .light))
                     .padding(10)
                     .background(Theme.bgCard)
                     .cornerRadius(Theme.radiusSM)
+                    .shadow(color: Color.black.opacity(0.03), radius: 2, y: 1)
             }
 
             VStack(alignment: .leading, spacing: 6) {
@@ -267,10 +268,11 @@ struct CompaniesView: View {
                     .foregroundStyle(Theme.textSecondary)
                 TextField("example.com", text: $newCompanyDomain)
                     .textFieldStyle(.plain)
-                    .font(.system(size: 14))
+                    .font(.system(size: 14, weight: .light))
                     .padding(10)
                     .background(Theme.bgCard)
                     .cornerRadius(Theme.radiusSM)
+                    .shadow(color: Color.black.opacity(0.03), radius: 2, y: 1)
             }
 
             HStack {
@@ -296,10 +298,10 @@ struct CompaniesView: View {
                     newCompanyDomain = ""
                 }
                 .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(Color.black)
+                .foregroundStyle(Color.white)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
-                .background(Color.white)
+                .background(Theme.accent)
                 .cornerRadius(Theme.radiusPill)
                 .buttonStyle(.plain)
                 .disabled(newCompanyName.trimmingCharacters(in: .whitespaces).isEmpty)

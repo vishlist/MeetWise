@@ -18,7 +18,7 @@ struct ContentView: View {
                 OnboardingView(isComplete: $onboardingComplete)
             }
         }
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
         .sheet(isPresented: $state.showPricing) {
             PricingView()
                 .environment(appState)
@@ -71,7 +71,7 @@ struct ContentView: View {
 
             // CMD+K search overlay
             if showSearch {
-                Color.black.opacity(0.4)
+                Color.black.opacity(0.15)
                     .ignoresSafeArea()
                     .onTapGesture { showSearch = false }
 
@@ -122,7 +122,7 @@ struct ContentView: View {
                 .foregroundStyle(Theme.textPrimary)
 
             Text(windowTitle)
-                .font(.system(size: 12))
+                .font(.system(size: 12, weight: .light))
                 .foregroundStyle(Theme.textSecondary)
                 .lineLimit(1)
 
@@ -147,10 +147,10 @@ struct ContentView: View {
                     Text("Record")
                         .font(.system(size: 12, weight: .medium))
                 }
-                .foregroundStyle(Color.black)
+                .foregroundStyle(Color.white)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 5)
-                .background(Color.white)
+                .background(Theme.accent)
                 .cornerRadius(Theme.radiusPill)
             }
             .buttonStyle(.plain)
@@ -166,10 +166,9 @@ struct ContentView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
-        .background(Theme.bgCard)
+        .background(Theme.pastelPeach.opacity(0.5))
         .cornerRadius(Theme.radiusMD)
-        .overlay(RoundedRectangle(cornerRadius: Theme.radiusMD).stroke(Theme.border, lineWidth: 1))
-        .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
+        .shadow(color: .black.opacity(0.06), radius: 8, y: 4)
         .padding(.horizontal, 20)
     }
 

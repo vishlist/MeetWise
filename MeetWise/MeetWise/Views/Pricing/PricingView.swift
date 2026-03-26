@@ -20,6 +20,7 @@ struct PricingView: View {
                         .padding(8)
                         .background(Theme.bgCard)
                         .cornerRadius(Theme.radiusSM)
+                        .shadow(color: Color.black.opacity(0.03), radius: 2, y: 1)
                 }
                 .buttonStyle(.plain)
                 .hoverScale(1.1)
@@ -36,7 +37,7 @@ struct PricingView: View {
                             .foregroundStyle(Theme.textHeading)
 
                         Text("Start free, upgrade when you need more")
-                            .font(.system(size: 15))
+                            .font(.system(size: 15, weight: .light))
                             .foregroundStyle(Theme.textSecondary)
                     }
 
@@ -46,13 +47,14 @@ struct PricingView: View {
                             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { isAnnual = false }
                         } label: {
                             Text("Monthly")
-                                .font(.system(size: 13, weight: isAnnual ? .regular : .semibold))
+                                .font(.system(size: 13, weight: isAnnual ? .light : .medium))
                                 .foregroundStyle(isAnnual ? Theme.textSecondary : Theme.textPrimary)
                                 .padding(.horizontal, 20)
                                 .padding(.vertical, 8)
                                 .background(
                                     RoundedRectangle(cornerRadius: Theme.radiusSM)
                                         .fill(isAnnual ? .clear : Theme.bgCard)
+                                        .shadow(color: isAnnual ? .clear : Color.black.opacity(0.04), radius: 4, y: 1)
                                 )
                         }
                         .buttonStyle(.plain)
@@ -62,14 +64,14 @@ struct PricingView: View {
                         } label: {
                             HStack(spacing: 6) {
                                 Text("Annual")
-                                    .font(.system(size: 13, weight: isAnnual ? .semibold : .regular))
+                                    .font(.system(size: 13, weight: isAnnual ? .medium : .light))
                                     .foregroundStyle(isAnnual ? Theme.textPrimary : Theme.textSecondary)
                                 Text("20% off")
                                     .font(.system(size: 11, weight: .medium))
-                                    .foregroundStyle(Theme.textMuted)
+                                    .foregroundStyle(Theme.accent)
                                     .padding(.horizontal, 6)
                                     .padding(.vertical, 2)
-                                    .background(Theme.bgElevated)
+                                    .background(Theme.pastelLavender)
                                     .cornerRadius(4)
                             }
                             .padding(.horizontal, 20)
@@ -77,14 +79,14 @@ struct PricingView: View {
                             .background(
                                 RoundedRectangle(cornerRadius: Theme.radiusSM)
                                     .fill(isAnnual ? Theme.bgCard : .clear)
+                                    .shadow(color: isAnnual ? Color.black.opacity(0.04) : .clear, radius: 4, y: 1)
                             )
                         }
                         .buttonStyle(.plain)
                     }
                     .padding(4)
-                    .background(Theme.bgInput)
+                    .background(Theme.bgHover)
                     .cornerRadius(Theme.radiusMD)
-                    .overlay(RoundedRectangle(cornerRadius: Theme.radiusMD).stroke(Theme.border, lineWidth: 1))
 
                     // Plans
                     HStack(alignment: .top, spacing: 16) {
@@ -200,39 +202,39 @@ struct PricingView: View {
             // Badge
             HStack {
                 Text(name)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.custom("Georgia", size: 16))
                     .foregroundStyle(Theme.textPrimary)
                 Spacer()
                 if isRecommended {
                     Text("Most Popular")
                         .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(.black)
+                        .foregroundStyle(Color.white)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(Color.white)
+                        .background(Theme.accent)
                         .cornerRadius(Theme.radiusPill)
                 }
             }
 
-            // Price
+            // Price (Georgia Bold serif)
             HStack(alignment: .firstTextBaseline, spacing: 2) {
                 Text(price)
-                    .font(.system(size: 32, weight: .bold))
+                    .font(.custom("Georgia-Bold", size: 32))
                     .foregroundStyle(Theme.textHeading)
                 Text(period)
-                    .font(.system(size: 14))
+                    .font(.system(size: 14, weight: .light))
                     .foregroundStyle(Theme.textSecondary)
             }
 
-            // Features
+            // Features (mint checkmarks)
             VStack(alignment: .leading, spacing: 8) {
                 ForEach(features, id: \.self) { feature in
                     HStack(spacing: 8) {
                         Image(systemName: "checkmark")
                             .font(.system(size: 11, weight: .bold))
-                            .foregroundStyle(Theme.textSecondary)
+                            .foregroundStyle(Theme.accentGreen)
                         Text(feature)
-                            .font(.system(size: 13))
+                            .font(.system(size: 13, weight: .light))
                             .foregroundStyle(Theme.textSecondary)
                     }
                 }
@@ -244,12 +246,12 @@ struct PricingView: View {
             Button(action: buttonAction) {
                 Text(buttonLabel)
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(isDisabled ? Theme.textMuted : (isRecommended ? .black : Theme.textPrimary))
+                    .foregroundStyle(isDisabled ? Theme.textMuted : (isRecommended ? Color.white : Theme.textPrimary))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
                     .background(
                         RoundedRectangle(cornerRadius: Theme.radiusSM)
-                            .fill(isDisabled ? Theme.bgInput : (isRecommended ? Color.white : .clear))
+                            .fill(isDisabled ? Theme.bgHover : (isRecommended ? Theme.accent : .clear))
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: Theme.radiusSM)
@@ -264,11 +266,7 @@ struct PricingView: View {
         .frame(maxWidth: .infinity)
         .background(Theme.bgCard)
         .cornerRadius(Theme.radiusMD)
-        .overlay(
-            RoundedRectangle(cornerRadius: Theme.radiusMD)
-                .stroke(isRecommended ? Color.white.opacity(0.3) : Theme.border, lineWidth: isRecommended ? 2 : 1)
-        )
-        .shadow(color: isRecommended ? .white.opacity(0.05) : .clear, radius: 12, y: 0)
+        .shadow(color: Color.black.opacity(isRecommended ? 0.08 : 0.04), radius: isRecommended ? 12 : 8, x: 0, y: isRecommended ? 4 : 2)
         .onHover { isHover in
             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                 hoveredPlan = isHover ? name : nil
@@ -280,7 +278,7 @@ struct PricingView: View {
     private var faqSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Frequently Asked Questions")
-                .font(.system(size: 16, weight: .semibold))
+                .font(.custom("Georgia", size: 16))
                 .foregroundStyle(Theme.textPrimary)
 
             faqItem(
@@ -304,8 +302,9 @@ struct PricingView: View {
             )
         }
         .padding(20)
-        .background(Theme.bgCard.opacity(0.5))
+        .background(Theme.bgCard)
         .cornerRadius(Theme.radiusMD)
+        .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 2)
     }
 
     private func faqItem(question: String, answer: String) -> some View {
@@ -314,7 +313,7 @@ struct PricingView: View {
                 .font(.system(size: 14, weight: .medium))
                 .foregroundStyle(Theme.textPrimary)
             Text(answer)
-                .font(.system(size: 13))
+                .font(.system(size: 13, weight: .light))
                 .foregroundStyle(Theme.textSecondary)
                 .lineSpacing(2)
         }

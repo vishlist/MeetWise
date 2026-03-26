@@ -22,9 +22,11 @@ struct FolderView: View {
                     List(meetings) { meeting in
                         HStack {
                             Text(meeting.title)
+                                .font(.system(size: 14, weight: .light))
                                 .foregroundStyle(Theme.textPrimary)
                             Spacer()
                             Text(meeting.formattedDate)
+                                .font(.system(size: 12, weight: .light))
                                 .foregroundStyle(Theme.textSecondary)
                         }
                         .listRowBackground(Theme.bgCard)
@@ -37,8 +39,9 @@ struct FolderView: View {
                         VStack(spacing: 8) {
                             Image(systemName: "folder")
                                 .font(.system(size: 36))
-                                .foregroundStyle(Theme.textMuted)
+                                .foregroundStyle(Theme.accent.opacity(0.4))
                             Text("No meetings in this folder")
+                                .font(.system(size: 14, weight: .light))
                                 .foregroundStyle(Theme.textSecondary)
                         }
                         Spacer()
@@ -47,6 +50,7 @@ struct FolderView: View {
                 }
             } else {
                 Text("Folder not found")
+                    .font(.system(size: 14, weight: .light))
                     .foregroundStyle(Theme.textSecondary)
             }
         }

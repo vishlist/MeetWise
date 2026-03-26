@@ -13,7 +13,7 @@ struct MenuBarView: View {
                     .font(.system(size: 16))
                     .foregroundStyle(Theme.accent)
                 Text("MeetWise")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.custom("Georgia", size: 13))
                     .foregroundStyle(Theme.textPrimary)
                 Spacer()
 
@@ -27,15 +27,15 @@ struct MenuBarView: View {
             .padding(.horizontal, 12)
             .padding(.top, 8)
 
-            Divider()
+            Divider().background(Theme.divider)
 
             if appState.isRecording {
                 // Recording state
                 HStack(spacing: 8) {
                     Circle()
-                        .fill(.red)
+                        .fill(Theme.accentRed)
                         .frame(width: 8, height: 8)
-                        .shadow(color: .red.opacity(0.5), radius: 3)
+                        .shadow(color: Theme.accentRed.opacity(0.4), radius: 3)
                     Text("Recording")
                         .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(Theme.textPrimary)
@@ -51,7 +51,7 @@ struct MenuBarView: View {
                 HStack(spacing: 2) {
                     ForEach(0..<20, id: \.self) { i in
                         RoundedRectangle(cornerRadius: 1)
-                            .fill(Float(i) / 20.0 < appState.audioLevel ? Theme.accent : Theme.bgCard)
+                            .fill(Float(i) / 20.0 < appState.audioLevel ? Theme.accent : Theme.pastelLavender)
                             .frame(width: 8, height: 12)
                     }
                 }
@@ -65,12 +65,12 @@ struct MenuBarView: View {
                         Image(systemName: "stop.fill")
                             .font(.system(size: 10))
                         Text("Stop Recording")
-                            .font(.system(size: 13))
+                            .font(.system(size: 13, weight: .light))
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 6)
-                    .background(Color.red.opacity(0.15))
-                    .foregroundStyle(.red)
+                    .background(Theme.pastelRose)
+                    .foregroundStyle(Theme.accentRed)
                     .cornerRadius(Theme.radiusSM)
                 }
                 .buttonStyle(.plain)
@@ -87,7 +87,7 @@ struct MenuBarView: View {
                                 .font(.system(size: 12, weight: .medium))
                                 .foregroundStyle(Theme.textPrimary)
                             Text(detected.windowTitle)
-                                .font(.system(size: 11))
+                                .font(.system(size: 11, weight: .light))
                                 .foregroundStyle(Theme.textMuted)
                                 .lineLimit(1)
                         }
@@ -96,7 +96,7 @@ struct MenuBarView: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
 
-                    Divider()
+                    Divider().background(Theme.divider)
                 }
 
                 // Quick Note button
@@ -108,11 +108,11 @@ struct MenuBarView: View {
                         Image(systemName: "plus")
                             .font(.system(size: 12))
                         Text("Quick Note")
-                            .font(.system(size: 13))
+                            .font(.system(size: 13, weight: .light))
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 6)
-                    .background(Theme.accent.opacity(0.12))
+                    .background(Theme.pastelLavender)
                     .foregroundStyle(Theme.accent)
                     .cornerRadius(Theme.radiusSM)
                 }
@@ -121,10 +121,10 @@ struct MenuBarView: View {
 
                 // Recent meetings
                 if !recentMeetings.isEmpty {
-                    Divider()
+                    Divider().background(Theme.divider)
 
                     Text("Recent")
-                        .font(.system(size: 10, weight: .semibold))
+                        .font(.custom("Georgia", size: 10))
                         .foregroundStyle(Theme.textMuted)
                         .tracking(0.5)
                         .padding(.horizontal, 12)
@@ -141,11 +141,11 @@ struct MenuBarView: View {
                                     .foregroundStyle(Theme.textMuted)
                                 VStack(alignment: .leading, spacing: 1) {
                                     Text(meeting.title)
-                                        .font(.system(size: 12))
+                                        .font(.system(size: 12, weight: .light))
                                         .foregroundStyle(Theme.textPrimary)
                                         .lineLimit(1)
                                     Text(meeting.formattedDate)
-                                        .font(.system(size: 10))
+                                        .font(.system(size: 10, weight: .light))
                                         .foregroundStyle(Theme.textMuted)
                                 }
                                 Spacer()
@@ -159,14 +159,14 @@ struct MenuBarView: View {
                 }
             }
 
-            Divider()
+            Divider().background(Theme.divider)
 
             Button {
                 NSApp.activate(ignoringOtherApps: true)
             } label: {
                 HStack {
                     Text("Open MeetWise")
-                        .font(.system(size: 13))
+                        .font(.system(size: 13, weight: .light))
                     Spacer()
                     Text("O")
                         .font(.system(size: 11))
@@ -183,21 +183,21 @@ struct MenuBarView: View {
                 NSApp.activate(ignoringOtherApps: true)
             } label: {
                 Text("Settings...")
-                    .font(.system(size: 13))
+                    .font(.system(size: 13, weight: .light))
                     .foregroundStyle(Theme.textPrimary)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 4)
             }
             .buttonStyle(.plain)
 
-            Divider()
+            Divider().background(Theme.divider)
 
             Button {
                 NSApp.terminate(nil)
             } label: {
                 HStack {
                     Text("Quit MeetWise")
-                        .font(.system(size: 13))
+                        .font(.system(size: 13, weight: .light))
                     Spacer()
                     Text("Q")
                         .font(.system(size: 11))

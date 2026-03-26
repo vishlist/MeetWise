@@ -163,21 +163,21 @@ struct NotepadView: View {
     private var recordingBanner: some View {
         HStack(spacing: 10) {
             Circle()
-                .fill(Color.red)
+                .fill(Theme.accentRed)
                 .frame(width: 8, height: 8)
-                .shadow(color: .red.opacity(0.6), radius: 4)
+                .shadow(color: Theme.accentRed.opacity(0.4), radius: 4)
 
             HStack(spacing: 2) {
                 ForEach(0..<12, id: \.self) { i in
                     RoundedRectangle(cornerRadius: 1)
-                        .fill(Color.red.opacity(0.6))
+                        .fill(Theme.accentRed.opacity(0.6))
                         .frame(width: 2, height: waveformHeight(index: i))
                 }
             }
 
             Text("Recording")
                 .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(Color.red)
+                .foregroundStyle(Theme.accentRed)
 
             Text(sessionManager.formattedDuration)
                 .font(.system(size: 12).monospacedDigit())
@@ -190,17 +190,17 @@ struct NotepadView: View {
             } label: {
                 Text("Stop")
                     .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.red)
+                    .foregroundStyle(Theme.accentRed)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
-                    .background(Color.red.opacity(0.12))
+                    .background(Theme.pastelRose)
                     .cornerRadius(Theme.radiusPill)
             }
             .buttonStyle(.plain)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
-        .background(Color.red.opacity(0.06))
+        .background(Theme.pastelRose.opacity(0.3))
     }
 
     private func waveformHeight(index: Int) -> CGFloat {
@@ -218,14 +218,14 @@ struct NotepadView: View {
                     withAnimation(.easeInOut(duration: 0.15)) { selectedTab = tab }
                 } label: {
                     Text(tab.rawValue)
-                        .font(.system(size: 13, weight: selectedTab == tab ? .semibold : .regular))
+                        .font(.system(size: 13, weight: selectedTab == tab ? .medium : .light))
                         .foregroundStyle(selectedTab == tab ? Theme.textPrimary : Theme.textSecondary)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 8)
                         .overlay(alignment: .bottom) {
                             if selectedTab == tab {
                                 Rectangle()
-                                    .fill(Theme.textPrimary)
+                                    .fill(Theme.accent)
                                     .frame(height: 2)
                             }
                         }
@@ -235,7 +235,7 @@ struct NotepadView: View {
             Spacer()
         }
         .overlay(alignment: .bottom) {
-            Rectangle().fill(Theme.border).frame(height: 1)
+            Rectangle().fill(Theme.divider).frame(height: 1)
         }
     }
 
@@ -256,6 +256,7 @@ struct NotepadView: View {
                 .padding(6)
                 .background(Theme.bgCard)
                 .cornerRadius(Theme.radiusSM)
+                .shadow(color: Color.black.opacity(0.03), radius: 2, y: 1)
             }
             .buttonStyle(.plain)
             .hoverScale(1.05)
@@ -263,7 +264,7 @@ struct NotepadView: View {
             // Breadcrumb
             HStack(spacing: 4) {
                 Text("Meetings")
-                    .font(.system(size: 12))
+                    .font(.system(size: 12, weight: .light))
                     .foregroundStyle(Theme.textMuted)
                 Image(systemName: "chevron.right")
                     .font(.system(size: 9))
@@ -282,12 +283,12 @@ struct NotepadView: View {
                     Image(systemName: "sparkles")
                         .font(.system(size: 12))
                     Text("Enhanced")
-                        .font(.system(size: 13))
+                        .font(.system(size: 13, weight: .light))
                 }
-                .foregroundStyle(Theme.textSecondary)
+                .foregroundStyle(Theme.accent)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
-                .background(Theme.bgCard)
+                .background(Theme.pastelLavender)
                 .cornerRadius(Theme.radiusSM)
             }
 
@@ -323,14 +324,14 @@ struct NotepadView: View {
                     Image(systemName: "square.and.arrow.up")
                         .font(.system(size: 12))
                     Text(copiedToClipboard ? "Copied!" : "Share")
-                        .font(.system(size: 13))
+                        .font(.system(size: 13, weight: .light))
                 }
                 .foregroundStyle(Theme.textPrimary)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
                 .background(Theme.bgCard)
                 .cornerRadius(Theme.radiusSM)
-                .overlay(RoundedRectangle(cornerRadius: Theme.radiusSM).stroke(Theme.border, lineWidth: 1))
+                .shadow(color: Color.black.opacity(0.03), radius: 2, y: 1)
             }
             .menuStyle(.borderlessButton)
             .fixedSize()
@@ -348,7 +349,7 @@ struct NotepadView: View {
                     .padding(6)
                     .background(Theme.bgCard)
                     .cornerRadius(Theme.radiusSM)
-                    .overlay(RoundedRectangle(cornerRadius: Theme.radiusSM).stroke(Theme.border, lineWidth: 1))
+                    .shadow(color: Color.black.opacity(0.03), radius: 2, y: 1)
             }
             .buttonStyle(.plain)
             .hoverScale(1.05)
@@ -361,10 +362,9 @@ struct NotepadView: View {
                     .font(.system(size: 13))
                     .foregroundStyle(showChatSidebar ? Theme.accent : Theme.textSecondary)
                     .padding(6)
-                    .background(Theme.bgCard)
+                    .background(showChatSidebar ? Theme.pastelLavender : Theme.bgCard)
                     .cornerRadius(Theme.radiusSM)
-                    .overlay(RoundedRectangle(cornerRadius: Theme.radiusSM).stroke(
-                        showChatSidebar ? Theme.accent.opacity(0.3) : Theme.border, lineWidth: 1))
+                    .shadow(color: Color.black.opacity(0.03), radius: 2, y: 1)
             }
             .buttonStyle(.plain)
             .hoverScale(1.05)
@@ -411,7 +411,7 @@ struct NotepadView: View {
                     .padding(6)
                     .background(Theme.bgCard)
                     .cornerRadius(Theme.radiusSM)
-                    .overlay(RoundedRectangle(cornerRadius: Theme.radiusSM).stroke(Theme.border, lineWidth: 1))
+                    .shadow(color: Color.black.opacity(0.03), radius: 2, y: 1)
             }
             .menuStyle(.borderlessButton)
             .fixedSize()
@@ -420,7 +420,7 @@ struct NotepadView: View {
         .padding(.vertical, 10)
     }
 
-    // MARK: - Meeting Header
+    // MARK: - Meeting Header (Georgia Bold serif)
     private var meetingHeader: some View {
         Text(meeting.title)
             .font(.heading(28))
@@ -428,19 +428,19 @@ struct NotepadView: View {
             .textSelection(.enabled)
     }
 
-    // MARK: - Metadata + Attendees
+    // MARK: - Metadata + Attendees (pastel pill backgrounds)
     private var metadataAndAttendees: some View {
         VStack(alignment: .leading, spacing: 10) {
             // Date pill
             HStack(spacing: 8) {
-                metadataPill(icon: "calendar", text: formatDateFull(meeting.startedAt))
+                metadataPill(icon: "calendar", text: formatDateFull(meeting.startedAt), bg: Theme.pastelLavender)
 
                 if let platform = meeting.platform {
-                    metadataPill(icon: "video", text: platform)
+                    metadataPill(icon: "video", text: platform, bg: Theme.pastelBlue)
                 }
 
                 if let dur = meeting.durationSeconds, dur > 0 {
-                    metadataPill(icon: "clock", text: meeting.formattedDuration)
+                    metadataPill(icon: "clock", text: meeting.formattedDuration, bg: Theme.pastelMint)
                 }
             }
 
@@ -459,7 +459,7 @@ struct NotepadView: View {
                 }
 
                 if participants.isEmpty {
-                    AttendeePill(name: "Me", color: Theme.textMuted)
+                    AttendeePill(name: "Me", color: Theme.accent)
                 }
 
                 // Add attendee button
@@ -467,7 +467,7 @@ struct NotepadView: View {
                     HStack(spacing: 4) {
                         TextField("Name", text: $newAttendee)
                             .textFieldStyle(.plain)
-                            .font(.system(size: 12))
+                            .font(.system(size: 12, weight: .light))
                             .foregroundStyle(Theme.textPrimary)
                             .frame(width: 100)
                             .onSubmit { addAttendee() }
@@ -480,7 +480,7 @@ struct NotepadView: View {
                     .padding(.vertical, 4)
                     .background(Theme.bgCard)
                     .cornerRadius(Theme.radiusPill)
-                    .overlay(RoundedRectangle(cornerRadius: Theme.radiusPill).stroke(Theme.border, lineWidth: 1))
+                    .shadow(color: Color.black.opacity(0.04), radius: 4, y: 1)
                 } else {
                     Button {
                         showAddAttendee = true
@@ -489,7 +489,7 @@ struct NotepadView: View {
                             Image(systemName: "plus")
                                 .font(.system(size: 10))
                             Text("Add attendee")
-                                .font(.system(size: 11))
+                                .font(.system(size: 11, weight: .light))
                         }
                         .foregroundStyle(Theme.textMuted)
                         .padding(.horizontal, 8)
@@ -508,17 +508,16 @@ struct NotepadView: View {
         }
     }
 
-    private func metadataPill(icon: String, text: String) -> some View {
+    private func metadataPill(icon: String, text: String, bg: Color = Theme.pastelLavender) -> some View {
         HStack(spacing: 4) {
             Image(systemName: icon).font(.system(size: 11))
-            Text(text).font(.system(size: 12))
+            Text(text).font(.system(size: 12, weight: .light))
         }
         .foregroundStyle(Theme.textSecondary)
         .padding(.horizontal, 10)
         .padding(.vertical, 5)
-        .background(Theme.bgCard)
+        .background(bg.opacity(0.6))
         .cornerRadius(Theme.radiusPill)
-        .overlay(RoundedRectangle(cornerRadius: Theme.radiusPill).stroke(Theme.border, lineWidth: 1))
     }
 
     // MARK: - Notes Tab
@@ -535,14 +534,14 @@ struct NotepadView: View {
     // MARK: - Note Editor
     private var noteEditor: some View {
         TextEditor(text: $userNotes)
-            .font(.system(size: 15))
+            .font(.system(size: 15, weight: .light))
             .foregroundStyle(Theme.textPrimary)
             .scrollContentBackground(.hidden)
             .frame(minHeight: 400)
             .overlay(alignment: .topLeading) {
                 if userNotes.isEmpty {
                     Text("Start taking notes...")
-                        .font(.system(size: 15))
+                        .font(.system(size: 15, weight: .light))
                         .foregroundStyle(Theme.textMuted)
                         .padding(.leading, 5)
                         .padding(.top, 8)
@@ -560,10 +559,10 @@ struct NotepadView: View {
                         .font(.system(size: 36))
                         .foregroundStyle(Theme.textMuted)
                     Text("No transcript yet")
-                        .font(.system(size: 14, weight: .medium))
+                        .font(.custom("Georgia", size: 14))
                         .foregroundStyle(Theme.textSecondary)
                     Text("Start recording to see real-time transcription")
-                        .font(.system(size: 12))
+                        .font(.system(size: 12, weight: .light))
                         .foregroundStyle(Theme.textMuted)
                 }
                 .frame(maxWidth: .infinity)
@@ -576,11 +575,11 @@ struct NotepadView: View {
                 if !sessionManager.interimText.isEmpty {
                     HStack {
                         Text(sessionManager.interimText)
-                            .font(.system(size: 13))
+                            .font(.system(size: 13, weight: .light))
                             .foregroundStyle(Theme.textMuted)
                             .italic()
                             .padding(10)
-                            .background(Theme.bgCard.opacity(0.3))
+                            .background(Theme.pastelLavender.opacity(0.3))
                             .cornerRadius(Theme.radiusMD)
                         Spacer()
                     }
@@ -606,16 +605,17 @@ struct NotepadView: View {
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(Theme.textMuted)
                     Text(formatTime(segment.timestamp))
-                        .font(.system(size: 10))
+                        .font(.mono(10))
                         .foregroundStyle(Theme.textMuted)
                 }
 
                 Text(segment.text)
-                    .font(.system(size: 14))
+                    .font(.system(size: 14, weight: .light))
                     .foregroundStyle(Theme.textPrimary)
                     .padding(10)
-                    .background(isUser ? Theme.bgCard : Theme.bgCard.opacity(0.5))
+                    .background(isUser ? Theme.pastelLavender.opacity(0.4) : Theme.bgCard)
                     .cornerRadius(Theme.radiusMD)
+                    .shadow(color: Color.black.opacity(0.03), radius: 3, y: 1)
                     .textSelection(.enabled)
             }
 
@@ -633,11 +633,12 @@ struct NotepadView: View {
                     .foregroundStyle(Theme.textMuted)
 
                 Text(text)
-                    .font(.system(size: 14))
+                    .font(.system(size: 14, weight: .light))
                     .foregroundStyle(Theme.textPrimary)
                     .padding(10)
-                    .background(isUser ? Theme.bgCard : Theme.bgCard.opacity(0.5))
+                    .background(isUser ? Theme.pastelLavender.opacity(0.4) : Theme.bgCard)
                     .cornerRadius(Theme.radiusMD)
+                    .shadow(color: Color.black.opacity(0.03), radius: 3, y: 1)
                     .textSelection(.enabled)
             }
 
@@ -655,7 +656,7 @@ struct NotepadView: View {
                     if !summary.overview.isEmpty {
                         CollapsibleSection(title: "Meeting Purpose", icon: "doc.text") {
                             Text(summary.overview)
-                                .font(.system(size: 14))
+                                .font(.system(size: 14, weight: .light))
                                 .foregroundStyle(Theme.textSecondary)
                                 .lineSpacing(4)
                         }
@@ -667,16 +668,16 @@ struct NotepadView: View {
                             ForEach(summary.keyPoints, id: \.self) { point in
                                 HStack(alignment: .top, spacing: 8) {
                                     Circle()
-                                        .fill(Theme.textMuted)
+                                        .fill(Theme.accent.opacity(0.4))
                                         .frame(width: 5, height: 5)
                                         .padding(.top, 7)
                                     Text(point)
-                                        .font(.system(size: 14))
+                                        .font(.system(size: 14, weight: .light))
                                         .foregroundStyle(Theme.textPrimary)
                                 }
                                 .padding(10)
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(Theme.bgPrimary.opacity(0.5))
+                                .background(Theme.pastelLavender.opacity(0.3))
                                 .cornerRadius(Theme.radiusSM)
                             }
                         }
@@ -711,7 +712,7 @@ struct NotepadView: View {
                                 .padding(.horizontal, 10)
                                 .padding(.vertical, 6)
 
-                                Rectangle().fill(Theme.border).frame(height: 1)
+                                Rectangle().fill(Theme.divider).frame(height: 1)
 
                                 ForEach(summary.actionItems, id: \.task) { item in
                                     ActionItemRow(
@@ -731,10 +732,10 @@ struct NotepadView: View {
                                 HStack(alignment: .top, spacing: 8) {
                                     Image(systemName: "checkmark")
                                         .font(.system(size: 10, weight: .bold))
-                                        .foregroundStyle(Theme.textMuted)
+                                        .foregroundStyle(Theme.accentGreen)
                                         .padding(.top, 3)
                                     Text(decision)
-                                        .font(.system(size: 14))
+                                        .font(.system(size: 14, weight: .light))
                                         .foregroundStyle(Theme.textPrimary)
                                 }
                             }
@@ -745,12 +746,12 @@ struct NotepadView: View {
                 VStack(spacing: 12) {
                     Image(systemName: "sparkles")
                         .font(.system(size: 36))
-                        .foregroundStyle(Theme.textMuted)
+                        .foregroundStyle(Theme.accent.opacity(0.4))
                     Text("No summary available")
-                        .font(.system(size: 14, weight: .medium))
+                        .font(.custom("Georgia", size: 14))
                         .foregroundStyle(Theme.textSecondary)
                     Text("Enhance your notes to generate a summary")
-                        .font(.system(size: 12))
+                        .font(.system(size: 12, weight: .light))
                         .foregroundStyle(Theme.textMuted)
                 }
                 .frame(maxWidth: .infinity)
@@ -759,7 +760,7 @@ struct NotepadView: View {
         }
     }
 
-    // MARK: - Enhanced Content (Markdown-like rendering)
+    // MARK: - Enhanced Content (Markdown-like rendering with Georgia headers)
     private func enhancedContent(_ content: String) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             let lines = content.components(separatedBy: "\n")
@@ -778,7 +779,7 @@ struct NotepadView: View {
             HStack(spacing: 6) {
                 Text("#").font(.system(size: 14)).foregroundStyle(Theme.textMuted)
                 Text(String(trimmed.dropFirst(2)))
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.custom("Georgia-Bold", size: 16))
                     .foregroundStyle(Theme.textPrimary)
             }
             .padding(.top, 12)
@@ -786,7 +787,7 @@ struct NotepadView: View {
             HStack(spacing: 6) {
                 Text("#").font(.system(size: 13)).foregroundStyle(Theme.textMuted)
                 Text(String(trimmed.dropFirst(3)))
-                    .font(.system(size: 15, weight: .medium))
+                    .font(.custom("Georgia", size: 15))
                     .foregroundStyle(Theme.textPrimary)
             }
             .padding(.top, 8)
@@ -805,7 +806,7 @@ struct NotepadView: View {
                 .replacingOccurrences(of: "[/USER]", with: "")
                 .trimmingCharacters(in: .whitespaces)
             Text(cleaned)
-                .font(.system(size: 14, weight: isAI ? .regular : .medium))
+                .font(.system(size: 14, weight: isAI ? .light : .regular))
                 .foregroundStyle(isAI ? Theme.textSecondary : Theme.textPrimary)
         }
     }
@@ -814,13 +815,13 @@ struct NotepadView: View {
         HStack(alignment: .top, spacing: 6) {
             Text(indent == 0 ? "*" : "-")
                 .font(.system(size: indent == 0 ? 14 : 12))
-                .foregroundStyle(Theme.textMuted)
+                .foregroundStyle(Theme.accent.opacity(0.5))
             Text(text
                 .replacingOccurrences(of: "[AI]", with: "")
                 .replacingOccurrences(of: "[/AI]", with: "")
                 .replacingOccurrences(of: "[USER]", with: "")
                 .replacingOccurrences(of: "[/USER]", with: ""))
-                .font(.system(size: 14))
+                .font(.system(size: 14, weight: .light))
                 .foregroundStyle(isAI ? Theme.textSecondary : Theme.textPrimary)
         }
         .padding(.leading, CGFloat(indent) * 20)
@@ -831,7 +832,7 @@ struct NotepadView: View {
         VStack(spacing: 0) {
             Divider().background(Theme.divider)
             HStack(spacing: 12) {
-                // Enhance button
+                // Enhance button (muted purple bg, white text)
                 if !isActiveRecording && meeting.enhancedNotes == nil {
                     Button {
                         isEnhancing = true
@@ -849,10 +850,10 @@ struct NotepadView: View {
                             Text(isEnhancing ? "Enhancing..." : "Enhance Notes")
                                 .font(.system(size: 13, weight: .medium))
                         }
-                        .foregroundStyle(Color.black)
+                        .foregroundStyle(Color.white)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 8)
-                        .background(Color.white)
+                        .background(Theme.accent)
                         .cornerRadius(Theme.radiusPill)
                     }
                     .buttonStyle(.plain)
@@ -865,13 +866,13 @@ struct NotepadView: View {
                         Task { await sessionManager.stopRecording(modelContext: modelContext) }
                     } label: {
                         HStack(spacing: 6) {
-                            Circle().fill(.red).frame(width: 8, height: 8)
+                            Circle().fill(Theme.accentRed).frame(width: 8, height: 8)
                             Text("Stop recording").font(.system(size: 13, weight: .medium))
                         }
-                        .foregroundStyle(Theme.textPrimary)
+                        .foregroundStyle(Theme.accentRed)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 8)
-                        .background(Color.red.opacity(0.15))
+                        .background(Theme.pastelRose)
                         .cornerRadius(Theme.radiusPill)
                     }
                     .buttonStyle(.plain)
@@ -881,7 +882,7 @@ struct NotepadView: View {
                 HStack(spacing: 8) {
                     TextField("Ask anything", text: $chatInput)
                         .textFieldStyle(.plain)
-                        .font(.system(size: 13))
+                        .font(.system(size: 13, weight: .light))
                         .foregroundStyle(Theme.textPrimary)
                         .onSubmit {
                             if !chatInput.isEmpty {
@@ -895,7 +896,7 @@ struct NotepadView: View {
                 .padding(.vertical, 8)
                 .background(Theme.bgCard)
                 .cornerRadius(Theme.radiusPill)
-                .overlay(RoundedRectangle(cornerRadius: Theme.radiusPill).stroke(Theme.border, lineWidth: 1))
+                .shadow(color: Color.black.opacity(0.04), radius: 4, x: 0, y: 1)
 
                 // Recipe pill
                 Button {
@@ -905,11 +906,11 @@ struct NotepadView: View {
                 } label: {
                     HStack(spacing: 4) {
                         Text("/").font(.system(size: 12, weight: .bold)).foregroundStyle(Theme.accent)
-                        Text("Write follow up email").font(.system(size: 12)).foregroundStyle(Theme.textPrimary)
+                        Text("Write follow up email").font(.system(size: 12, weight: .light)).foregroundStyle(Theme.textPrimary)
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
-                    .background(Theme.bgCard)
+                    .background(Theme.pastelLavender.opacity(0.5))
                     .cornerRadius(Theme.radiusPill)
                 }
                 .buttonStyle(.plain)
@@ -917,7 +918,7 @@ struct NotepadView: View {
 
                 if let error = sessionManager.error {
                     Text(error)
-                        .font(.system(size: 11))
+                        .font(.system(size: 11, weight: .light))
                         .foregroundStyle(Theme.accentRed)
                         .lineLimit(1)
                 }
@@ -928,23 +929,23 @@ struct NotepadView: View {
         }
     }
 
-    // MARK: - Chat Sidebar
+    // MARK: - Chat Sidebar (light cream bg)
     private var chatSidebar: some View {
         VStack(spacing: 0) {
             // Header
             HStack {
                 // Bot avatar
                 Circle()
-                    .fill(Color(hex: "#333333"))
+                    .fill(Theme.accent)
                     .frame(width: 24, height: 24)
                     .overlay(
                         Text("MW")
                             .font(.system(size: 8, weight: .bold))
-                            .foregroundStyle(Theme.textPrimary)
+                            .foregroundStyle(Color.white)
                     )
 
                 Text("Ask about this meeting")
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.custom("Georgia", size: 14))
                     .foregroundStyle(Theme.textPrimary)
                 Spacer()
                 Text("J")
@@ -970,7 +971,7 @@ struct NotepadView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     if chatMessages.isEmpty {
                         Text("Ask anything about this meeting.\nTry: \"What were the action items?\"")
-                            .font(.system(size: 13))
+                            .font(.system(size: 13, weight: .light))
                             .foregroundStyle(Theme.textMuted)
                             .padding(12)
                     }
@@ -982,12 +983,12 @@ struct NotepadView: View {
                     if chatService.isLoading {
                         HStack(spacing: 8) {
                             Circle()
-                                .fill(Color(hex: "#333333"))
+                                .fill(Theme.accent)
                                 .frame(width: 22, height: 22)
                                 .overlay(
                                     Text("MW")
                                         .font(.system(size: 7, weight: .bold))
-                                        .foregroundStyle(Theme.textPrimary)
+                                        .foregroundStyle(Color.white)
                                 )
                             TypingIndicator()
                         }
@@ -1007,13 +1008,13 @@ struct NotepadView: View {
                                 sendChatMessage()
                             } label: {
                                 Text(prompt)
-                                    .font(.system(size: 11))
+                                    .font(.system(size: 11, weight: .light))
                                     .foregroundStyle(Theme.textSecondary)
                                     .padding(.horizontal, 10)
                                     .padding(.vertical, 5)
                                     .background(Theme.bgCard)
                                     .cornerRadius(Theme.radiusPill)
-                                    .overlay(RoundedRectangle(cornerRadius: Theme.radiusPill).stroke(Theme.border, lineWidth: 1))
+                                    .shadow(color: Color.black.opacity(0.03), radius: 2, y: 1)
                             }
                             .buttonStyle(.plain)
                             .hoverScale(1.03)
@@ -1030,7 +1031,7 @@ struct NotepadView: View {
             HStack(spacing: 8) {
                 TextField("Ask me anything...", text: $chatInput)
                     .textFieldStyle(.plain)
-                    .font(.system(size: 13))
+                    .font(.system(size: 13, weight: .light))
                     .onSubmit { sendChatMessage() }
 
                 Button { sendChatMessage() } label: {
@@ -1050,32 +1051,33 @@ struct NotepadView: View {
         HStack(alignment: .top, spacing: 8) {
             if role == "assistant" {
                 Circle()
-                    .fill(Color(hex: "#333333"))
+                    .fill(Theme.accent)
                     .frame(width: 22, height: 22)
                     .overlay(
                         Text("MW")
                             .font(.system(size: 7, weight: .bold))
-                            .foregroundStyle(Theme.textPrimary)
+                            .foregroundStyle(Color.white)
                     )
             }
 
             Text(content)
-                .font(.system(size: 13))
-                .foregroundStyle(role == "user" ? Theme.textPrimary : Theme.textSecondary)
+                .font(.system(size: 13, weight: .light))
+                .foregroundStyle(Theme.textPrimary)
                 .padding(10)
-                .background(role == "user" ? Theme.bgCard : Color(hex: "#1a1a1a"))
+                .background(role == "user" ? Theme.pastelLavender.opacity(0.4) : Theme.bgCard)
                 .cornerRadius(Theme.radiusMD)
+                .shadow(color: role == "assistant" ? Color.black.opacity(0.03) : .clear, radius: 3, y: 1)
                 .textSelection(.enabled)
                 .frame(maxWidth: .infinity, alignment: role == "user" ? .trailing : .leading)
 
             if role == "user" {
                 Circle()
-                    .fill(Theme.textMuted)
+                    .fill(Theme.pastelBlue)
                     .frame(width: 22, height: 22)
                     .overlay(
                         Text(appState.currentUser?.initials ?? "U")
                             .font(.system(size: 8, weight: .medium))
-                            .foregroundStyle(Theme.bgPrimary)
+                            .foregroundStyle(Theme.accent)
                     )
             }
         }

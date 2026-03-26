@@ -127,37 +127,41 @@ struct HomeView: View {
                 .font(.heading(28))
                 .foregroundStyle(Theme.textHeading)
             Text("You have \(thisWeekMeetings.count) meeting\(thisWeekMeetings.count == 1 ? "" : "s") this week")
-                .font(.system(size: 14))
+                .font(.system(size: 14, weight: .light))
                 .foregroundStyle(Theme.textSecondary)
         }
     }
 
-    // MARK: - Stats Cards Row
+    // MARK: - Stats Cards Row (each with different pastel bg)
     private var statsCardsRow: some View {
         HStack(spacing: 12) {
             StatsCard(
                 title: "Active Notes",
                 value: "\(activeNotesCount)",
                 subtitle: "Total meetings",
-                icon: "doc.text.fill"
+                icon: "doc.text.fill",
+                pastelBg: Theme.pastelBlue
             )
             StatsCard(
                 title: "Completed",
                 value: "\(completedCount)/\(recentMeetings.count)",
                 subtitle: completedCount == recentMeetings.count ? "All done" : "\(recentMeetings.count - completedCount) remaining",
-                icon: "checkmark.circle.fill"
+                icon: "checkmark.circle.fill",
+                pastelBg: Theme.pastelMint
             )
             StatsCard(
                 title: "This Week",
                 value: "\(thisWeekMeetings.count)",
                 subtitle: "Meetings",
-                icon: "calendar"
+                icon: "calendar",
+                pastelBg: Theme.pastelPeach
             )
             StatsCard(
                 title: "Action Items",
                 value: "\(actionItemsCount)",
                 subtitle: "Pending tasks",
-                icon: "checklist"
+                icon: "checklist",
+                pastelBg: Theme.pastelYellow
             )
         }
     }
@@ -168,7 +172,7 @@ struct HomeView: View {
             HStack(alignment: .top, spacing: 16) {
                 VStack(spacing: 2) {
                     Text("\(Calendar.current.component(.day, from: Date()))")
-                        .font(.system(size: 32, weight: .light, design: .rounded))
+                        .font(.custom("Georgia-Bold", size: 32))
                         .foregroundStyle(Theme.textPrimary)
                     Text(dayOfWeek)
                         .font(.system(size: 14, weight: .medium))
@@ -177,13 +181,13 @@ struct HomeView: View {
                 .frame(width: 50)
 
                 Text(monthName)
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.custom("Georgia", size: 14))
                     .foregroundStyle(Theme.accent)
 
                 Spacer()
             }
             .padding(16)
-            .background(Theme.bgCard)
+            .background(Theme.pastelPeach.opacity(0.3))
             .clipShape(UnevenRoundedRectangle(topLeadingRadius: Theme.radiusLG, topTrailingRadius: Theme.radiusLG))
 
             if !calendarAuthorized {
@@ -195,7 +199,7 @@ struct HomeView: View {
                         .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(Theme.textSecondary)
                     Text("Connect your calendar to see upcoming meetings")
-                        .font(.system(size: 12))
+                        .font(.system(size: 12, weight: .light))
                         .foregroundStyle(Theme.textMuted)
 
                     HStack(spacing: 12) {
@@ -206,10 +210,10 @@ struct HomeView: View {
                             }
                         }
                         .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(.black)
+                        .foregroundStyle(Color.white)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 6)
-                        .background(Color.white)
+                        .background(Theme.accent)
                         .cornerRadius(Theme.radiusSM)
                         .buttonStyle(.plain)
                         .hoverScale(1.05)
@@ -229,10 +233,9 @@ struct HomeView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 24)
-                .overlay(
-                    UnevenRoundedRectangle(bottomLeadingRadius: Theme.radiusLG, bottomTrailingRadius: Theme.radiusLG)
-                        .stroke(Theme.border, style: StrokeStyle(lineWidth: 1, dash: [6]))
-                )
+                .background(Theme.bgCard)
+                .clipShape(UnevenRoundedRectangle(bottomLeadingRadius: Theme.radiusLG, bottomTrailingRadius: Theme.radiusLG))
+                .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 2)
             } else if calendarService.todayEvents.isEmpty {
                 VStack(spacing: 10) {
                     Image(systemName: "calendar.badge.clock")
@@ -242,7 +245,7 @@ struct HomeView: View {
                         .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(Theme.textSecondary)
                     Text("Check your visible calendars")
-                        .font(.system(size: 12))
+                        .font(.system(size: 12, weight: .light))
                         .foregroundStyle(Theme.textMuted)
 
                     Button("Calendar Settings") {
@@ -259,17 +262,18 @@ struct HomeView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 24)
-                .overlay(
-                    UnevenRoundedRectangle(bottomLeadingRadius: Theme.radiusLG, bottomTrailingRadius: Theme.radiusLG)
-                        .stroke(Theme.border, style: StrokeStyle(lineWidth: 1, dash: [6]))
-                )
+                .background(Theme.bgCard)
+                .clipShape(UnevenRoundedRectangle(bottomLeadingRadius: Theme.radiusLG, bottomTrailingRadius: Theme.radiusLG))
+                .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 2)
             } else {
                 VStack(spacing: 0) {
                     ForEach(calendarService.todayEvents) { event in
                         calendarEventRow(event)
                     }
                 }
-                .glassCard(cornerRadius: Theme.radiusLG)
+                .background(Theme.bgCard)
+                .clipShape(UnevenRoundedRectangle(bottomLeadingRadius: Theme.radiusLG, bottomTrailingRadius: Theme.radiusLG))
+                .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 2)
             }
         }
     }
@@ -287,14 +291,14 @@ struct HomeView: View {
 
                 HStack(spacing: 6) {
                     Text(event.formattedTimeRange)
-                        .font(.system(size: 12))
+                        .font(.system(size: 12, weight: .light))
                         .foregroundStyle(Theme.textSecondary)
 
                     if !event.attendees.isEmpty {
                         Text("*")
                             .foregroundStyle(Theme.textMuted)
                         Text(event.attendees.prefix(3).map(\.name).joined(separator: ", "))
-                            .font(.system(size: 12))
+                            .font(.system(size: 12, weight: .light))
                             .foregroundStyle(Theme.textMuted)
                             .lineLimit(1)
                     }
@@ -335,7 +339,7 @@ struct HomeView: View {
                         .foregroundStyle(Theme.accent)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 5)
-                        .background(Theme.accent.opacity(0.12))
+                        .background(Theme.pastelLavender)
                         .cornerRadius(Theme.radiusPill)
                 }
                 .buttonStyle(.plain)
@@ -351,7 +355,7 @@ struct HomeView: View {
     private var notesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Recent Notes")
-                .font(.system(size: 16, weight: .semibold))
+                .font(.custom("Georgia", size: 16))
                 .foregroundStyle(Theme.textPrimary)
 
             let grouped = Dictionary(grouping: recentMeetings) { meeting in
@@ -363,7 +367,7 @@ struct HomeView: View {
                 let meetings = grouped[day] ?? []
 
                 Text(dayLabel(day))
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(Theme.textMuted)
                     .tracking(0.5)
                     .padding(.top, 8)
@@ -381,7 +385,7 @@ struct HomeView: View {
                 HStack(spacing: 12) {
                     ZStack {
                         RoundedRectangle(cornerRadius: Theme.radiusSM)
-                            .fill(Theme.bgCard)
+                            .fill(Theme.pastelLavender.opacity(0.5))
                             .frame(width: 36, height: 36)
 
                         if sessionManager.isRecording && sessionManager.currentMeeting?.id == meeting.id {
@@ -398,7 +402,7 @@ struct HomeView: View {
                             .font(.system(size: 14, weight: .medium))
                             .foregroundStyle(Theme.textPrimary)
                         Text(meeting.participants?.map(\.name).joined(separator: ", ") ?? "Me")
-                            .font(.system(size: 12))
+                            .font(.system(size: 12, weight: .light))
                             .foregroundStyle(Theme.textSecondary)
                     }
 
@@ -435,8 +439,9 @@ struct HomeView: View {
             .padding(.horizontal, 14)
             .background(
                 RoundedRectangle(cornerRadius: Theme.radiusMD)
-                    .fill(Theme.bgCard.opacity(0.5))
+                    .fill(Theme.bgCard)
             )
+            .shadow(color: Color.black.opacity(0.04), radius: 6, x: 0, y: 2)
             .contentShape(Rectangle())
         }
         .buttonStyle(HoverButtonStyle(cornerRadius: Theme.radiusMD))
@@ -448,17 +453,17 @@ struct HomeView: View {
             HStack {
                 Image(systemName: "checklist")
                     .font(.system(size: 13))
-                    .foregroundStyle(Theme.textMuted)
+                    .foregroundStyle(Theme.accent)
                 Text("Today's Tasks")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.custom("Georgia", size: 14))
                     .foregroundStyle(Theme.textPrimary)
                 Spacer()
                 Text("\(todayActionItems.count)")
                     .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(Theme.textMuted)
+                    .foregroundStyle(Theme.accent)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
-                    .background(Theme.bgCard)
+                    .background(Theme.pastelMint)
                     .cornerRadius(Theme.radiusPill)
             }
 
@@ -473,10 +478,7 @@ struct HomeView: View {
         .padding(16)
         .background(Theme.bgCard)
         .cornerRadius(Theme.radiusMD)
-        .overlay(
-            RoundedRectangle(cornerRadius: Theme.radiusMD)
-                .stroke(Theme.border, lineWidth: 1)
-        )
+        .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 2)
     }
 
     // MARK: - Empty State
@@ -487,11 +489,11 @@ struct HomeView: View {
                 .foregroundStyle(Theme.accent.opacity(0.4))
 
             Text("Take your first note")
-                .font(.subheading(16))
+                .font(.custom("Georgia", size: 16))
                 .foregroundStyle(Theme.textPrimary)
 
             Text("Your meeting notes will appear here")
-                .font(.system(size: 13))
+                .font(.system(size: 13, weight: .light))
                 .foregroundStyle(Theme.textSecondary)
 
             Button {
@@ -502,12 +504,11 @@ struct HomeView: View {
                     Image(systemName: "plus").font(.system(size: 12))
                     Text("Quick Note").font(.system(size: 13, weight: .semibold))
                 }
-                .foregroundStyle(Color.black)
+                .foregroundStyle(Color.white)
                 .padding(.horizontal, 20)
                 .padding(.vertical, 10)
-                .background(Color.white)
+                .background(Theme.accent)
                 .cornerRadius(Theme.radiusPill)
-                .glow(Theme.accent)
             }
             .buttonStyle(.plain)
             .hoverScale(1.05)
@@ -527,7 +528,7 @@ struct HomeView: View {
                         .foregroundStyle(Theme.accent)
                     TextField("What did we talk about yesterday?", text: $homeChat)
                         .textFieldStyle(.plain)
-                        .font(.system(size: 13))
+                        .font(.system(size: 13, weight: .light))
                         .foregroundStyle(Theme.textPrimary)
                         .onSubmit { sendHomeChatMessage() }
                     Spacer()
@@ -538,7 +539,9 @@ struct HomeView: View {
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
-                .glassCard(cornerRadius: Theme.radiusPill)
+                .background(Theme.bgCard)
+                .cornerRadius(Theme.radiusPill)
+                .shadow(color: Color.black.opacity(0.04), radius: 4, x: 0, y: 1)
 
                 Button {
                     homeChat = "List recent todos"
@@ -549,12 +552,14 @@ struct HomeView: View {
                             .font(.system(size: 12, weight: .bold))
                             .foregroundStyle(Theme.accent)
                         Text("List recent todos")
-                            .font(.system(size: 12))
+                            .font(.system(size: 12, weight: .light))
                             .foregroundStyle(Theme.textPrimary)
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
-                    .glassCard(cornerRadius: Theme.radiusPill)
+                    .background(Theme.bgCard)
+                    .cornerRadius(Theme.radiusPill)
+                    .shadow(color: Color.black.opacity(0.04), radius: 4, x: 0, y: 1)
                 }
                 .buttonStyle(.plain)
                 .hoverScale(1.03)

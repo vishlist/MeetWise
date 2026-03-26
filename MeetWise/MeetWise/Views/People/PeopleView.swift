@@ -31,7 +31,7 @@ struct PeopleView: View {
                             .foregroundStyle(Theme.textHeading)
                         Spacer()
                         Text("\(contacts.count) contacts")
-                            .font(.system(size: 12))
+                            .font(.system(size: 12, weight: .light))
                             .foregroundStyle(Theme.textMuted)
                     }
                     .padding(.top, 40)
@@ -43,12 +43,12 @@ struct PeopleView: View {
                             .foregroundStyle(Theme.textMuted)
                         TextField("Search people...", text: $searchText)
                             .textFieldStyle(.plain)
-                            .font(.system(size: 14))
+                            .font(.system(size: 14, weight: .light))
                     }
                     .padding(10)
                     .background(Theme.bgCard)
                     .cornerRadius(Theme.radiusSM)
-                    .overlay(RoundedRectangle(cornerRadius: Theme.radiusSM).stroke(Theme.border, lineWidth: 1))
+                    .shadow(color: Color.black.opacity(0.04), radius: 4, y: 1)
 
                     if filteredContacts.isEmpty {
                         emptyState
@@ -80,7 +80,7 @@ struct PeopleView: View {
             } label: {
                 HStack(spacing: 12) {
                     Circle()
-                        .fill(Theme.accent.opacity(0.2))
+                        .fill(Theme.pastelBlue)
                         .frame(width: 36, height: 36)
                         .overlay(
                             Text(contact.initials)
@@ -95,12 +95,12 @@ struct PeopleView: View {
                         HStack(spacing: 8) {
                             if let email = contact.email {
                                 Text(email)
-                                    .font(.system(size: 12))
+                                    .font(.system(size: 12, weight: .light))
                                     .foregroundStyle(Theme.textSecondary)
                             }
                             if let company = contact.company {
                                 Text("- \(company.name)")
-                                    .font(.system(size: 12))
+                                    .font(.system(size: 12, weight: .light))
                                     .foregroundStyle(Theme.textMuted)
                             }
                         }
@@ -124,18 +124,18 @@ struct PeopleView: View {
                         .foregroundStyle(Theme.accent)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(Theme.accent.opacity(0.1))
+                        .background(Theme.pastelLavender)
                         .cornerRadius(Theme.radiusPill)
                     }
                     .buttonStyle(.plain)
 
                     Text("\(contact.meetingCount) meetings")
-                        .font(.system(size: 12))
+                        .font(.system(size: 12, weight: .light))
                         .foregroundStyle(Theme.textMuted)
 
                     if let lastMet = contact.lastMetAt {
                         Text(formatRelativeDate(lastMet))
-                            .font(.system(size: 12))
+                            .font(.system(size: 12, weight: .light))
                             .foregroundStyle(Theme.textMuted)
                     }
 
@@ -162,11 +162,11 @@ struct PeopleView: View {
                                         .font(.system(size: 12))
                                         .foregroundStyle(Theme.textMuted)
                                     Text(meeting.title)
-                                        .font(.system(size: 13))
+                                        .font(.system(size: 13, weight: .light))
                                         .foregroundStyle(Theme.textPrimary)
                                     Spacer()
                                     Text(meeting.formattedDate)
-                                        .font(.system(size: 12))
+                                        .font(.system(size: 12, weight: .light))
                                         .foregroundStyle(Theme.textMuted)
                                 }
                                 .padding(.horizontal, 16)
@@ -178,24 +178,25 @@ struct PeopleView: View {
 
                         if contactMeetings.count > 5 {
                             Text("+ \(contactMeetings.count - 5) more")
-                                .font(.system(size: 12))
+                                .font(.system(size: 12, weight: .light))
                                 .foregroundStyle(Theme.textMuted)
                                 .padding(.horizontal, 16)
                                 .padding(.vertical, 4)
                         }
                     }
                     .padding(.bottom, 8)
-                    .background(Theme.bgCard.opacity(0.3))
+                    .background(Theme.bgPrimary.opacity(0.5))
                 } else {
                     Text("No meetings found with this contact")
-                        .font(.system(size: 12))
+                        .font(.system(size: 12, weight: .light))
                         .foregroundStyle(Theme.textMuted)
                         .padding(12)
                 }
             }
         }
-        .background(Theme.bgCard.opacity(0.3))
+        .background(Theme.bgCard)
         .cornerRadius(Theme.radiusMD)
+        .shadow(color: Color.black.opacity(0.04), radius: 6, y: 2)
     }
 
     // MARK: - Person Chat Sidebar
@@ -203,7 +204,7 @@ struct PeopleView: View {
         VStack(spacing: 0) {
             HStack {
                 Text("Ask about \(person.name)")
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.custom("Georgia", size: 14))
                     .foregroundStyle(Theme.textPrimary)
                     .lineLimit(1)
                 Spacer()
@@ -222,7 +223,7 @@ struct PeopleView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     if personChatMessages.isEmpty {
                         Text("Ask about interactions with \(person.name)")
-                            .font(.system(size: 13))
+                            .font(.system(size: 13, weight: .light))
                             .foregroundStyle(Theme.textMuted)
                             .padding(12)
                     }
@@ -230,11 +231,12 @@ struct PeopleView: View {
                     ForEach(Array(personChatMessages.enumerated()), id: \.offset) { _, msg in
                         VStack(alignment: msg.role == "user" ? .trailing : .leading) {
                             Text(msg.content)
-                                .font(.system(size: 13))
-                                .foregroundStyle(msg.role == "user" ? Theme.textPrimary : Theme.textSecondary)
+                                .font(.system(size: 13, weight: .light))
+                                .foregroundStyle(Theme.textPrimary)
                                 .padding(10)
-                                .background(msg.role == "user" ? Theme.bgCard : Theme.bgCard.opacity(0.5))
+                                .background(msg.role == "user" ? Theme.pastelLavender.opacity(0.4) : Theme.bgCard)
                                 .cornerRadius(Theme.radiusMD)
+                                .shadow(color: msg.role == "assistant" ? Color.black.opacity(0.03) : .clear, radius: 3, y: 1)
                                 .textSelection(.enabled)
                         }
                         .frame(maxWidth: .infinity, alignment: msg.role == "user" ? .trailing : .leading)
@@ -243,7 +245,7 @@ struct PeopleView: View {
                     if appState.chatService.isLoading {
                         HStack(spacing: 6) {
                             ProgressView().controlSize(.small)
-                            Text("Thinking...").font(.system(size: 12)).foregroundStyle(Theme.textMuted)
+                            Text("Thinking...").font(.system(size: 12, weight: .light)).foregroundStyle(Theme.textMuted)
                         }
                         .padding(10)
                     }
@@ -256,7 +258,7 @@ struct PeopleView: View {
             HStack(spacing: 8) {
                 TextField("Ask about \(person.name)...", text: $personChatInput)
                     .textFieldStyle(.plain)
-                    .font(.system(size: 13))
+                    .font(.system(size: 13, weight: .light))
                     .onSubmit { sendPersonChat(person: person) }
 
                 Button { sendPersonChat(person: person) } label: {
@@ -294,10 +296,10 @@ struct PeopleView: View {
                 .font(.system(size: 36))
                 .foregroundStyle(Theme.textMuted)
             Text("No contacts yet")
-                .font(.system(size: 14))
+                .font(.custom("Georgia", size: 14))
                 .foregroundStyle(Theme.textSecondary)
             Text("People from your meetings will appear here")
-                .font(.system(size: 12))
+                .font(.system(size: 12, weight: .light))
                 .foregroundStyle(Theme.textMuted)
         }
         .frame(maxWidth: .infinity)

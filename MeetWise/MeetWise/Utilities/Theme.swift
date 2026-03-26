@@ -1,49 +1,61 @@
 import SwiftUI
 
-// MARK: - MeetWise Design System — Monochrome Dark Theme
+// MARK: - MeetWise Design System — Pastel Light Editorial Theme
 
 enum Theme {
     // --- Backgrounds ---
-    static let bgPrimary    = Color(hex: "#0a0a0a")    // pure black
-    static let bgSidebar    = Color(hex: "#0e0e0e")    // sidebar
-    static let bgCard       = Color(hex: "#161616")    // card surface
-    static let bgCardBorder = Color(hex: "#1e1e1e")    // subtle border
-    static let bgHover      = Color(hex: "#1a1a1a")    // hover
-    static let bgActive     = Color(hex: "#202020")    // selected
-    static let bgInput      = Color(hex: "#111111")    // input fields
-    static let bgElevated   = Color(hex: "#181818")    // elevated
+    static let bgPrimary    = Color(hex: "#FAF8F5")    // warm off-white
+    static let bgSidebar    = Color(hex: "#F3F0F8")    // light lavender
+    static let bgCard       = Color(hex: "#FFFFFF")    // pure white
+    static let bgCardBorder = Color(hex: "#E8E4F0")    // subtle lavender border
+    static let bgHover      = Color(hex: "#F5F3F0")    // warm hover
+    static let bgActive     = Color(hex: "#EDE8F4")    // lavender active
+    static let bgInput      = Color(hex: "#FFFFFF")    // white input
+    static let bgElevated   = Color(hex: "#F8F6FF")    // very light lavender tint
 
     // --- Text ---
-    static let textPrimary   = Color(hex: "#f0f0f0")   // white
-    static let textSecondary = Color(hex: "#888888")   // gray
-    static let textHeading   = Color(hex: "#ffffff")   // bright white
-    static let textMuted     = Color(hex: "#4a4a4a")   // dark gray
+    static let textPrimary   = Color(hex: "#1A1A2E")   // dark charcoal
+    static let textSecondary = Color(hex: "#5A5A6A")   // medium gray
+    static let textHeading   = Color(hex: "#1A1A2E")   // dark charcoal
+    static let textMuted     = Color(hex: "#9A9AAA")   // light gray
 
-    // --- Accents (all white/gray based) ---
-    static let accent        = Color(hex: "#ffffff")   // white accent
-    static let accentGlow    = Color.white.opacity(0.15)
-    static let accentGreen   = Color(hex: "#ffffff")   // white (was green)
-    static let accentOrange  = Color(hex: "#cccccc")   // light gray
-    static let accentYellow  = Color(hex: "#aaaaaa")   // mid gray
-    static let accentBlue    = Color(hex: "#dddddd")   // near white
-    static let accentPink    = Color(hex: "#bbbbbb")   // gray
-    static let accentRed     = Color(hex: "#ff4444")   // keep red for errors
+    // --- Accents ---
+    static let accent        = Color(hex: "#7C6BC4")   // muted purple
+    static let accentGlow    = Color(hex: "#7C6BC4").opacity(0.10)
+    static let accentGreen   = Color(hex: "#6BAF8D")   // soft green
+    static let accentOrange  = Color(hex: "#C4956B")   // warm muted orange
+    static let accentYellow  = Color(hex: "#B8A86B")   // muted gold
+    static let accentBlue    = Color(hex: "#6B8FC4")   // soft blue
+    static let accentPink    = Color(hex: "#C46B8F")   // soft rose
+    static let accentRed     = Color(hex: "#C46B6B")   // soft red for errors
+
+    // --- Pastels ---
+    static let pastelLavender = Color(hex: "#E8E0F0")
+    static let pastelBlue     = Color(hex: "#E0EBF5")
+    static let pastelMint     = Color(hex: "#E0F2ED")
+    static let pastelPeach    = Color(hex: "#F5E6E0")
+    static let pastelYellow   = Color(hex: "#F5F0E0")
+    static let pastelRose     = Color(hex: "#F5E0E8")
+
+    static let pastelColors: [Color] = [
+        pastelLavender, pastelBlue, pastelMint, pastelPeach, pastelYellow, pastelRose
+    ]
 
     // --- Borders ---
-    static let border  = Color(hex: "#2a2a2a")
-    static let divider = Color(hex: "#161616")
+    static let border  = Color(hex: "#E8E4F0")
+    static let divider = Color(hex: "#EDE8F4")
 
     // --- Gradients ---
     static let gradientAccent = LinearGradient(
-        colors: [Color.white, Color(hex: "#cccccc")],
+        colors: [Color(hex: "#7C6BC4"), Color(hex: "#9B8ED8")],
         startPoint: .leading, endPoint: .trailing
     )
     static let gradientCard = LinearGradient(
-        colors: [Color(hex: "#161616"), Color(hex: "#0e0e0e")],
+        colors: [Color.white, Color(hex: "#FAF8F5")],
         startPoint: .top, endPoint: .bottom
     )
     static let gradientGlow = RadialGradient(
-        colors: [Color.white.opacity(0.06), .clear],
+        colors: [Color(hex: "#7C6BC4").opacity(0.06), .clear],
         center: .center, startRadius: 0, endRadius: 200
     )
 
@@ -64,42 +76,47 @@ enum Theme {
     static let sidebarWidth: CGFloat = 230
 
     // --- Shadows ---
-    static func glow(_ color: Color = .white, radius: CGFloat = 12) -> some View {
-        color.opacity(0.08).blur(radius: radius)
+    static func glow(_ color: Color = Color(hex: "#7C6BC4"), radius: CGFloat = 12) -> some View {
+        color.opacity(0.06).blur(radius: radius)
     }
 
-    // --- Attendee colors (subtle, for telling people apart) ---
+    // --- Card shadow ---
+    static func cardShadow() -> some ViewModifier {
+        SoftShadow()
+    }
+
+    // --- Attendee colors (pastel tones) ---
     static let attendeeColors: [Color] = [
-        Color(hex: "#666666"),
-        Color(hex: "#777777"),
-        Color(hex: "#555555"),
-        Color(hex: "#888888"),
-        Color(hex: "#999999"),
-        Color(hex: "#6a6a6a"),
-        Color(hex: "#7a7a7a"),
-        Color(hex: "#5a5a5a"),
+        Color(hex: "#7C6BC4"),
+        Color(hex: "#6B8FC4"),
+        Color(hex: "#6BAF8D"),
+        Color(hex: "#C4956B"),
+        Color(hex: "#C46B8F"),
+        Color(hex: "#B8A86B"),
+        Color(hex: "#8B6BC4"),
+        Color(hex: "#6BC4A8"),
     ]
 }
 
-// MARK: - Fonts
+// MARK: - Fonts (Georgia serif for headings, system light for body)
 extension Font {
     static func heading(_ size: CGFloat) -> Font {
-        .system(size: size, weight: .bold, design: .default)
+        .custom("Georgia-Bold", size: size)
     }
     static func subheading(_ size: CGFloat) -> Font {
-        .system(size: size, weight: .semibold)
+        .custom("Georgia", size: size)
     }
     static func body(_ size: CGFloat) -> Font {
-        .system(size: size, weight: .regular)
+        .system(size: size, weight: .light)
     }
     static func bodyMedium(_ size: CGFloat) -> Font {
-        .system(size: size, weight: .medium)
+        .system(size: size, weight: .regular)
     }
     static func bodySemibold(_ size: CGFloat) -> Font {
-        .system(size: size, weight: .semibold)
+        .system(size: size, weight: .medium)
     }
     static func mono(_ size: CGFloat) -> Font {
-        .system(size: size, design: .monospaced)
+        .system(size: size, weight: .light, design: .monospaced)
     }
 }
 
@@ -130,6 +147,21 @@ extension Color {
     }
 }
 
+// MARK: - Soft Shadow
+struct SoftShadow: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 2)
+            .shadow(color: Color.black.opacity(0.02), radius: 2, x: 0, y: 1)
+    }
+}
+
+extension View {
+    func softShadow() -> some View {
+        modifier(SoftShadow())
+    }
+}
+
 // MARK: - Hover Button Style
 struct HoverButtonStyle: ButtonStyle {
     var hoverColor: Color = Theme.bgHover
@@ -143,47 +175,43 @@ struct HoverButtonStyle: ButtonStyle {
                 RoundedRectangle(cornerRadius: cornerRadius)
                     .fill(configuration.isPressed ? pressColor : (isHovering ? hoverColor : .clear))
             )
-            .scaleEffect(configuration.isPressed ? 0.98 : (isHovering ? 1.01 : 1.0))
-            .brightness(isHovering ? 0.03 : 0)
-            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isHovering)
-            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: configuration.isPressed)
+            .scaleEffect(configuration.isPressed ? 0.99 : 1.0)
+            .animation(.spring(response: 0.3, dampingFraction: 0.8), value: isHovering)
+            .animation(.spring(response: 0.3, dampingFraction: 0.8), value: configuration.isPressed)
             .onHover { isHovering = $0 }
     }
 }
 
-// MARK: - Smooth Button Style (White bg, black text, hover/press)
+// MARK: - Smooth Button Style (Purple bg, white text)
 struct SmoothButtonStyle: ButtonStyle {
     @State private var isHovering = false
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(size: 14, weight: .medium))
-            .foregroundStyle(Color.black)
+            .foregroundStyle(Color.white)
             .padding(.horizontal, 20)
             .padding(.vertical, 10)
             .background(
                 RoundedRectangle(cornerRadius: Theme.radiusMD)
-                    .fill(Color.white)
+                    .fill(Theme.accent)
             )
-            .scaleEffect(configuration.isPressed ? 0.98 : (isHovering ? 1.02 : 1.0))
-            .brightness(isHovering ? 0.05 : 0)
-            .shadow(color: .white.opacity(isHovering ? 0.1 : 0), radius: 8, y: 0)
+            .scaleEffect(configuration.isPressed ? 0.98 : (isHovering ? 1.01 : 1.0))
+            .shadow(color: Theme.accent.opacity(isHovering ? 0.2 : 0), radius: 8, y: 2)
             .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isHovering)
             .animation(.spring(response: 0.3, dampingFraction: 0.7), value: configuration.isPressed)
             .onHover { isHovering = $0 }
     }
 }
 
-// MARK: - Glass Card
+// MARK: - Glass Card (now white card with soft shadow)
 struct GlassCard: ViewModifier {
     var cornerRadius: CGFloat = Theme.radiusMD
     func body(content: Content) -> some View {
         content
             .background(RoundedRectangle(cornerRadius: cornerRadius).fill(Theme.bgCard))
-            .overlay(
-                RoundedRectangle(cornerRadius: cornerRadius)
-                    .stroke(Color.white.opacity(0.06), lineWidth: 1)
-            )
+            .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 2)
+            .shadow(color: Color.black.opacity(0.02), radius: 2, x: 0, y: 1)
     }
 }
 
@@ -199,12 +227,12 @@ struct GlowModifier: ViewModifier {
     let radius: CGFloat
     func body(content: Content) -> some View {
         content
-            .shadow(color: color.opacity(0.15), radius: radius, x: 0, y: 0)
+            .shadow(color: color.opacity(0.12), radius: radius, x: 0, y: 2)
     }
 }
 
 extension View {
-    func glow(_ color: Color = .white, radius: CGFloat = 8) -> some View {
+    func glow(_ color: Color = Theme.accent, radius: CGFloat = 8) -> some View {
         modifier(GlowModifier(color: color, radius: radius))
     }
 }
@@ -239,10 +267,9 @@ struct HoverHighlight: ViewModifier {
                     .fill(isHovering ? Theme.bgHover : .clear)
                     .opacity(isHovering ? 1 : 0)
             )
-            .scaleEffect(isPressed ? 0.98 : (isHovering ? 1.01 : 1.0))
-            .brightness(isHovering ? 0.05 : 0)
-            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isHovering)
-            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isPressed)
+            .scaleEffect(isPressed ? 0.99 : 1.0)
+            .animation(.spring(response: 0.3, dampingFraction: 0.8), value: isHovering)
+            .animation(.spring(response: 0.3, dampingFraction: 0.8), value: isPressed)
             .onHover { isHovering = $0 }
             .simultaneousGesture(
                 DragGesture(minimumDistance: 0)
@@ -264,11 +291,7 @@ struct CardHover: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .overlay(
-                RoundedRectangle(cornerRadius: Theme.radiusMD)
-                    .stroke(Color.white.opacity(isHovering ? 0.12 : 0), lineWidth: 1)
-            )
-            .shadow(color: .black.opacity(isHovering ? 0.3 : 0.1), radius: isHovering ? 12 : 4, y: isHovering ? 4 : 2)
+            .shadow(color: .black.opacity(isHovering ? 0.08 : 0.04), radius: isHovering ? 12 : 8, y: isHovering ? 4 : 2)
             .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isHovering)
             .onHover { isHovering = $0 }
     }
@@ -286,7 +309,7 @@ struct PillTag: View {
     let icon: String?
     let color: Color
 
-    init(_ text: String, icon: String? = nil, color: Color = .white) {
+    init(_ text: String, icon: String? = nil, color: Color = Theme.accent) {
         self.text = text
         self.icon = icon
         self.color = color
@@ -302,12 +325,12 @@ struct PillTag: View {
         .foregroundStyle(color)
         .padding(.horizontal, 10)
         .padding(.vertical, 5)
-        .background(color.opacity(0.1))
+        .background(color.opacity(0.10))
         .cornerRadius(Theme.radiusPill)
     }
 }
 
-// MARK: - Collapsible Section
+// MARK: - Collapsible Section (white card with shadow, Georgia header)
 struct CollapsibleSection<Content: View>: View {
     let title: String
     let icon: String
@@ -331,10 +354,10 @@ struct CollapsibleSection<Content: View>: View {
                 HStack(spacing: 8) {
                     Image(systemName: icon)
                         .font(.system(size: 13))
-                        .foregroundStyle(Theme.textMuted)
+                        .foregroundStyle(Theme.accent)
                         .frame(width: 18)
                     Text(title)
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(.custom("Georgia", size: 15))
                         .foregroundStyle(Theme.textPrimary)
                     Spacer()
                     Image(systemName: "chevron.right")
@@ -359,19 +382,18 @@ struct CollapsibleSection<Content: View>: View {
         }
         .background(Theme.bgCard)
         .cornerRadius(Theme.radiusMD)
-        .overlay(
-            RoundedRectangle(cornerRadius: Theme.radiusMD)
-                .stroke(Theme.border, lineWidth: 1)
-        )
+        .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 2)
+        .shadow(color: Color.black.opacity(0.02), radius: 2, x: 0, y: 1)
     }
 }
 
-// MARK: - Stats Card
+// MARK: - Stats Card (white bg, pastel icon tint, soft shadow)
 struct StatsCard: View {
     let title: String
     let value: String
     let subtitle: String
     let icon: String
+    var pastelBg: Color = Theme.pastelBlue
     @State private var isHovering = false
 
     var body: some View {
@@ -380,11 +402,14 @@ struct StatsCard: View {
                 Spacer()
                 Image(systemName: icon)
                     .font(.system(size: 14))
-                    .foregroundStyle(Theme.textMuted)
+                    .foregroundStyle(Theme.accent.opacity(0.6))
+                    .padding(6)
+                    .background(pastelBg.opacity(0.6))
+                    .cornerRadius(6)
             }
 
             Text(value)
-                .font(.system(size: 28, weight: .bold, design: .rounded))
+                .font(.custom("Georgia-Bold", size: 28))
                 .foregroundStyle(Theme.textHeading)
 
             VStack(alignment: .leading, spacing: 2) {
@@ -392,7 +417,7 @@ struct StatsCard: View {
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(Theme.textPrimary)
                 Text(subtitle)
-                    .font(.system(size: 11))
+                    .font(.system(size: 11, weight: .light))
                     .foregroundStyle(Theme.textMuted)
             }
         }
@@ -400,24 +425,22 @@ struct StatsCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Theme.bgCard)
         .cornerRadius(Theme.radiusMD)
-        .overlay(
-            RoundedRectangle(cornerRadius: Theme.radiusMD)
-                .stroke(isHovering ? Color.white.opacity(0.1) : Theme.border, lineWidth: 1)
-        )
+        .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 2)
+        .shadow(color: Color.black.opacity(0.02), radius: 2, x: 0, y: 1)
         .scaleEffect(isHovering ? 1.02 : 1.0)
         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isHovering)
         .onHover { isHovering = $0 }
     }
 }
 
-// MARK: - Attendee Pill
+// MARK: - Attendee Pill (pastel colored circles)
 struct AttendeePill: View {
     let name: String
     let color: Color
     let onRemove: (() -> Void)?
     @State private var isHovering = false
 
-    init(name: String, color: Color = Theme.textSecondary, onRemove: (() -> Void)? = nil) {
+    init(name: String, color: Color = Theme.accent, onRemove: (() -> Void)? = nil) {
         self.name = name
         self.color = color
         self.onRemove = onRemove
@@ -426,12 +449,12 @@ struct AttendeePill: View {
     var body: some View {
         HStack(spacing: 6) {
             Circle()
-                .fill(color)
+                .fill(color.opacity(0.15))
                 .frame(width: 18, height: 18)
                 .overlay(
                     Text(String(name.prefix(1)).uppercased())
                         .font(.system(size: 9, weight: .bold))
-                        .foregroundStyle(Theme.bgPrimary)
+                        .foregroundStyle(color)
                 )
 
             Text(name)
@@ -452,17 +475,19 @@ struct AttendeePill: View {
         .padding(.vertical, 5)
         .background(Theme.bgCard)
         .cornerRadius(Theme.radiusPill)
-        .overlay(
-            RoundedRectangle(cornerRadius: Theme.radiusPill)
-                .stroke(Theme.border, lineWidth: 1)
-        )
+        .shadow(color: Color.black.opacity(0.04), radius: 4, x: 0, y: 1)
         .onHover { isHovering = $0 }
     }
 }
 
-// MARK: - Tag Pill
+// MARK: - Tag Pill (rotating pastel colors)
 struct TagPill: View {
     let text: String
+    var colorIndex: Int = 0
+
+    private var pillColor: Color {
+        Theme.pastelColors[abs(text.hashValue) % Theme.pastelColors.count]
+    }
 
     var body: some View {
         Text("#\(text)")
@@ -470,12 +495,12 @@ struct TagPill: View {
             .foregroundStyle(Theme.textSecondary)
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
-            .background(Color(hex: "#2a2a2a"))
+            .background(pillColor)
             .cornerRadius(Theme.radiusPill)
     }
 }
 
-// MARK: - Action Item Row
+// MARK: - Action Item Row (white bg, soft dividers)
 struct ActionItemRow: View {
     let task: String
     let assignee: String?
@@ -489,13 +514,13 @@ struct ActionItemRow: View {
             } label: {
                 Image(systemName: isCompleted ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 16))
-                    .foregroundStyle(isCompleted ? Theme.textSecondary : Theme.textMuted)
+                    .foregroundStyle(isCompleted ? Theme.accentGreen : Theme.textMuted)
             }
             .buttonStyle(.plain)
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(task)
-                    .font(.system(size: 14))
+                    .font(.system(size: 14, weight: .light))
                     .foregroundStyle(isCompleted ? Theme.textMuted : Theme.textPrimary)
                     .strikethrough(isCompleted)
 
@@ -503,15 +528,15 @@ struct ActionItemRow: View {
                     if let assignee, !assignee.isEmpty {
                         HStack(spacing: 4) {
                             Circle()
-                                .fill(Theme.textMuted)
+                                .fill(Theme.pastelLavender)
                                 .frame(width: 14, height: 14)
                                 .overlay(
                                     Text(String(assignee.prefix(1)).uppercased())
                                         .font(.system(size: 7, weight: .bold))
-                                        .foregroundStyle(Theme.bgPrimary)
+                                        .foregroundStyle(Theme.accent)
                                 )
                             Text(assignee)
-                                .font(.system(size: 11))
+                                .font(.system(size: 11, weight: .light))
                                 .foregroundStyle(Theme.textSecondary)
                         }
                     }
@@ -520,7 +545,7 @@ struct ActionItemRow: View {
                             Image(systemName: "calendar")
                                 .font(.system(size: 9))
                             Text(deadline)
-                                .font(.system(size: 11))
+                                .font(.system(size: 11, weight: .light))
                         }
                         .foregroundStyle(Theme.textMuted)
                     }
@@ -533,7 +558,7 @@ struct ActionItemRow: View {
         .padding(.horizontal, 10)
         .background(
             RoundedRectangle(cornerRadius: Theme.radiusSM)
-                .fill(Theme.bgCard.opacity(0.5))
+                .fill(Theme.bgCard)
         )
     }
 }
@@ -565,8 +590,8 @@ struct StatusDot: View {
 
     private var dotColor: Color {
         switch status {
-        case "completed": return Color(hex: "#666666")
-        case "processing": return Color(hex: "#888888")
+        case "completed": return Theme.accentGreen
+        case "processing": return Theme.accentBlue
         case "failed": return Theme.accentRed
         case "recording": return Theme.accentRed
         default: return Theme.textMuted
@@ -587,10 +612,10 @@ struct CountBadge: View {
     var body: some View {
         Text("\(count)")
             .font(.system(size: 10, weight: .medium))
-            .foregroundStyle(Theme.textMuted)
+            .foregroundStyle(Theme.accent)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
-            .background(Color(hex: "#2a2a2a"))
+            .background(Theme.pastelLavender)
             .cornerRadius(Theme.radiusPill)
     }
 }

@@ -61,7 +61,7 @@ struct SidebarView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("SPACES")
-                        .font(.system(size: 10, weight: .semibold))
+                        .font(.custom("Georgia", size: 10))
                         .foregroundStyle(Theme.textMuted)
                         .tracking(1.2)
                         .padding(.horizontal, 16)
@@ -105,9 +105,9 @@ struct SidebarView: View {
     private var recordingIndicator: some View {
         HStack(spacing: 8) {
             Circle()
-                .fill(.red)
+                .fill(Theme.accentRed)
                 .frame(width: 8, height: 8)
-                .shadow(color: .red.opacity(0.5), radius: 3)
+                .shadow(color: Theme.accentRed.opacity(0.4), radius: 3)
 
             VStack(alignment: .leading, spacing: 1) {
                 Text(sessionManager.currentMeeting?.title ?? "Recording")
@@ -124,15 +124,14 @@ struct SidebarView: View {
             HStack(spacing: 1) {
                 ForEach(0..<5, id: \.self) { i in
                     RoundedRectangle(cornerRadius: 1)
-                        .fill(Color.red.opacity(0.6))
+                        .fill(Theme.accentRed.opacity(0.6))
                         .frame(width: 2, height: max(3, CGFloat(sessionManager.audioLevel) * 12 * CGFloat(abs(sin(Double(i) * 0.7)))))
                 }
             }
         }
         .padding(8)
-        .background(Color.red.opacity(0.08))
+        .background(Theme.pastelRose.opacity(0.5))
         .cornerRadius(Theme.radiusSM)
-        .overlay(RoundedRectangle(cornerRadius: Theme.radiusSM).stroke(Color.red.opacity(0.2), lineWidth: 1))
         .onTapGesture {
             if let meeting = sessionManager.currentMeeting {
                 appState.selectedMeeting = meeting
@@ -161,6 +160,7 @@ struct SidebarView: View {
         .padding(8)
         .background(Theme.bgCard)
         .cornerRadius(Theme.radiusSM)
+        .softShadow()
     }
 
     private var searchBar: some View {
@@ -172,7 +172,7 @@ struct SidebarView: View {
                     .font(.system(size: 13))
                     .foregroundStyle(Theme.textMuted)
                 Text("Search")
-                    .font(.system(size: 13))
+                    .font(.system(size: 13, weight: .light))
                     .foregroundStyle(Theme.textMuted)
                 Spacer()
                 Text("K")
@@ -185,12 +185,9 @@ struct SidebarView: View {
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 7)
-            .background(Theme.bgInput)
+            .background(Theme.bgCard)
             .cornerRadius(Theme.radiusSM)
-            .overlay(
-                RoundedRectangle(cornerRadius: Theme.radiusSM)
-                    .stroke(Theme.border, lineWidth: 1)
-            )
+            .shadow(color: Color.black.opacity(0.03), radius: 4, x: 0, y: 1)
         }
         .buttonStyle(.plain)
     }
@@ -241,11 +238,11 @@ struct SidebarView: View {
                 HStack(spacing: 10) {
                     Image(systemName: "folder.fill")
                         .font(.system(size: 14))
-                        .foregroundStyle(Theme.textSecondary)
+                        .foregroundStyle(Theme.accent.opacity(0.6))
                         .frame(width: 20)
                     TextField("Folder name", text: $newFolderName)
                         .textFieldStyle(.plain)
-                        .font(.system(size: 13))
+                        .font(.system(size: 13, weight: .light))
                         .foregroundStyle(Theme.textPrimary)
                         .onSubmit {
                             commitNewFolder(isPersonal: isPersonal)
@@ -269,7 +266,7 @@ struct SidebarView: View {
             } label: {
                 HStack(spacing: 6) {
                     Image(systemName: "plus").font(.system(size: 10))
-                    Text("Add folder").font(.system(size: 12))
+                    Text("Add folder").font(.system(size: 12, weight: .light))
                 }
                 .foregroundStyle(Theme.textMuted)
                 .padding(.horizontal, 8)
@@ -290,22 +287,23 @@ struct SidebarView: View {
                 StatusDot(status: meeting.status)
 
                 Text(meeting.title)
-                    .font(.system(size: 12))
+                    .font(.system(size: 12, weight: .light))
                     .foregroundStyle(appState.selectedMeeting?.id == meeting.id ? Theme.textPrimary : Theme.textSecondary)
                     .lineLimit(1)
 
                 Spacer()
 
                 Text(meeting.formattedTime)
-                    .font(.system(size: 10))
+                    .font(.mono(10))
                     .foregroundStyle(Theme.textMuted)
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
             .background(
                 RoundedRectangle(cornerRadius: Theme.radiusSM)
-                    .fill(appState.selectedMeeting?.id == meeting.id ? Theme.accent.opacity(0.08) : .clear)
+                    .fill(appState.selectedMeeting?.id == meeting.id ? Theme.bgCard : .clear)
             )
+            .shadow(color: appState.selectedMeeting?.id == meeting.id ? Color.black.opacity(0.04) : .clear, radius: 4, y: 1)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -319,11 +317,11 @@ struct SidebarView: View {
                 HStack(spacing: 10) {
                     Image(systemName: "folder.fill")
                         .font(.system(size: 14))
-                        .foregroundStyle(Theme.textSecondary)
+                        .foregroundStyle(Theme.accent.opacity(0.6))
                         .frame(width: 20)
                     TextField("Folder name", text: $editingFolderName)
                         .textFieldStyle(.plain)
-                        .font(.system(size: 13))
+                        .font(.system(size: 13, weight: .light))
                         .onSubmit {
                             commitRename(folder)
                         }
@@ -343,10 +341,10 @@ struct SidebarView: View {
                     HStack(spacing: 10) {
                         Image(systemName: "folder.fill")
                             .font(.system(size: 14))
-                            .foregroundStyle(appState.selectedNavItem == .folder(folder.id) ? Theme.accent : Theme.textSecondary)
+                            .foregroundStyle(appState.selectedNavItem == .folder(folder.id) ? Theme.accent : Theme.accent.opacity(0.5))
                             .frame(width: 20)
                         Text(folder.name)
-                            .font(.system(size: 13, weight: appState.selectedNavItem == .folder(folder.id) ? .semibold : .regular))
+                            .font(.system(size: 13, weight: appState.selectedNavItem == .folder(folder.id) ? .medium : .light))
                             .foregroundStyle(appState.selectedNavItem == .folder(folder.id) ? Theme.textPrimary : Theme.textSecondary)
                             .lineLimit(1)
                         Spacer()
@@ -361,12 +359,9 @@ struct SidebarView: View {
                     .padding(.vertical, 7)
                     .background(
                         RoundedRectangle(cornerRadius: Theme.radiusSM)
-                            .fill(appState.selectedNavItem == .folder(folder.id) ? Theme.accent.opacity(0.12) : .clear)
+                            .fill(appState.selectedNavItem == .folder(folder.id) ? Theme.bgCard : .clear)
                     )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: Theme.radiusSM)
-                            .stroke(appState.selectedNavItem == .folder(folder.id) ? Theme.accent.opacity(0.2) : .clear, lineWidth: 1)
-                    )
+                    .shadow(color: appState.selectedNavItem == .folder(folder.id) ? Color.black.opacity(0.04) : .clear, radius: 4, y: 1)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -425,6 +420,10 @@ struct SidebarView: View {
                     Text(appState.currentUser?.planDisplayName ?? "Free Plan")
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(Theme.textSecondary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Theme.pastelLavender)
+                        .cornerRadius(Theme.radiusPill)
                     Spacer()
                     Text("Upgrade")
                         .font(.system(size: 12, weight: .semibold))
@@ -442,14 +441,13 @@ struct SidebarView: View {
             } label: {
                 HStack(spacing: 8) {
                     Circle()
-                        .fill(Theme.bgCard)
+                        .fill(Theme.pastelLavender)
                         .frame(width: 28, height: 28)
                         .overlay(
                             Text(appState.currentUser?.initials ?? "U")
                                 .font(.system(size: 10, weight: .bold))
                                 .foregroundStyle(Theme.accent)
                         )
-                        .overlay(Circle().stroke(Theme.border, lineWidth: 1))
                     Text(appState.currentUser?.fullName ?? "User")
                         .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(Theme.textPrimary)
@@ -479,7 +477,7 @@ struct SidebarView: View {
                     .foregroundStyle(Theme.textPrimary)
                 if let email = appState.currentUser?.email, !email.isEmpty {
                     Text(email)
-                        .font(.system(size: 12))
+                        .font(.system(size: 12, weight: .light))
                         .foregroundStyle(Theme.textSecondary)
                 }
             }
@@ -496,7 +494,7 @@ struct SidebarView: View {
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "gearshape").font(.system(size: 12))
-                    Text("Settings").font(.system(size: 13))
+                    Text("Settings").font(.system(size: 13, weight: .light))
                     Spacer()
                 }
                 .foregroundStyle(Theme.textPrimary)
@@ -515,7 +513,7 @@ struct SidebarView: View {
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "keyboard").font(.system(size: 12))
-                    Text("Keyboard Shortcuts").font(.system(size: 13))
+                    Text("Keyboard Shortcuts").font(.system(size: 13, weight: .light))
                     Spacer()
                 }
                 .foregroundStyle(Theme.textPrimary)
@@ -534,7 +532,7 @@ struct SidebarView: View {
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "rectangle.portrait.and.arrow.right").font(.system(size: 12))
-                    Text("Sign Out").font(.system(size: 13))
+                    Text("Sign Out").font(.system(size: 13, weight: .light))
                     Spacer()
                 }
                 .foregroundStyle(Theme.accentRed)
@@ -546,7 +544,7 @@ struct SidebarView: View {
             .hoverHighlight()
         }
         .frame(width: 220)
-        .background(Theme.bgElevated)
+        .background(Theme.bgCard)
     }
 }
 
@@ -566,7 +564,7 @@ struct SidebarNavButton: View {
                     .foregroundStyle(isSelected ? Theme.accent : Theme.textSecondary)
                     .frame(width: 20)
                 Text(label)
-                    .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
+                    .font(.system(size: 13, weight: isSelected ? .medium : .light))
                     .foregroundStyle(isSelected ? Theme.textPrimary : Theme.textSecondary)
                 Spacer()
             }
@@ -574,14 +572,9 @@ struct SidebarNavButton: View {
             .padding(.vertical, 7)
             .background(
                 RoundedRectangle(cornerRadius: Theme.radiusSM)
-                    .fill(isSelected ? Theme.accent.opacity(0.12) : (isHovering ? Theme.bgHover : .clear))
+                    .fill(isSelected ? Theme.bgCard : (isHovering ? Theme.bgHover : .clear))
             )
-            .overlay(
-                RoundedRectangle(cornerRadius: Theme.radiusSM)
-                    .stroke(isSelected ? Theme.accent.opacity(0.2) : .clear, lineWidth: 1)
-            )
-            .scaleEffect(isHovering && !isSelected ? 1.01 : 1.0)
-            .brightness(isHovering ? 0.03 : 0)
+            .shadow(color: isSelected ? Color.black.opacity(0.04) : .clear, radius: 4, y: 1)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

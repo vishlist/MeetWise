@@ -62,7 +62,6 @@ struct SearchOverlay: View {
             if let transcript = meeting.transcriptRaw,
                transcript.localizedCaseInsensitiveContains(q),
                !results.contains(where: { $0.meeting?.id == meeting.id }) {
-                // Extract a snippet around the match
                 let snippet = extractSnippet(from: transcript, query: q)
                 results.append(SearchResult(
                     type: .transcript,
@@ -144,7 +143,7 @@ struct SearchOverlay: View {
 
                 TextField("Search notes, people, companies...", text: $query)
                     .textFieldStyle(.plain)
-                    .font(.system(size: 15))
+                    .font(.system(size: 15, weight: .light))
                     .foregroundStyle(Theme.textPrimary)
 
                 if !query.isEmpty {
@@ -163,7 +162,7 @@ struct SearchOverlay: View {
                     .foregroundStyle(Theme.textMuted)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
-                    .background(Theme.bgCard)
+                    .background(Theme.pastelLavender)
                     .cornerRadius(4)
             }
             .padding(16)
@@ -175,7 +174,7 @@ struct SearchOverlay: View {
                 VStack(alignment: .leading, spacing: 2) {
                     if searchResults.isEmpty {
                         Text("No results found")
-                            .font(.system(size: 14))
+                            .font(.system(size: 14, weight: .light))
                             .foregroundStyle(Theme.textSecondary)
                             .padding(16)
                     } else {
@@ -194,16 +193,16 @@ struct SearchOverlay: View {
                                     HStack(spacing: 12) {
                                         Image(systemName: result.icon)
                                             .font(.system(size: 14))
-                                            .foregroundStyle(Theme.textMuted)
+                                            .foregroundStyle(Theme.accent.opacity(0.6))
                                             .frame(width: 20)
 
                                         VStack(alignment: .leading, spacing: 2) {
                                             Text(result.title)
-                                                .font(.system(size: 14))
+                                                .font(.system(size: 14, weight: .regular))
                                                 .foregroundStyle(Theme.textPrimary)
                                                 .lineLimit(1)
                                             Text(result.subtitle)
-                                                .font(.system(size: 12))
+                                                .font(.system(size: 12, weight: .light))
                                                 .foregroundStyle(Theme.textSecondary)
                                                 .lineLimit(1)
                                         }
@@ -211,11 +210,11 @@ struct SearchOverlay: View {
                                         Spacer()
 
                                         Text(result.type.rawValue)
-                                            .font(.system(size: 10))
+                                            .font(.system(size: 10, weight: .light))
                                             .foregroundStyle(Theme.textMuted)
                                             .padding(.horizontal, 6)
                                             .padding(.vertical, 2)
-                                            .background(Theme.bgCard)
+                                            .background(Theme.pastelLavender.opacity(0.5))
                                             .cornerRadius(4)
                                     }
                                     .padding(.horizontal, 16)
@@ -234,11 +233,7 @@ struct SearchOverlay: View {
         .frame(width: 540)
         .background(Theme.bgCard)
         .cornerRadius(Theme.radiusLG)
-        .overlay(
-            RoundedRectangle(cornerRadius: Theme.radiusLG)
-                .stroke(Theme.bgCardBorder, lineWidth: 1)
-        )
-        .shadow(color: .black.opacity(0.4), radius: 20, y: 10)
+        .shadow(color: .black.opacity(0.1), radius: 20, y: 10)
         .onKeyPress(.escape) {
             isPresented = false
             return .handled

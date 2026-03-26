@@ -79,7 +79,7 @@ struct ChatView: View {
             HStack(spacing: 10) {
                 botAvatar
                 Text("MeetWise AI")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(Theme.textPrimary)
             }
 
@@ -88,21 +88,21 @@ struct ChatView: View {
                 .foregroundStyle(Theme.textHeading)
 
             Text("I can help you search across your meetings, find action items, write follow-ups, and more.")
-                .font(.system(size: 14))
+                .font(.system(size: 14, weight: .light))
                 .foregroundStyle(Theme.textSecondary)
                 .lineSpacing(3)
         }
     }
 
-    // MARK: - Bot Avatar
+    // MARK: - Bot Avatar (muted purple circle with white MW)
     private var botAvatar: some View {
         Circle()
-            .fill(Color(hex: "#333333"))
+            .fill(Theme.accent)
             .frame(width: 32, height: 32)
             .overlay(
                 Text("MW")
                     .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(Theme.textPrimary)
+                    .foregroundStyle(Color.white)
             )
     }
 
@@ -117,7 +117,7 @@ struct ChatView: View {
 
                 if !meetings.isEmpty {
                     Text("\(scopedMeetings.count) meetings")
-                        .font(.system(size: 11))
+                        .font(.system(size: 11, weight: .light))
                         .foregroundStyle(Theme.textMuted)
                 }
             }
@@ -128,7 +128,7 @@ struct ChatView: View {
             HStack(spacing: 12) {
                 TextField("Transcribe a meeting to start asking questions", text: $chatInput)
                     .textFieldStyle(.plain)
-                    .font(.system(size: 14))
+                    .font(.system(size: 14, weight: .light))
                     .foregroundStyle(Theme.textPrimary)
                     .onSubmit { sendMessage() }
 
@@ -152,7 +152,7 @@ struct ChatView: View {
             HStack(spacing: 12) {
                 Spacer()
                 Text("Powered by Claude")
-                    .font(.system(size: 10))
+                    .font(.system(size: 10, weight: .light))
                     .foregroundStyle(Theme.textMuted)
             }
             .padding(.horizontal, 16)
@@ -160,24 +160,21 @@ struct ChatView: View {
         }
         .background(Theme.bgCard)
         .cornerRadius(Theme.radiusLG)
-        .overlay(
-            RoundedRectangle(cornerRadius: Theme.radiusLG)
-                .stroke(Theme.bgCardBorder, lineWidth: 1)
-        )
+        .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 2)
     }
 
-    // MARK: - Recipes Section
+    // MARK: - Recipes Section (different pastel bg colors)
     private var recipesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Suggested")
-                .font(.system(size: 14, weight: .medium))
+                .font(.custom("Georgia", size: 14))
                 .foregroundStyle(Theme.textSecondary)
 
             let displayRecipes = recipes.isEmpty ? defaultRecipePills : recipes.map { ($0.name, Theme.accent) }
 
             FlowLayout(spacing: 8) {
-                ForEach(Array(displayRecipes.enumerated()), id: \.offset) { _, recipe in
-                    recipePill(recipe.0, color: recipe.1)
+                ForEach(Array(displayRecipes.enumerated()), id: \.offset) { index, recipe in
+                    recipePill(recipe.0, pastelColor: Theme.pastelColors[index % Theme.pastelColors.count])
                 }
             }
         }
@@ -200,19 +197,19 @@ struct ChatView: View {
     private func scopeTab(_ title: String, isSelected: Bool) -> some View {
         Button { selectedScope = title } label: {
             Text(title)
-                .font(.system(size: 13, weight: isSelected ? .medium : .regular))
+                .font(.system(size: 13, weight: isSelected ? .medium : .light))
                 .foregroundStyle(isSelected ? Theme.textPrimary : Theme.textSecondary)
                 .padding(.bottom, 4)
                 .overlay(alignment: .bottom) {
                     if isSelected {
-                        Rectangle().fill(Theme.textPrimary).frame(height: 1)
+                        Rectangle().fill(Theme.accent).frame(height: 2)
                     }
                 }
         }
         .buttonStyle(.plain)
     }
 
-    private func recipePill(_ title: String, color: Color) -> some View {
+    private func recipePill(_ title: String, pastelColor: Color) -> some View {
         Button {
             if let recipe = recipes.first(where: { $0.name == title }) {
                 executeRecipe(recipe)
@@ -224,19 +221,15 @@ struct ChatView: View {
             HStack(spacing: 6) {
                 Text("/")
                     .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(color)
+                    .foregroundStyle(Theme.accent)
                 Text(title)
-                    .font(.system(size: 13))
+                    .font(.system(size: 13, weight: .light))
                     .foregroundStyle(Theme.textPrimary)
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
-            .background(Theme.bgCard)
+            .background(pastelColor.opacity(0.5))
             .cornerRadius(Theme.radiusPill)
-            .overlay(
-                RoundedRectangle(cornerRadius: Theme.radiusPill)
-                    .stroke(Theme.border, lineWidth: 1)
-            )
         }
         .buttonStyle(.plain)
         .hoverScale(1.03)
@@ -246,33 +239,34 @@ struct ChatView: View {
         HStack(alignment: .top, spacing: 10) {
             if role == "assistant" {
                 Circle()
-                    .fill(Color(hex: "#333333"))
+                    .fill(Theme.accent)
                     .frame(width: 28, height: 28)
                     .overlay(
                         Text("MW")
                             .font(.system(size: 8, weight: .bold))
-                            .foregroundStyle(Theme.textPrimary)
+                            .foregroundStyle(Color.white)
                     )
             }
 
             Text(content)
-                .font(.system(size: 14))
-                .foregroundStyle(role == "user" ? Theme.textPrimary : Theme.textSecondary)
+                .font(.system(size: 14, weight: .light))
+                .foregroundStyle(Theme.textPrimary)
                 .textSelection(.enabled)
                 .lineSpacing(3)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(12)
-                .background(role == "user" ? Theme.bgCard : Color(hex: "#1a1a1a"))
+                .background(role == "user" ? Theme.pastelLavender.opacity(0.5) : Theme.bgCard)
                 .cornerRadius(Theme.radiusMD)
+                .shadow(color: role == "assistant" ? Color.black.opacity(0.04) : .clear, radius: 4, x: 0, y: 1)
 
             if role == "user" {
                 Circle()
-                    .fill(Theme.textMuted)
+                    .fill(Theme.pastelBlue)
                     .frame(width: 28, height: 28)
                     .overlay(
                         Text(appState.currentUser?.initials ?? "U")
                             .font(.system(size: 10, weight: .medium))
-                            .foregroundStyle(Theme.bgPrimary)
+                            .foregroundStyle(Theme.accent)
                     )
             }
         }

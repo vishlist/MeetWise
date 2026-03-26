@@ -25,14 +25,14 @@ struct SettingsView: View {
                             Image(systemName: tab.icon)
                                 .font(.system(size: 12))
                             Text(tab.rawValue)
-                                .font(.system(size: 13, weight: appState.settingsTab == tab ? .semibold : .regular))
+                                .font(.system(size: 13, weight: appState.settingsTab == tab ? .medium : .light))
                         }
                         .foregroundStyle(appState.settingsTab == tab ? Theme.textPrimary : Theme.textSecondary)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 10)
                         .background(
                             RoundedRectangle(cornerRadius: Theme.radiusSM)
-                                .fill(appState.settingsTab == tab ? Theme.bgCard : .clear)
+                                .fill(appState.settingsTab == tab ? Theme.pastelLavender : .clear)
                         )
                     }
                     .buttonStyle(.plain)
@@ -86,14 +86,11 @@ struct SettingsView: View {
             HStack(spacing: 20) {
                 ZStack {
                     Circle()
-                        .fill(Theme.bgCard)
+                        .fill(Theme.pastelLavender)
                         .frame(width: 72, height: 72)
-                        .overlay(
-                            Circle().stroke(Theme.border, lineWidth: 1)
-                        )
                     Text(appState.currentUser?.initials ?? "U")
-                        .font(.system(size: 24, weight: .bold))
-                        .foregroundStyle(Theme.textPrimary)
+                        .font(.custom("Georgia-Bold", size: 24))
+                        .foregroundStyle(Theme.accent)
                 }
 
                 VStack(alignment: .leading, spacing: 12) {
@@ -103,12 +100,12 @@ struct SettingsView: View {
                             .foregroundStyle(Theme.textSecondary)
                         TextField("Your name", text: $editableName)
                             .textFieldStyle(.plain)
-                            .font(.system(size: 14))
+                            .font(.system(size: 14, weight: .light))
                             .foregroundStyle(Theme.textPrimary)
                             .padding(10)
-                            .background(Theme.bgInput)
+                            .background(Theme.bgCard)
                             .cornerRadius(Theme.radiusSM)
-                            .overlay(RoundedRectangle(cornerRadius: Theme.radiusSM).stroke(Theme.border, lineWidth: 1))
+                            .shadow(color: Color.black.opacity(0.03), radius: 2, y: 1)
                             .onChange(of: editableName) { _, newValue in
                                 appState.currentUser?.fullName = newValue
                                 try? modelContext.save()
@@ -121,12 +118,12 @@ struct SettingsView: View {
                             .foregroundStyle(Theme.textSecondary)
                         TextField("your@email.com", text: $editableEmail)
                             .textFieldStyle(.plain)
-                            .font(.system(size: 14))
+                            .font(.system(size: 14, weight: .light))
                             .foregroundStyle(Theme.textPrimary)
                             .padding(10)
-                            .background(Theme.bgInput)
+                            .background(Theme.bgCard)
                             .cornerRadius(Theme.radiusSM)
-                            .overlay(RoundedRectangle(cornerRadius: Theme.radiusSM).stroke(Theme.border, lineWidth: 1))
+                            .shadow(color: Color.black.opacity(0.03), radius: 2, y: 1)
                             .onChange(of: editableEmail) { _, newValue in
                                 appState.currentUser?.email = newValue
                                 try? modelContext.save()
@@ -140,10 +137,10 @@ struct SettingsView: View {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(appState.currentUser?.planDisplayName ?? "Free Plan")
-                            .font(.system(size: 16, weight: .semibold))
+                            .font(.custom("Georgia", size: 16))
                             .foregroundStyle(Theme.textPrimary)
                         Text(planDescription)
-                            .font(.system(size: 13))
+                            .font(.system(size: 13, weight: .light))
                             .foregroundStyle(Theme.textSecondary)
                     }
                     Spacer()
@@ -153,10 +150,10 @@ struct SettingsView: View {
                         } label: {
                             Text("Upgrade")
                                 .font(.system(size: 13, weight: .semibold))
-                                .foregroundStyle(.black)
+                                .foregroundStyle(Color.white)
                                 .padding(.horizontal, 16)
                                 .padding(.vertical, 8)
-                                .background(Color.white)
+                                .background(Theme.accent)
                                 .cornerRadius(Theme.radiusSM)
                         }
                         .buttonStyle(.plain)
@@ -166,13 +163,17 @@ struct SettingsView: View {
                 .padding(16)
             }
 
-            // Sign Out
+            // Sign Out (soft rose bg)
             Button {
                 showSignOutAlert = true
             } label: {
                 Text("Sign Out")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(Theme.accentRed)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(Theme.pastelRose)
+                    .cornerRadius(Theme.radiusSM)
             }
             .buttonStyle(.plain)
             .hoverScale(1.02)
@@ -253,12 +254,11 @@ struct SettingsView: View {
                             .foregroundStyle(Theme.textMuted)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
-                            .background(Theme.bgCard)
+                            .background(Theme.pastelLavender)
                             .cornerRadius(4)
-                            .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.border, lineWidth: 1))
                         Spacer()
                         Text("Close overlay")
-                            .font(.system(size: 14))
+                            .font(.system(size: 14, weight: .light))
                             .foregroundStyle(Theme.textSecondary)
                     }
                     .padding(.horizontal, 16)
@@ -268,7 +268,7 @@ struct SettingsView: View {
         }
     }
 
-    // MARK: - About Tab
+    // MARK: - About Tab (Georgia serif for app name)
     private var aboutTab: some View {
         VStack(alignment: .leading, spacing: 24) {
             // Logo area
@@ -278,15 +278,15 @@ struct SettingsView: View {
                     .foregroundStyle(Theme.accent)
 
                 Text("MeetWise")
-                    .font(.heading(24))
+                    .font(.custom("Georgia-Bold", size: 24))
                     .foregroundStyle(Theme.textHeading)
 
                 Text("Version 1.0.0")
-                    .font(.system(size: 13))
+                    .font(.system(size: 13, weight: .light))
                     .foregroundStyle(Theme.textSecondary)
 
                 Text("Made by Vishal")
-                    .font(.system(size: 13))
+                    .font(.system(size: 13, weight: .light))
                     .foregroundStyle(Theme.textMuted)
             }
             .frame(maxWidth: .infinity)
@@ -308,7 +308,7 @@ struct SettingsView: View {
     private func settingsSection(_ title: String, @ViewBuilder content: () -> some View) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
-                .font(.system(size: 12, weight: .semibold))
+                .font(.custom("Georgia", size: 12))
                 .foregroundStyle(Theme.textMuted)
                 .textCase(.uppercase)
                 .tracking(1)
@@ -317,22 +317,19 @@ struct SettingsView: View {
             }
             .background(Theme.bgCard)
             .cornerRadius(Theme.radiusMD)
-            .overlay(
-                RoundedRectangle(cornerRadius: Theme.radiusMD)
-                    .stroke(Theme.border, lineWidth: 1)
-            )
+            .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 2)
         }
     }
 
     private func settingsToggle(_ label: String, isOn: Binding<Bool>) -> some View {
         HStack {
             Text(label)
-                .font(.system(size: 14))
+                .font(.system(size: 14, weight: .light))
                 .foregroundStyle(Theme.textPrimary)
             Spacer()
             Toggle("", isOn: isOn)
                 .toggleStyle(.switch)
-                .tint(.white)
+                .tint(Theme.accent)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
@@ -341,7 +338,7 @@ struct SettingsView: View {
     private func settingsPicker(_ label: String, selection: Binding<String>, options: [(String, String)]) -> some View {
         HStack {
             Text(label)
-                .font(.system(size: 14))
+                .font(.system(size: 14, weight: .light))
                 .foregroundStyle(Theme.textPrimary)
             Spacer()
             Picker("", selection: selection) {
@@ -364,21 +361,19 @@ struct SettingsView: View {
                     .foregroundStyle(Theme.textMuted)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 3)
-                    .background(Theme.bgElevated)
+                    .background(Theme.pastelLavender)
                     .cornerRadius(4)
-                    .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.border, lineWidth: 1))
                 Text(keys)
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(Theme.textMuted)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 3)
-                    .background(Theme.bgElevated)
+                    .background(Theme.pastelLavender)
                     .cornerRadius(4)
-                    .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.border, lineWidth: 1))
             }
             Spacer()
             Text(description)
-                .font(.system(size: 14))
+                .font(.system(size: 14, weight: .light))
                 .foregroundStyle(Theme.textSecondary)
         }
         .padding(.horizontal, 16)
@@ -394,10 +389,10 @@ struct SettingsView: View {
             HStack {
                 Image(systemName: icon)
                     .font(.system(size: 13))
-                    .foregroundStyle(Theme.textSecondary)
+                    .foregroundStyle(Theme.accent)
                     .frame(width: 20)
                 Text(label)
-                    .font(.system(size: 14))
+                    .font(.system(size: 14, weight: .light))
                     .foregroundStyle(Theme.textPrimary)
                 Spacer()
                 Image(systemName: "arrow.up.right")

@@ -5,9 +5,9 @@ enum Constants {
     static let bundleID = "com.meetwise.app"
 
     // API Keys — hardcoded
-    static let deepgramAPIKey = "YOUR_DEEPGRAM_KEY"
-    static let anthropicAPIKey = "YOUR_ANTHROPIC_KEY"
-    static let openAIAPIKey = "YOUR_OPENAI_KEY"
+    static let deepgramAPIKey = "YOUR_KEY"
+    static let anthropicAPIKey = "YOUR_KEY"
+    static let openAIAPIKey = "YOUR_KEY"
 
     // Supabase
     static var supabaseURL: String {

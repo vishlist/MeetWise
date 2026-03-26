@@ -10,31 +10,28 @@ struct SharedWithMeView: View {
                 .foregroundStyle(Theme.textHeading)
 
             Text("Notes that others have shared with you will appear here.")
-                .font(.system(size: 14))
+                .font(.system(size: 14, weight: .light))
                 .foregroundStyle(Theme.textSecondary)
 
             // Empty state illustration
             VStack(spacing: 16) {
                 Image(systemName: "doc.on.doc")
                     .font(.system(size: 48))
-                    .foregroundStyle(Theme.textMuted)
+                    .foregroundStyle(Theme.accent.opacity(0.4))
 
                 Text("No shared notes yet")
-                    .font(.system(size: 16, weight: .medium))
+                    .font(.custom("Georgia", size: 16))
                     .foregroundStyle(Theme.textPrimary)
 
                 Text("When someone shares a note with you, it will show up here")
-                    .font(.system(size: 13))
+                    .font(.system(size: 13, weight: .light))
                     .foregroundStyle(Theme.textSecondary)
                     .multilineTextAlignment(.center)
             }
             .padding(40)
-            .background(Theme.bgCard.opacity(0.3))
+            .background(Theme.bgCard)
             .cornerRadius(Theme.radiusLG)
-            .overlay(
-                RoundedRectangle(cornerRadius: Theme.radiusLG)
-                    .stroke(Theme.bgCardBorder, style: StrokeStyle(lineWidth: 1, dash: [6]))
-            )
+            .shadow(color: Color.black.opacity(0.04), radius: 8, y: 2)
 
             Spacer()
         }
