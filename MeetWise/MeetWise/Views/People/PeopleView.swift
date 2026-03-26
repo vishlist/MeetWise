@@ -80,7 +80,7 @@ struct PeopleView: View {
             } label: {
                 HStack(spacing: 12) {
                     Circle()
-                        .fill(Theme.pastelBlue)
+                        .fill(Theme.tintCool)
                         .frame(width: 36, height: 36)
                         .overlay(
                             Text(contact.initials)
@@ -124,7 +124,7 @@ struct PeopleView: View {
                         .foregroundStyle(Theme.accent)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(Theme.pastelLavender)
+                        .background(Theme.accentSoft)
                         .cornerRadius(Theme.radiusPill)
                     }
                     .buttonStyle(.plain)
@@ -234,7 +234,7 @@ struct PeopleView: View {
                                 .font(.system(size: 13, weight: .light))
                                 .foregroundStyle(Theme.textPrimary)
                                 .padding(10)
-                                .background(msg.role == "user" ? Theme.pastelLavender.opacity(0.4) : Theme.bgCard)
+                                .background(msg.role == "user" ? Theme.accentSoft.opacity(0.4) : Theme.bgCard)
                                 .cornerRadius(Theme.radiusMD)
                                 .shadow(color: msg.role == "assistant" ? Color.black.opacity(0.03) : .clear, radius: 3, y: 1)
                                 .textSelection(.enabled)

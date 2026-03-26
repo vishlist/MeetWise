@@ -1,61 +1,65 @@
 import SwiftUI
 
-// MARK: - MeetWise Design System — Pastel Light Editorial Theme
+// MARK: - MeetWise Design System — Warm Neutral "Ink on Paper" Theme
 
 enum Theme {
     // --- Backgrounds ---
-    static let bgPrimary    = Color(hex: "#FAF8F5")    // warm off-white
-    static let bgSidebar    = Color(hex: "#F3F0F8")    // light lavender
-    static let bgCard       = Color(hex: "#FFFFFF")    // pure white
-    static let bgCardBorder = Color(hex: "#E8E4F0")    // subtle lavender border
-    static let bgHover      = Color(hex: "#F5F3F0")    // warm hover
-    static let bgActive     = Color(hex: "#EDE8F4")    // lavender active
+    static let bgPrimary    = Color(hex: "#F6F5F2")    // warm stone/paper
+    static let bgSidebar    = Color(hex: "#EFEEE9")    // slightly darker warm gray
+    static let bgCard       = Color(hex: "#FFFFFF")    // white
+    static let bgCardBorder = Color(hex: "#E0DED8")    // warm gray border
+    static let bgHover      = Color(hex: "#F0EFE9")    // warm hover
+    static let bgActive     = Color(hex: "#E8E7E1")    // warm active
     static let bgInput      = Color(hex: "#FFFFFF")    // white input
-    static let bgElevated   = Color(hex: "#F8F6FF")    // very light lavender tint
+    static let bgElevated   = Color(hex: "#F6F5F2")    // warm stone
 
     // --- Text ---
-    static let textPrimary   = Color(hex: "#1A1A2E")   // dark charcoal
-    static let textSecondary = Color(hex: "#5A5A6A")   // medium gray
-    static let textHeading   = Color(hex: "#1A1A2E")   // dark charcoal
-    static let textMuted     = Color(hex: "#9A9AAA")   // light gray
+    static let textPrimary   = Color(hex: "#1C1C1E")   // near-black
+    static let textSecondary = Color(hex: "#6B6B6B")   // medium gray
+    static let textHeading   = Color(hex: "#1C1C1E")   // near-black
+    static let textMuted     = Color(hex: "#A0A0A0")   // light gray
 
-    // --- Accents ---
-    static let accent        = Color(hex: "#7C6BC4")   // muted purple
-    static let accentGlow    = Color(hex: "#7C6BC4").opacity(0.10)
-    static let accentGreen   = Color(hex: "#6BAF8D")   // soft green
-    static let accentOrange  = Color(hex: "#C4956B")   // warm muted orange
-    static let accentYellow  = Color(hex: "#B8A86B")   // muted gold
-    static let accentBlue    = Color(hex: "#6B8FC4")   // soft blue
-    static let accentPink    = Color(hex: "#C46B8F")   // soft rose
-    static let accentRed     = Color(hex: "#C46B6B")   // soft red for errors
+    // --- Accents (dark charcoal, no purple) ---
+    static let accent        = Color(hex: "#2C2C2E")   // dark charcoal
+    static let accentGlow    = Color(hex: "#2C2C2E").opacity(0.10)
+    static let accentSoft    = Color(hex: "#E8E7E1")   // warm light gray for pills/badges
+    static let accentGreen   = Color(hex: "#5A9B6B")   // muted forest green
+    static let accentOrange  = Color(hex: "#B8955A")   // warm muted amber
+    static let accentYellow  = Color(hex: "#B8A040")   // muted gold
+    static let accentBlue    = Color(hex: "#6B8FA0")   // muted steel blue
+    static let accentPink    = Color(hex: "#A06B7B")   // muted dusty rose
+    static let accentRed     = Color(hex: "#C45A5A")   // muted red
 
-    // --- Pastels ---
-    static let pastelLavender = Color(hex: "#E8E0F0")
-    static let pastelBlue     = Color(hex: "#E0EBF5")
-    static let pastelMint     = Color(hex: "#E0F2ED")
-    static let pastelPeach    = Color(hex: "#F5E6E0")
-    static let pastelYellow   = Color(hex: "#F5F0E0")
-    static let pastelRose     = Color(hex: "#F5E0E8")
+    // --- Subtle Tints (barely-there, not bright pastels) ---
+    static let tintWarm   = Color(hex: "#F0EAE0")   // very faint warm beige
+    static let tintCool   = Color(hex: "#E8ECF0")   // very faint cool gray
+    static let tintSage   = Color(hex: "#E8EDE8")   // barely-there sage
+    static let tintAmber  = Color(hex: "#F0ECE0")   // faint amber
 
-    static let pastelColors: [Color] = [
-        pastelLavender, pastelBlue, pastelMint, pastelPeach, pastelYellow, pastelRose
+    static let tintColors: [Color] = [
+        tintWarm, tintCool, tintSage, tintAmber
     ]
 
+    // --- Status colors (muted) ---
+    static let statusGreen  = Color(hex: "#5A9B6B")
+    static let statusRed    = Color(hex: "#C45A5A")
+    static let statusYellow = Color(hex: "#B8A040")
+
     // --- Borders ---
-    static let border  = Color(hex: "#E8E4F0")
-    static let divider = Color(hex: "#EDE8F4")
+    static let border  = Color(hex: "#E0DED8")   // warm gray border
+    static let divider = Color(hex: "#E8E6E0")   // slightly lighter
 
     // --- Gradients ---
     static let gradientAccent = LinearGradient(
-        colors: [Color(hex: "#7C6BC4"), Color(hex: "#9B8ED8")],
+        colors: [Color(hex: "#2C2C2E"), Color(hex: "#3C3C3E")],
         startPoint: .leading, endPoint: .trailing
     )
     static let gradientCard = LinearGradient(
-        colors: [Color.white, Color(hex: "#FAF8F5")],
+        colors: [Color.white, Color(hex: "#F6F5F2")],
         startPoint: .top, endPoint: .bottom
     )
     static let gradientGlow = RadialGradient(
-        colors: [Color(hex: "#7C6BC4").opacity(0.06), .clear],
+        colors: [Color(hex: "#2C2C2E").opacity(0.04), .clear],
         center: .center, startRadius: 0, endRadius: 200
     )
 
@@ -76,8 +80,8 @@ enum Theme {
     static let sidebarWidth: CGFloat = 230
 
     // --- Shadows ---
-    static func glow(_ color: Color = Color(hex: "#7C6BC4"), radius: CGFloat = 12) -> some View {
-        color.opacity(0.06).blur(radius: radius)
+    static func glow(_ color: Color = Color(hex: "#2C2C2E"), radius: CGFloat = 12) -> some View {
+        color.opacity(0.04).blur(radius: radius)
     }
 
     // --- Card shadow ---
@@ -85,16 +89,16 @@ enum Theme {
         SoftShadow()
     }
 
-    // --- Attendee colors (pastel tones) ---
+    // --- Attendee colors (neutral gray tones) ---
     static let attendeeColors: [Color] = [
-        Color(hex: "#7C6BC4"),
-        Color(hex: "#6B8FC4"),
-        Color(hex: "#6BAF8D"),
-        Color(hex: "#C4956B"),
-        Color(hex: "#C46B8F"),
-        Color(hex: "#B8A86B"),
-        Color(hex: "#8B6BC4"),
-        Color(hex: "#6BC4A8"),
+        Color(hex: "#6B6B6B"),
+        Color(hex: "#8B8B8B"),
+        Color(hex: "#5A7B6B"),
+        Color(hex: "#7B6B5A"),
+        Color(hex: "#6B7B8B"),
+        Color(hex: "#8B7B6B"),
+        Color(hex: "#7B8B6B"),
+        Color(hex: "#6B8B7B"),
     ]
 }
 
@@ -182,7 +186,7 @@ struct HoverButtonStyle: ButtonStyle {
     }
 }
 
-// MARK: - Smooth Button Style (Purple bg, white text)
+// MARK: - Smooth Button Style (Dark charcoal bg, white text)
 struct SmoothButtonStyle: ButtonStyle {
     @State private var isHovering = false
 
@@ -197,14 +201,14 @@ struct SmoothButtonStyle: ButtonStyle {
                     .fill(Theme.accent)
             )
             .scaleEffect(configuration.isPressed ? 0.98 : (isHovering ? 1.01 : 1.0))
-            .shadow(color: Theme.accent.opacity(isHovering ? 0.2 : 0), radius: 8, y: 2)
+            .shadow(color: Theme.accent.opacity(isHovering ? 0.15 : 0), radius: 8, y: 2)
             .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isHovering)
             .animation(.spring(response: 0.3, dampingFraction: 0.7), value: configuration.isPressed)
             .onHover { isHovering = $0 }
     }
 }
 
-// MARK: - Glass Card (now white card with soft shadow)
+// MARK: - Glass Card (white card with soft shadow)
 struct GlassCard: ViewModifier {
     var cornerRadius: CGFloat = Theme.radiusMD
     func body(content: Content) -> some View {
@@ -227,7 +231,7 @@ struct GlowModifier: ViewModifier {
     let radius: CGFloat
     func body(content: Content) -> some View {
         content
-            .shadow(color: color.opacity(0.12), radius: radius, x: 0, y: 2)
+            .shadow(color: color.opacity(0.08), radius: radius, x: 0, y: 2)
     }
 }
 
@@ -330,7 +334,7 @@ struct PillTag: View {
     }
 }
 
-// MARK: - Collapsible Section (white card with shadow, Georgia header)
+// MARK: - Collapsible Section (white card with warm shadow)
 struct CollapsibleSection<Content: View>: View {
     let title: String
     let icon: String
@@ -354,7 +358,7 @@ struct CollapsibleSection<Content: View>: View {
                 HStack(spacing: 8) {
                     Image(systemName: icon)
                         .font(.system(size: 13))
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.textSecondary)
                         .frame(width: 18)
                     Text(title)
                         .font(.custom("Georgia", size: 15))
@@ -387,13 +391,13 @@ struct CollapsibleSection<Content: View>: View {
     }
 }
 
-// MARK: - Stats Card (white bg, pastel icon tint, soft shadow)
+// MARK: - Stats Card (white bg, tint icon bg, soft shadow)
 struct StatsCard: View {
     let title: String
     let value: String
     let subtitle: String
     let icon: String
-    var pastelBg: Color = Theme.pastelBlue
+    var tintBg: Color = Theme.tintCool
     @State private var isHovering = false
 
     var body: some View {
@@ -402,9 +406,9 @@ struct StatsCard: View {
                 Spacer()
                 Image(systemName: icon)
                     .font(.system(size: 14))
-                    .foregroundStyle(Theme.accent.opacity(0.6))
+                    .foregroundStyle(Theme.textSecondary)
                     .padding(6)
-                    .background(pastelBg.opacity(0.6))
+                    .background(tintBg)
                     .cornerRadius(6)
             }
 
@@ -433,14 +437,14 @@ struct StatsCard: View {
     }
 }
 
-// MARK: - Attendee Pill (pastel colored circles)
+// MARK: - Attendee Pill (neutral gray circles)
 struct AttendeePill: View {
     let name: String
     let color: Color
     let onRemove: (() -> Void)?
     @State private var isHovering = false
 
-    init(name: String, color: Color = Theme.accent, onRemove: (() -> Void)? = nil) {
+    init(name: String, color: Color = Theme.textSecondary, onRemove: (() -> Void)? = nil) {
         self.name = name
         self.color = color
         self.onRemove = onRemove
@@ -480,13 +484,13 @@ struct AttendeePill: View {
     }
 }
 
-// MARK: - Tag Pill (rotating pastel colors)
+// MARK: - Tag Pill (warm gray bg, dark text)
 struct TagPill: View {
     let text: String
     var colorIndex: Int = 0
 
     private var pillColor: Color {
-        Theme.pastelColors[abs(text.hashValue) % Theme.pastelColors.count]
+        Theme.accentSoft
     }
 
     var body: some View {
@@ -528,12 +532,12 @@ struct ActionItemRow: View {
                     if let assignee, !assignee.isEmpty {
                         HStack(spacing: 4) {
                             Circle()
-                                .fill(Theme.pastelLavender)
+                                .fill(Theme.accentSoft)
                                 .frame(width: 14, height: 14)
                                 .overlay(
                                     Text(String(assignee.prefix(1)).uppercased())
                                         .font(.system(size: 7, weight: .bold))
-                                        .foregroundStyle(Theme.accent)
+                                        .foregroundStyle(Theme.textSecondary)
                                 )
                             Text(assignee)
                                 .font(.system(size: 11, weight: .light))
@@ -612,10 +616,10 @@ struct CountBadge: View {
     var body: some View {
         Text("\(count)")
             .font(.system(size: 10, weight: .medium))
-            .foregroundStyle(Theme.accent)
+            .foregroundStyle(Theme.textSecondary)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
-            .background(Theme.pastelLavender)
+            .background(Theme.accentSoft)
             .cornerRadius(Theme.radiusPill)
     }
 }

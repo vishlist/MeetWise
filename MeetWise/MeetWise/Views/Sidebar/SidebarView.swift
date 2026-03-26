@@ -3,6 +3,7 @@ import SwiftData
 
 struct SidebarView: View {
     var sessionManager: MeetingSessionManager
+    var toggleSidebar: (() -> Void)? = nil
     @Environment(AppState.self) private var appState
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Folder.position) private var folders: [Folder]
@@ -21,10 +22,30 @@ struct SidebarView: View {
         @Bindable var state = appState
 
         VStack(spacing: 0) {
+            // Collapse button + Search bar
+            HStack(spacing: 8) {
+                Button {
+                    toggleSidebar?()
+                } label: {
+                    Image(systemName: "sidebar.left")
+                        .font(.system(size: 14))
+                        .foregroundStyle(Theme.textSecondary)
+                        .padding(6)
+                        .background(Theme.bgCard)
+                        .cornerRadius(Theme.radiusSM)
+                }
+                .buttonStyle(.plain)
+                .hoverScale(1.05)
+
+                Spacer()
+            }
+            .padding(.horizontal, 12)
+            .padding(.top, 10)
+            .padding(.bottom, 4)
+
             // Search bar
             searchBar
                 .padding(.horizontal, 12)
-                .padding(.top, 12)
                 .padding(.bottom, 8)
 
             // Recording indicator
@@ -130,7 +151,7 @@ struct SidebarView: View {
             }
         }
         .padding(8)
-        .background(Theme.pastelRose.opacity(0.5))
+        .background(Theme.accentRed.opacity(0.08))
         .cornerRadius(Theme.radiusSM)
         .onTapGesture {
             if let meeting = sessionManager.currentMeeting {
@@ -144,7 +165,7 @@ struct SidebarView: View {
         HStack(spacing: 6) {
             Image(systemName: "video.fill")
                 .font(.system(size: 10))
-                .foregroundStyle(Theme.accent)
+                .foregroundStyle(Theme.textSecondary)
 
             Text(detected.platform.rawValue)
                 .font(.system(size: 11, weight: .medium))
@@ -154,7 +175,7 @@ struct SidebarView: View {
             Spacer()
 
             Circle()
-                .fill(Theme.accent)
+                .fill(Theme.accentGreen)
                 .frame(width: 5, height: 5)
         }
         .padding(8)
@@ -207,7 +228,7 @@ struct SidebarView: View {
             HStack(spacing: 8) {
                 Image(systemName: icon)
                     .font(.system(size: 12))
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.textSecondary)
                 Text(name)
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary)
@@ -238,7 +259,7 @@ struct SidebarView: View {
                 HStack(spacing: 10) {
                     Image(systemName: "folder.fill")
                         .font(.system(size: 14))
-                        .foregroundStyle(Theme.accent.opacity(0.6))
+                        .foregroundStyle(Theme.textMuted)
                         .frame(width: 20)
                     TextField("Folder name", text: $newFolderName)
                         .textFieldStyle(.plain)
@@ -317,7 +338,7 @@ struct SidebarView: View {
                 HStack(spacing: 10) {
                     Image(systemName: "folder.fill")
                         .font(.system(size: 14))
-                        .foregroundStyle(Theme.accent.opacity(0.6))
+                        .foregroundStyle(Theme.textMuted)
                         .frame(width: 20)
                     TextField("Folder name", text: $editingFolderName)
                         .textFieldStyle(.plain)
@@ -341,7 +362,7 @@ struct SidebarView: View {
                     HStack(spacing: 10) {
                         Image(systemName: "folder.fill")
                             .font(.system(size: 14))
-                            .foregroundStyle(appState.selectedNavItem == .folder(folder.id) ? Theme.accent : Theme.accent.opacity(0.5))
+                            .foregroundStyle(appState.selectedNavItem == .folder(folder.id) ? Theme.textPrimary : Theme.textMuted)
                             .frame(width: 20)
                         Text(folder.name)
                             .font(.system(size: 13, weight: appState.selectedNavItem == .folder(folder.id) ? .medium : .light))
@@ -422,7 +443,7 @@ struct SidebarView: View {
                         .foregroundStyle(Theme.textSecondary)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)
-                        .background(Theme.pastelLavender)
+                        .background(Theme.accentSoft)
                         .cornerRadius(Theme.radiusPill)
                     Spacer()
                     Text("Upgrade")
@@ -441,7 +462,7 @@ struct SidebarView: View {
             } label: {
                 HStack(spacing: 8) {
                     Circle()
-                        .fill(Theme.pastelLavender)
+                        .fill(Theme.accentSoft)
                         .frame(width: 28, height: 28)
                         .overlay(
                             Text(appState.currentUser?.initials ?? "U")
@@ -561,7 +582,7 @@ struct SidebarNavButton: View {
             HStack(spacing: 10) {
                 Image(systemName: icon)
                     .font(.system(size: 14))
-                    .foregroundStyle(isSelected ? Theme.accent : Theme.textSecondary)
+                    .foregroundStyle(isSelected ? Theme.textPrimary : Theme.textSecondary)
                     .frame(width: 20)
                 Text(label)
                     .font(.system(size: 13, weight: isSelected ? .medium : .light))

@@ -94,7 +94,7 @@ struct ChatView: View {
         }
     }
 
-    // MARK: - Bot Avatar (muted purple circle with white MW)
+    // MARK: - Bot Avatar (dark charcoal circle with white MW)
     private var botAvatar: some View {
         Circle()
             .fill(Theme.accent)
@@ -163,7 +163,7 @@ struct ChatView: View {
         .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 2)
     }
 
-    // MARK: - Recipes Section (different pastel bg colors)
+    // MARK: - Recipes Section (warm gray bg)
     private var recipesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Suggested")
@@ -174,7 +174,7 @@ struct ChatView: View {
 
             FlowLayout(spacing: 8) {
                 ForEach(Array(displayRecipes.enumerated()), id: \.offset) { index, recipe in
-                    recipePill(recipe.0, pastelColor: Theme.pastelColors[index % Theme.pastelColors.count])
+                    recipePill(recipe.0, tintColor: Theme.tintColors[index % Theme.tintColors.count])
                 }
             }
         }
@@ -184,11 +184,11 @@ struct ChatView: View {
         [
             ("List action items", Theme.accent),
             ("Show pending tasks", Theme.accent),
-            ("Write follow up email", Theme.accentOrange),
+            ("Write follow up email", Theme.accent),
             ("Coach me", Theme.accent),
-            ("Weekly recap", Theme.accentYellow),
+            ("Weekly recap", Theme.accent),
             ("Blind spots", Theme.accent),
-            ("Streamline my calendar", Theme.accentOrange),
+            ("Streamline my calendar", Theme.accent),
             ("Summarize last meeting", Theme.accent),
         ]
     }
@@ -209,7 +209,7 @@ struct ChatView: View {
         .buttonStyle(.plain)
     }
 
-    private func recipePill(_ title: String, pastelColor: Color) -> some View {
+    private func recipePill(_ title: String, tintColor: Color) -> some View {
         Button {
             if let recipe = recipes.first(where: { $0.name == title }) {
                 executeRecipe(recipe)
@@ -221,14 +221,14 @@ struct ChatView: View {
             HStack(spacing: 6) {
                 Text("/")
                     .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.textSecondary)
                 Text(title)
                     .font(.system(size: 13, weight: .light))
                     .foregroundStyle(Theme.textPrimary)
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
-            .background(pastelColor.opacity(0.5))
+            .background(tintColor)
             .cornerRadius(Theme.radiusPill)
         }
         .buttonStyle(.plain)
@@ -255,18 +255,18 @@ struct ChatView: View {
                 .lineSpacing(3)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(12)
-                .background(role == "user" ? Theme.pastelLavender.opacity(0.5) : Theme.bgCard)
+                .background(role == "user" ? Theme.tintWarm : Theme.bgCard)
                 .cornerRadius(Theme.radiusMD)
                 .shadow(color: role == "assistant" ? Color.black.opacity(0.04) : .clear, radius: 4, x: 0, y: 1)
 
             if role == "user" {
                 Circle()
-                    .fill(Theme.pastelBlue)
+                    .fill(Theme.accentSoft)
                     .frame(width: 28, height: 28)
                     .overlay(
                         Text(appState.currentUser?.initials ?? "U")
                             .font(.system(size: 10, weight: .medium))
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.textPrimary)
                     )
             }
         }

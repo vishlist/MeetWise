@@ -132,7 +132,7 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - Stats Cards Row (each with different pastel bg)
+    // MARK: - Stats Cards Row (each with different tint bg)
     private var statsCardsRow: some View {
         HStack(spacing: 12) {
             StatsCard(
@@ -140,28 +140,28 @@ struct HomeView: View {
                 value: "\(activeNotesCount)",
                 subtitle: "Total meetings",
                 icon: "doc.text.fill",
-                pastelBg: Theme.pastelBlue
+                tintBg: Theme.tintCool
             )
             StatsCard(
                 title: "Completed",
                 value: "\(completedCount)/\(recentMeetings.count)",
                 subtitle: completedCount == recentMeetings.count ? "All done" : "\(recentMeetings.count - completedCount) remaining",
                 icon: "checkmark.circle.fill",
-                pastelBg: Theme.pastelMint
+                tintBg: Theme.tintSage
             )
             StatsCard(
                 title: "This Week",
                 value: "\(thisWeekMeetings.count)",
                 subtitle: "Meetings",
                 icon: "calendar",
-                pastelBg: Theme.pastelPeach
+                tintBg: Theme.tintWarm
             )
             StatsCard(
                 title: "Action Items",
                 value: "\(actionItemsCount)",
                 subtitle: "Pending tasks",
                 icon: "checklist",
-                pastelBg: Theme.pastelYellow
+                tintBg: Theme.tintAmber
             )
         }
     }
@@ -182,12 +182,12 @@ struct HomeView: View {
 
                 Text(monthName)
                     .font(.custom("Georgia", size: 14))
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.textSecondary)
 
                 Spacer()
             }
             .padding(16)
-            .background(Theme.pastelPeach.opacity(0.3))
+            .background(Theme.tintWarm)
             .clipShape(UnevenRoundedRectangle(topLeadingRadius: Theme.radiusLG, topTrailingRadius: Theme.radiusLG))
 
             if !calendarAuthorized {
@@ -222,10 +222,10 @@ struct HomeView: View {
                             NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.datetime")!)
                         }
                         .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.textSecondary)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 6)
-                        .background(Theme.accent.opacity(0.1))
+                        .background(Theme.bgActive)
                         .cornerRadius(Theme.radiusSM)
                         .buttonStyle(.plain)
                     }
@@ -252,10 +252,10 @@ struct HomeView: View {
                         NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.datetime")!)
                     }
                     .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.textSecondary)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 6)
-                    .background(Theme.accent.opacity(0.1))
+                    .background(Theme.bgActive)
                     .cornerRadius(Theme.radiusSM)
                     .padding(.top, 4)
                     .buttonStyle(.plain)
@@ -336,10 +336,10 @@ struct HomeView: View {
                 } label: {
                     Text("Join & Note")
                         .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Color.white)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 5)
-                        .background(Theme.pastelLavender)
+                        .background(Theme.accent)
                         .cornerRadius(Theme.radiusPill)
                 }
                 .buttonStyle(.plain)
@@ -385,7 +385,7 @@ struct HomeView: View {
                 HStack(spacing: 12) {
                     ZStack {
                         RoundedRectangle(cornerRadius: Theme.radiusSM)
-                            .fill(Theme.pastelLavender.opacity(0.5))
+                            .fill(Theme.tintCool)
                             .frame(width: 36, height: 36)
 
                         if sessionManager.isRecording && sessionManager.currentMeeting?.id == meeting.id {
@@ -393,7 +393,7 @@ struct HomeView: View {
                         } else {
                             Image(systemName: "doc.text.fill")
                                 .font(.system(size: 15))
-                                .foregroundStyle(Theme.accent.opacity(0.6))
+                                .foregroundStyle(Theme.textMuted)
                         }
                     }
 
@@ -409,7 +409,7 @@ struct HomeView: View {
                     Spacer()
 
                     if meeting.enhancedNotes != nil {
-                        PillTag("Enhanced", icon: "sparkles", color: Theme.accent)
+                        PillTag("Enhanced", icon: "sparkles", color: Theme.textSecondary)
                     }
 
                     if meeting.platform != nil {
@@ -453,17 +453,17 @@ struct HomeView: View {
             HStack {
                 Image(systemName: "checklist")
                     .font(.system(size: 13))
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.textSecondary)
                 Text("Today's Tasks")
                     .font(.custom("Georgia", size: 14))
                     .foregroundStyle(Theme.textPrimary)
                 Spacer()
                 Text("\(todayActionItems.count)")
                     .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.textSecondary)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
-                    .background(Theme.pastelMint)
+                    .background(Theme.tintSage)
                     .cornerRadius(Theme.radiusPill)
             }
 
@@ -486,7 +486,7 @@ struct HomeView: View {
         VStack(spacing: 16) {
             Image(systemName: "doc.text.fill")
                 .font(.system(size: 40))
-                .foregroundStyle(Theme.accent.opacity(0.4))
+                .foregroundStyle(Theme.textMuted)
 
             Text("Take your first note")
                 .font(.custom("Georgia", size: 16))
@@ -525,7 +525,7 @@ struct HomeView: View {
                 HStack {
                     Image(systemName: "sparkles")
                         .font(.system(size: 12))
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.textSecondary)
                     TextField("What did we talk about yesterday?", text: $homeChat)
                         .textFieldStyle(.plain)
                         .font(.system(size: 13, weight: .light))
@@ -550,7 +550,7 @@ struct HomeView: View {
                     HStack(spacing: 4) {
                         Text("/")
                             .font(.system(size: 12, weight: .bold))
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.textSecondary)
                         Text("List recent todos")
                             .font(.system(size: 12, weight: .light))
                             .foregroundStyle(Theme.textPrimary)

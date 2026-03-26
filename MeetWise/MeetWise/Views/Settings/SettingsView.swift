@@ -27,12 +27,12 @@ struct SettingsView: View {
                             Text(tab.rawValue)
                                 .font(.system(size: 13, weight: appState.settingsTab == tab ? .medium : .light))
                         }
-                        .foregroundStyle(appState.settingsTab == tab ? Theme.textPrimary : Theme.textSecondary)
+                        .foregroundStyle(appState.settingsTab == tab ? Color.white : Theme.textSecondary)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 10)
                         .background(
                             RoundedRectangle(cornerRadius: Theme.radiusSM)
-                                .fill(appState.settingsTab == tab ? Theme.pastelLavender : .clear)
+                                .fill(appState.settingsTab == tab ? Theme.accent : .clear)
                         )
                     }
                     .buttonStyle(.plain)
@@ -86,7 +86,7 @@ struct SettingsView: View {
             HStack(spacing: 20) {
                 ZStack {
                     Circle()
-                        .fill(Theme.pastelLavender)
+                        .fill(Theme.accentSoft)
                         .frame(width: 72, height: 72)
                     Text(appState.currentUser?.initials ?? "U")
                         .font(.custom("Georgia-Bold", size: 24))
@@ -163,7 +163,7 @@ struct SettingsView: View {
                 .padding(16)
             }
 
-            // Sign Out (soft rose bg)
+            // Sign Out
             Button {
                 showSignOutAlert = true
             } label: {
@@ -172,7 +172,7 @@ struct SettingsView: View {
                     .foregroundStyle(Theme.accentRed)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 8)
-                    .background(Theme.pastelRose)
+                    .background(Theme.accentRed.opacity(0.08))
                     .cornerRadius(Theme.radiusSM)
             }
             .buttonStyle(.plain)
@@ -254,7 +254,7 @@ struct SettingsView: View {
                             .foregroundStyle(Theme.textMuted)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
-                            .background(Theme.pastelLavender)
+                            .background(Theme.accentSoft)
                             .cornerRadius(4)
                         Spacer()
                         Text("Close overlay")
@@ -361,14 +361,14 @@ struct SettingsView: View {
                     .foregroundStyle(Theme.textMuted)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 3)
-                    .background(Theme.pastelLavender)
+                    .background(Theme.accentSoft)
                     .cornerRadius(4)
                 Text(keys)
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(Theme.textMuted)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 3)
-                    .background(Theme.pastelLavender)
+                    .background(Theme.accentSoft)
                     .cornerRadius(4)
             }
             Spacer()
@@ -389,7 +389,7 @@ struct SettingsView: View {
             HStack {
                 Image(systemName: icon)
                     .font(.system(size: 13))
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.textSecondary)
                     .frame(width: 20)
                 Text(label)
                     .font(.system(size: 14, weight: .light))

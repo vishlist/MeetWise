@@ -42,7 +42,7 @@ struct CompaniesView: View {
                         .foregroundStyle(Theme.accent)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
-                        .background(Theme.pastelLavender)
+                        .background(Theme.accentSoft)
                         .cornerRadius(Theme.radiusSM)
                     }
                     .buttonStyle(.plain)
@@ -87,7 +87,7 @@ struct CompaniesView: View {
             } label: {
                 HStack(spacing: 12) {
                     RoundedRectangle(cornerRadius: 6)
-                        .fill(Theme.pastelLavender)
+                        .fill(Theme.accentSoft)
                         .frame(width: 36, height: 36)
                         .overlay(
                             Text(String(company.name.prefix(2)).uppercased())
@@ -141,7 +141,7 @@ struct CompaniesView: View {
                         ForEach(contacts) { contact in
                             HStack(spacing: 8) {
                                 Circle()
-                                    .fill(Theme.pastelBlue)
+                                    .fill(Theme.tintCool)
                                     .frame(width: 20, height: 20)
                                     .overlay(
                                         Text(contact.initials)

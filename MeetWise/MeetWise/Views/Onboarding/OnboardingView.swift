@@ -22,7 +22,7 @@ struct OnboardingView: View {
             HStack(spacing: 8) {
                 ForEach(0..<totalSteps, id: \.self) { step in
                     Circle()
-                        .fill(step <= currentStep ? Theme.accent : Theme.pastelLavender)
+                        .fill(step <= currentStep ? Theme.accent : Theme.accentSoft)
                         .frame(width: 8, height: 8)
                         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: currentStep)
                 }
@@ -142,10 +142,10 @@ struct OnboardingView: View {
             } label: {
                 Text("Open System Settings")
                     .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.textSecondary)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 6)
-                    .background(Theme.pastelLavender)
+                    .background(Theme.accentSoft)
                     .cornerRadius(Theme.radiusSM)
             }
             .buttonStyle(.plain)
@@ -262,7 +262,7 @@ struct OnboardingView: View {
                     .foregroundStyle(Theme.textMuted)
                     .padding(.horizontal, 5)
                     .padding(.vertical, 2)
-                    .background(Theme.pastelLavender)
+                    .background(Theme.accentSoft)
                     .cornerRadius(3)
                 Text("+")
                     .font(.system(size: 10))
@@ -272,7 +272,7 @@ struct OnboardingView: View {
                     .foregroundStyle(Theme.textMuted)
                     .padding(.horizontal, 5)
                     .padding(.vertical, 2)
-                    .background(Theme.pastelLavender)
+                    .background(Theme.accentSoft)
                     .cornerRadius(3)
             }
             Text(description)
@@ -285,7 +285,7 @@ struct OnboardingView: View {
         HStack(spacing: 8) {
             Image(systemName: icon)
                 .font(.system(size: 12))
-                .foregroundStyle(Theme.accent)
+                .foregroundStyle(Theme.textSecondary)
             Text(text)
                 .font(.system(size: 13, weight: .light))
                 .foregroundStyle(Theme.textSecondary)
@@ -299,7 +299,7 @@ struct OnboardingView: View {
                 .font(.system(size: 16))
                 .foregroundStyle(isGranted ? Theme.accentGreen : Theme.textSecondary)
                 .frame(width: 32, height: 32)
-                .background(isGranted ? Theme.pastelMint : Theme.bgCard)
+                .background(isGranted ? Theme.tintSage : Theme.bgCard)
                 .cornerRadius(Theme.radiusSM)
 
             VStack(alignment: .leading, spacing: 2) {
@@ -319,10 +319,10 @@ struct OnboardingView: View {
             } else {
                 Button("Grant") { action() }
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Color.white)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 4)
-                    .background(Theme.pastelLavender)
+                    .background(Theme.accent)
                     .cornerRadius(Theme.radiusSM)
                     .buttonStyle(.plain)
             }
@@ -394,7 +394,7 @@ struct OnboardingView: View {
             let recipe = Recipe(
                 name: template.name,
                 prompt: template.prompt,
-                iconColor: "#7C6BC4",
+                iconColor: "#2C2C2E",
                 category: "builtin"
             )
             recipe.position = index

@@ -51,7 +51,7 @@ struct MenuBarView: View {
                 HStack(spacing: 2) {
                     ForEach(0..<20, id: \.self) { i in
                         RoundedRectangle(cornerRadius: 1)
-                            .fill(Float(i) / 20.0 < appState.audioLevel ? Theme.accent : Theme.pastelLavender)
+                            .fill(Float(i) / 20.0 < appState.audioLevel ? Theme.accent : Theme.accentSoft)
                             .frame(width: 8, height: 12)
                     }
                 }
@@ -69,7 +69,7 @@ struct MenuBarView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 6)
-                    .background(Theme.pastelRose)
+                    .background(Theme.accentRed.opacity(0.08))
                     .foregroundStyle(Theme.accentRed)
                     .cornerRadius(Theme.radiusSM)
                 }
@@ -112,7 +112,7 @@ struct MenuBarView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 6)
-                    .background(Theme.pastelLavender)
+                    .background(Theme.accentSoft)
                     .foregroundStyle(Theme.accent)
                     .cornerRadius(Theme.radiusSM)
                 }

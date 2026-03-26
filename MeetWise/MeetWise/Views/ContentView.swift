@@ -7,6 +7,7 @@ struct ContentView: View {
     @State private var sessionManager = MeetingSessionManager()
     @State private var showSearch = false
     @State private var onboardingComplete = UserDefaults.standard.bool(forKey: "onboardingComplete")
+    @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
     var body: some View {
         @Bindable var state = appState
@@ -37,8 +38,12 @@ struct ContentView: View {
 
     private var mainAppView: some View {
         ZStack {
-            NavigationSplitView(columnVisibility: .constant(.all)) {
-                SidebarView(sessionManager: sessionManager)
+            NavigationSplitView(columnVisibility: $columnVisibility) {
+                SidebarView(sessionManager: sessionManager, toggleSidebar: {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        columnVisibility = columnVisibility == .all ? .detailOnly : .all
+                    }
+                })
                     .navigationSplitViewColumnWidth(min: 200, ideal: Theme.sidebarWidth, max: 280)
             } detail: {
                 ZStack(alignment: .topTrailing) {
@@ -166,7 +171,7 @@ struct ContentView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
-        .background(Theme.pastelPeach.opacity(0.5))
+        .background(Theme.tintWarm)
         .cornerRadius(Theme.radiusMD)
         .shadow(color: .black.opacity(0.06), radius: 8, y: 4)
         .padding(.horizontal, 20)

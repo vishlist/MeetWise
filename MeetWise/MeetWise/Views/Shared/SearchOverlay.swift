@@ -162,7 +162,7 @@ struct SearchOverlay: View {
                     .foregroundStyle(Theme.textMuted)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
-                    .background(Theme.pastelLavender)
+                    .background(Theme.accentSoft)
                     .cornerRadius(4)
             }
             .padding(16)
@@ -214,7 +214,7 @@ struct SearchOverlay: View {
                                             .foregroundStyle(Theme.textMuted)
                                             .padding(.horizontal, 6)
                                             .padding(.vertical, 2)
-                                            .background(Theme.pastelLavender.opacity(0.5))
+                                            .background(Theme.accentSoft.opacity(0.5))
                                             .cornerRadius(4)
                                     }
                                     .padding(.horizontal, 16)

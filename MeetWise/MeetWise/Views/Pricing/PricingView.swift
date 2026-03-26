@@ -68,10 +68,10 @@ struct PricingView: View {
                                     .foregroundStyle(isAnnual ? Theme.textPrimary : Theme.textSecondary)
                                 Text("20% off")
                                     .font(.system(size: 11, weight: .medium))
-                                    .foregroundStyle(Theme.accent)
+                                    .foregroundStyle(Theme.textSecondary)
                                     .padding(.horizontal, 6)
                                     .padding(.vertical, 2)
-                                    .background(Theme.pastelLavender)
+                                    .background(Theme.accentSoft)
                                     .cornerRadius(4)
                             }
                             .padding(.horizontal, 20)
@@ -226,7 +226,7 @@ struct PricingView: View {
                     .foregroundStyle(Theme.textSecondary)
             }
 
-            // Features (mint checkmarks)
+            // Features (muted green checkmarks)
             VStack(alignment: .leading, spacing: 8) {
                 ForEach(features, id: \.self) { feature in
                     HStack(spacing: 8) {
