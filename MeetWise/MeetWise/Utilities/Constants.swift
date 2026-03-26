@@ -10,13 +10,8 @@ enum Constants {
     static let openAIAPIKey = "YOUR_KEY"
 
     // Supabase
-    static var supabaseURL: String {
-        ProcessInfo.processInfo.environment["SUPABASE_URL"] ?? UserDefaults.standard.string(forKey: "supabaseURL") ?? ""
-    }
-
-    static var supabaseAnonKey: String {
-        ProcessInfo.processInfo.environment["SUPABASE_ANON_KEY"] ?? UserDefaults.standard.string(forKey: "supabaseAnonKey") ?? ""
-    }
+    static let supabaseURL = "https://ygwjivwcwoqbhjcogpby.supabase.co"
+    static let supabaseAnonKey = "sb_publishable_zO5IZ9UEwIPNAfPRZXfwWQ_TSf5XBSL"
 
     // Stripe (placeholder)
     static let stripePublishableKey = ""

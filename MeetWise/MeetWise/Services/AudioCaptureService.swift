@@ -52,11 +52,24 @@ final class AudioCaptureService {
 
     // MARK: - System Audio (ScreenCaptureKit)
     private func startSystemAudioCapture() async throws {
+        // First check if we have permission
+        // On macOS 15+, try requesting permission explicitly
+        if #available(macOS 15.0, *) {
+            // macOS 15 has explicit permission check
+            do {
+                try await SCShareableContent.excludingDesktopWindows(true, onScreenWindowsOnly: true)
+            } catch {
+                print("[AudioCapture] Permission check failed: \(error)")
+                throw AudioCaptureError.permissionDenied
+            }
+        }
+
         // Request access and get shareable content
         let content: SCShareableContent
         do {
             content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false)
         } catch {
+            print("[AudioCapture] SCShareableContent failed: \(error)")
             throw AudioCaptureError.permissionDenied
         }
 

@@ -12,6 +12,10 @@ final class UserProfile {
     var googleRefreshToken: String?
     var supabaseAccessToken: String?
 
+    // Auth
+    var passwordHash: Int = 0
+    var isEmailVerified: Bool = false
+
     // Plan
     var plan: String = "free"
     var planExpiresAt: Date?
