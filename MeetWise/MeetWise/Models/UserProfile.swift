@@ -17,6 +17,13 @@ final class UserProfile {
     var planExpiresAt: Date?
     var stripeCustomerId: String?
 
+    // Usage tracking (Issue 3: Pro Plan Enforcement)
+    var meetingsThisMonth: Int = 0
+    var enhancementsThisMonth: Int = 0
+    var chatQuestionsToday: Int = 0
+    var lastMonthlyResetDate: Date?
+    var lastDailyResetDate: Date?
+
     // Settings stored as individual fields for simplicity
     var autoRecord: Bool = true
     var defaultLanguage: String = "en"
@@ -45,7 +52,7 @@ final class UserProfile {
     }
 
     var isPro: Bool {
-        plan == "pro"
+        plan == "pro" || plan == "team"
     }
 
     var isTeam: Bool {
@@ -59,4 +66,10 @@ final class UserProfile {
         default: return "Free Plan"
         }
     }
+
+    // MARK: - Plan Limits
+    static let freeMeetingLimit = 5
+    static let freeEnhancementLimit = 3
+    static let freeChatLimit = 2
+    static let freeRecipeLimit = 3
 }

@@ -89,7 +89,7 @@ struct SettingsView: View {
                         .fill(Theme.accentSoft)
                         .frame(width: 72, height: 72)
                     Text(appState.currentUser?.initials ?? "U")
-                        .font(.custom("Georgia-Bold", size: 24))
+                        .font(.custom("InstrumentSerif-Regular", size: 24))
                         .foregroundStyle(Theme.accent)
                 }
 
@@ -137,7 +137,7 @@ struct SettingsView: View {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(appState.currentUser?.planDisplayName ?? "Free Plan")
-                            .font(.custom("Georgia", size: 16))
+                            .font(.custom("InstrumentSerif-Regular", size: 16))
                             .foregroundStyle(Theme.textPrimary)
                         Text(planDescription)
                             .font(.system(size: 13, weight: .light))
@@ -158,6 +158,111 @@ struct SettingsView: View {
                         }
                         .buttonStyle(.plain)
                         .hoverScale(1.05)
+                    }
+                }
+                .padding(16)
+            }
+
+            // Issue 3: Usage stats for free plan
+            if !(appState.currentUser?.isPro ?? false) {
+                settingsSection("Usage This Month") {
+                    VStack(spacing: 12) {
+                        usageRow(
+                            label: "Meetings",
+                            used: appState.currentUser?.meetingsThisMonth ?? 0,
+                            limit: UserProfile.freeMeetingLimit
+                        )
+                        Divider().background(Theme.divider)
+                        usageRow(
+                            label: "AI Enhancements",
+                            used: appState.currentUser?.enhancementsThisMonth ?? 0,
+                            limit: UserProfile.freeEnhancementLimit
+                        )
+                        Divider().background(Theme.divider)
+                        usageRow(
+                            label: "Chat Questions (today)",
+                            used: appState.currentUser?.chatQuestionsToday ?? 0,
+                            limit: UserProfile.freeChatLimit
+                        )
+                    }
+                    .padding(16)
+                }
+            }
+
+            // Issue 2: Calendar Connection
+            settingsSection("Calendar") {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Google Calendar")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundStyle(Theme.textPrimary)
+                            Text(appState.calendarService.hasGoogleCalendar
+                                 ? "Connected via macOS Calendar"
+                                 : "Add your Google account to macOS to sync your calendar")
+                                .font(.system(size: 12, weight: .light))
+                                .foregroundStyle(Theme.textSecondary)
+                        }
+                        Spacer()
+                        if appState.calendarService.hasGoogleCalendar {
+                            PillTag("Connected", icon: "checkmark.circle.fill", color: Theme.accentGreen)
+                        }
+                    }
+
+                    if !appState.calendarService.hasGoogleCalendar {
+                        HStack(spacing: 12) {
+                            Button {
+                                CalendarService.openInternetAccountsSettings()
+                            } label: {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "person.badge.plus")
+                                        .font(.system(size: 12))
+                                    Text("Connect Google Calendar")
+                                        .font(.system(size: 13, weight: .medium))
+                                }
+                                .foregroundStyle(Color.white)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(Theme.accent)
+                                .cornerRadius(Theme.radiusSM)
+                            }
+                            .buttonStyle(.plain)
+                            .hoverScale(1.05)
+
+                            Text("Opens Internet Accounts in System Settings")
+                                .font(.system(size: 11, weight: .light))
+                                .foregroundStyle(Theme.textMuted)
+                        }
+                    }
+
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Calendar Access")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundStyle(Theme.textPrimary)
+                            Text(appState.calendarService.isAuthorized
+                                 ? "MeetWise can read your calendar"
+                                 : "Grant calendar access to see upcoming meetings")
+                                .font(.system(size: 12, weight: .light))
+                                .foregroundStyle(Theme.textSecondary)
+                        }
+                        Spacer()
+                        if appState.calendarService.isAuthorized {
+                            PillTag("Authorized", icon: "checkmark.circle.fill", color: Theme.accentGreen)
+                        } else {
+                            Button {
+                                Task { await appState.calendarService.requestAccess() }
+                            } label: {
+                                Text("Grant Access")
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundStyle(Theme.accent)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 6)
+                                    .background(Theme.accentSoft)
+                                    .cornerRadius(Theme.radiusSM)
+                            }
+                            .buttonStyle(.plain)
+                        }
                     }
                 }
                 .padding(16)
@@ -184,7 +289,34 @@ struct SettingsView: View {
         switch appState.currentUser?.plan ?? "free" {
         case "pro": return "Unlimited meetings, AI-enhanced notes, all recipes"
         case "team": return "Everything in Pro plus collaboration features"
-        default: return "5 meetings/month, basic transcription"
+        default: return "5 meetings/month, 3 AI enhancements/month, basic recipes"
+        }
+    }
+
+    // Issue 3: Usage progress row
+    private func usageRow(label: String, used: Int, limit: Int) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text(label)
+                    .font(.system(size: 13, weight: .light))
+                    .foregroundStyle(Theme.textPrimary)
+                Spacer()
+                Text("\(used)/\(limit)")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(used >= limit ? Theme.accentRed : Theme.textSecondary)
+            }
+
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(Theme.accentSoft)
+                        .frame(height: 6)
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(used >= limit ? Theme.accentRed : Theme.accent)
+                        .frame(width: geo.size.width * CGFloat(min(used, limit)) / CGFloat(limit), height: 6)
+                }
+            }
+            .frame(height: 6)
         }
     }
 
@@ -278,7 +410,7 @@ struct SettingsView: View {
                     .foregroundStyle(Theme.accent)
 
                 Text("MeetWise")
-                    .font(.custom("Georgia-Bold", size: 24))
+                    .font(.custom("InstrumentSerif-Regular", size: 24))
                     .foregroundStyle(Theme.textHeading)
 
                 Text("Version 1.0.0")
@@ -308,7 +440,7 @@ struct SettingsView: View {
     private func settingsSection(_ title: String, @ViewBuilder content: () -> some View) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
-                .font(.custom("Georgia", size: 12))
+                .font(.custom("InstrumentSerif-Regular", size: 12))
                 .foregroundStyle(Theme.textMuted)
                 .textCase(.uppercase)
                 .tracking(1)

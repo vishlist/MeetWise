@@ -232,7 +232,7 @@ struct OnboardingView: View {
 
             VStack(alignment: .leading, spacing: 10) {
                 Text("Keyboard Shortcuts")
-                    .font(.custom("Georgia", size: 13))
+                    .font(.custom("InstrumentSerif-Regular", size: 13))
                     .foregroundStyle(Theme.textSecondary)
 
                 shortcutRow(keys: "N", description: "Create quick note")

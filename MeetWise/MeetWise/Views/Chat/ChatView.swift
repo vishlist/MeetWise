@@ -7,19 +7,80 @@ struct ChatView: View {
     @Environment(AppState.self) private var appState
     @Query(sort: \Meeting.startedAt, order: .reverse) private var meetings: [Meeting]
     @Query(sort: \Recipe.position) private var recipes: [Recipe]
+    @Query(sort: \Folder.position) private var folders: [Folder]
     @State private var messages: [(role: String, content: String)] = []
+
+    // Issue 12: Filter/sort state
+    @State private var selectedFolderFilter: Folder?
+    @State private var selectedSort = "Most recent"
+    @State private var selectedDateRange = "All time"
 
     private var chatService: ChatService {
         appState.chatService
     }
 
+    // Issue 12: Filtered and sorted meetings
     private var scopedMeetings: [Meeting] {
+        var result: [Meeting]
+
         switch selectedScope {
         case "My notes":
-            return meetings.filter { !$0.userNotes.isEmpty || $0.enhancedNotes != nil }
+            result = meetings.filter { !$0.userNotes.isEmpty || $0.enhancedNotes != nil }
         default:
-            return meetings
+            result = Array(meetings)
         }
+
+        // Issue 9: Exclude empty drafts
+        result = result.filter { !$0.isDraft || $0.hasContent }
+
+        // Issue 12: Filter by folder
+        if let folder = selectedFolderFilter {
+            result = result.filter { $0.folder?.id == folder.id }
+        }
+
+        // Issue 12: Date range filter
+        let now = Date()
+        let calendar = Calendar.current
+        switch selectedDateRange {
+        case "This week":
+            let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: now)?.start ?? now
+            result = result.filter { $0.startedAt >= startOfWeek }
+        case "This month":
+            let startOfMonth = calendar.dateInterval(of: .month, for: now)?.start ?? now
+            result = result.filter { $0.startedAt >= startOfMonth }
+        case "Last 3 months":
+            let threeMonthsAgo = calendar.date(byAdding: .month, value: -3, to: now) ?? now
+            result = result.filter { $0.startedAt >= threeMonthsAgo }
+        default:
+            break // "All time"
+        }
+
+        // Issue 12: Sort
+        switch selectedSort {
+        case "Oldest first":
+            result.sort { $0.startedAt < $1.startedAt }
+        case "Most relevant":
+            // Sort by those with enhanced notes first, then by date
+            result.sort { a, b in
+                let aHasEnhanced = a.enhancedNotes != nil
+                let bHasEnhanced = b.enhancedNotes != nil
+                if aHasEnhanced != bHasEnhanced { return aHasEnhanced }
+                return a.startedAt > b.startedAt
+            }
+        default: // "Most recent"
+            result.sort { $0.startedAt > $1.startedAt }
+        }
+
+        return result
+    }
+
+    // Issue 12: Active filter count
+    private var activeFilterCount: Int {
+        var count = 0
+        if selectedFolderFilter != nil { count += 1 }
+        if selectedDateRange != "All time" { count += 1 }
+        if selectedSort != "Most recent" { count += 1 }
+        return count
     }
 
     var body: some View {
@@ -124,6 +185,135 @@ struct ChatView: View {
             .padding(.horizontal, 16)
             .padding(.top, 12)
 
+            // Issue 12: Filter/Sort controls
+            HStack(spacing: 8) {
+                // Filter by folder
+                Menu {
+                    Button {
+                        selectedFolderFilter = nil
+                    } label: {
+                        HStack {
+                            Text("All Folders")
+                            if selectedFolderFilter == nil {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                    Divider()
+                    ForEach(folders) { folder in
+                        Button {
+                            selectedFolderFilter = folder
+                        } label: {
+                            HStack {
+                                Image(systemName: "folder.fill")
+                                Text(folder.name)
+                                if selectedFolderFilter?.id == folder.id {
+                                    Image(systemName: "checkmark")
+                                }
+                            }
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "folder").font(.system(size: 10))
+                        Text(selectedFolderFilter?.name ?? "All Folders")
+                            .font(.system(size: 11, weight: .light))
+                    }
+                    .foregroundStyle(selectedFolderFilter != nil ? Theme.textPrimary : Theme.textMuted)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(selectedFolderFilter != nil ? Theme.accentSoft : Theme.bgHover)
+                    .cornerRadius(Theme.radiusPill)
+                }
+                .menuStyle(.borderlessButton)
+                .fixedSize()
+
+                // Sort by
+                Menu {
+                    ForEach(["Most recent", "Oldest first", "Most relevant"], id: \.self) { option in
+                        Button {
+                            selectedSort = option
+                        } label: {
+                            HStack {
+                                Text(option)
+                                if selectedSort == option {
+                                    Image(systemName: "checkmark")
+                                }
+                            }
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.up.arrow.down").font(.system(size: 10))
+                        Text(selectedSort)
+                            .font(.system(size: 11, weight: .light))
+                    }
+                    .foregroundStyle(selectedSort != "Most recent" ? Theme.textPrimary : Theme.textMuted)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(selectedSort != "Most recent" ? Theme.accentSoft : Theme.bgHover)
+                    .cornerRadius(Theme.radiusPill)
+                }
+                .menuStyle(.borderlessButton)
+                .fixedSize()
+
+                // Date range
+                Menu {
+                    ForEach(["All time", "This week", "This month", "Last 3 months"], id: \.self) { option in
+                        Button {
+                            selectedDateRange = option
+                        } label: {
+                            HStack {
+                                Text(option)
+                                if selectedDateRange == option {
+                                    Image(systemName: "checkmark")
+                                }
+                            }
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "calendar").font(.system(size: 10))
+                        Text(selectedDateRange)
+                            .font(.system(size: 11, weight: .light))
+                    }
+                    .foregroundStyle(selectedDateRange != "All time" ? Theme.textPrimary : Theme.textMuted)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(selectedDateRange != "All time" ? Theme.accentSoft : Theme.bgHover)
+                    .cornerRadius(Theme.radiusPill)
+                }
+                .menuStyle(.borderlessButton)
+                .fixedSize()
+
+                // Issue 12: Active filter badge
+                if activeFilterCount > 0 {
+                    Button {
+                        // Reset all filters
+                        selectedFolderFilter = nil
+                        selectedSort = "Most recent"
+                        selectedDateRange = "All time"
+                    } label: {
+                        HStack(spacing: 3) {
+                            Text("\(activeFilterCount) filter\(activeFilterCount > 1 ? "s" : "")")
+                                .font(.system(size: 10, weight: .medium))
+                            Image(systemName: "xmark")
+                                .font(.system(size: 8, weight: .bold))
+                        }
+                        .foregroundStyle(Theme.textSecondary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Theme.accentSoft)
+                        .cornerRadius(Theme.radiusPill)
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 6)
+
             // Input field
             HStack(spacing: 12) {
                 TextField("Transcribe a meeting to start asking questions", text: $chatInput)
@@ -167,14 +357,16 @@ struct ChatView: View {
     private var recipesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Suggested")
-                .font(.custom("Georgia", size: 14))
+                .font(.custom("InstrumentSerif-Regular", size: 14))
                 .foregroundStyle(Theme.textSecondary)
 
             let displayRecipes = recipes.isEmpty ? defaultRecipePills : recipes.map { ($0.name, Theme.accent) }
 
             FlowLayout(spacing: 8) {
                 ForEach(Array(displayRecipes.enumerated()), id: \.offset) { index, recipe in
-                    recipePill(recipe.0, tintColor: Theme.tintColors[index % Theme.tintColors.count])
+                    // Issue 3: Check if recipe is available on free plan
+                    let isAvailable = appState.isRecipeAvailable(index: index)
+                    recipePill(recipe.0, tintColor: Theme.tintColors[index % Theme.tintColors.count], isLocked: !isAvailable)
                 }
             }
         }
@@ -209,8 +401,12 @@ struct ChatView: View {
         .buttonStyle(.plain)
     }
 
-    private func recipePill(_ title: String, tintColor: Color) -> some View {
+    private func recipePill(_ title: String, tintColor: Color, isLocked: Bool = false) -> some View {
         Button {
+            if isLocked {
+                appState.showUpgrade("This recipe requires a Pro plan. Upgrade to access all 12 recipes.")
+                return
+            }
             if let recipe = recipes.first(where: { $0.name == title }) {
                 executeRecipe(recipe)
             } else {
@@ -221,14 +417,19 @@ struct ChatView: View {
             HStack(spacing: 6) {
                 Text("/")
                     .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(Theme.textSecondary)
+                    .foregroundStyle(isLocked ? Theme.textMuted : Theme.textSecondary)
                 Text(title)
                     .font(.system(size: 13, weight: .light))
-                    .foregroundStyle(Theme.textPrimary)
+                    .foregroundStyle(isLocked ? Theme.textMuted : Theme.textPrimary)
+                if isLocked {
+                    Image(systemName: "lock.fill")
+                        .font(.system(size: 9))
+                        .foregroundStyle(Theme.textMuted)
+                }
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
-            .background(tintColor)
+            .background(isLocked ? Theme.bgHover : tintColor)
             .cornerRadius(Theme.radiusPill)
         }
         .buttonStyle(.plain)
@@ -275,9 +476,19 @@ struct ChatView: View {
     // MARK: - Actions
     private func sendMessage() {
         guard !chatInput.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+
+        // Issue 3: Check chat limit
+        if !appState.checkChatLimit() {
+            let used = appState.currentUser?.chatQuestionsToday ?? 0
+            messages.append((role: "assistant", content: "You've used \(used)/\(UserProfile.freeChatLimit) free chat questions today. Upgrade to Pro for unlimited."))
+            return
+        }
+
         let question = chatInput
         chatInput = ""
         messages.append((role: "user", content: question))
+
+        appState.incrementChatCount()
 
         Task {
             let response = await chatService.askAcrossMeetings(question, meetings: scopedMeetings)
@@ -288,6 +499,9 @@ struct ChatView: View {
     private func executeRecipe(_ recipe: Recipe) {
         messages.append((role: "user", content: "/\(recipe.name)"))
         chatInput = ""
+
+        appState.incrementChatCount()
+
         Task {
             let response = await chatService.executeRecipe(recipe, meetings: scopedMeetings)
             messages.append((role: "assistant", content: response))

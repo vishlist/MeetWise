@@ -49,6 +49,10 @@ final class AppState {
     var detectedMeetingTitle: String?
     var showMeetingDetectionBanner = false
 
+    // Upgrade prompt
+    var showUpgradePrompt = false
+    var upgradePromptMessage = ""
+
     // Onboarding
     var onboardingComplete: Bool {
         UserDefaults.standard.bool(forKey: "onboardingComplete")
@@ -84,6 +88,9 @@ final class AppState {
         Task {
             await calendarService.requestAccess()
         }
+
+        // Reset usage counters if needed
+        resetCountsIfNeeded()
     }
 
     /// Sign out: clear all user state
@@ -111,6 +118,82 @@ final class AppState {
         showPricing = false
         showProfileMenu = false
         isRecording = false
+    }
+
+    // MARK: - Pro Plan Enforcement (Issue 3)
+
+    func resetCountsIfNeeded() {
+        guard let user = currentUser else { return }
+        let calendar = Calendar.current
+        let now = Date()
+
+        // Monthly reset
+        if let lastReset = user.lastMonthlyResetDate {
+            if !calendar.isDate(lastReset, equalTo: now, toGranularity: .month) {
+                user.meetingsThisMonth = 0
+                user.enhancementsThisMonth = 0
+                user.lastMonthlyResetDate = now
+            }
+        } else {
+            user.lastMonthlyResetDate = now
+        }
+
+        // Daily reset
+        if let lastDaily = user.lastDailyResetDate {
+            if !calendar.isDateInToday(lastDaily) {
+                user.chatQuestionsToday = 0
+                user.lastDailyResetDate = now
+            }
+        } else {
+            user.lastDailyResetDate = now
+        }
+    }
+
+    func checkMeetingLimit() -> Bool {
+        guard let user = currentUser, !user.isPro else { return true }
+        resetCountsIfNeeded()
+        return user.meetingsThisMonth < UserProfile.freeMeetingLimit
+    }
+
+    func checkEnhancementLimit() -> Bool {
+        guard let user = currentUser, !user.isPro else { return true }
+        resetCountsIfNeeded()
+        return user.enhancementsThisMonth < UserProfile.freeEnhancementLimit
+    }
+
+    func checkChatLimit() -> Bool {
+        guard let user = currentUser, !user.isPro else { return true }
+        resetCountsIfNeeded()
+        return user.chatQuestionsToday < UserProfile.freeChatLimit
+    }
+
+    func incrementMeetingCount() {
+        guard let user = currentUser else { return }
+        resetCountsIfNeeded()
+        user.meetingsThisMonth += 1
+    }
+
+    func incrementEnhancementCount() {
+        guard let user = currentUser else { return }
+        resetCountsIfNeeded()
+        user.enhancementsThisMonth += 1
+    }
+
+    func incrementChatCount() {
+        guard let user = currentUser else { return }
+        resetCountsIfNeeded()
+        user.chatQuestionsToday += 1
+    }
+
+    func showUpgrade(_ message: String) {
+        upgradePromptMessage = message
+        showUpgradePrompt = true
+    }
+
+    /// Check if a recipe is available on the free plan (first 3 only)
+    func isRecipeAvailable(index: Int) -> Bool {
+        guard let user = currentUser, !user.isPro else { return true }
+        return index < UserProfile.freeRecipeLimit
     }
 }
 

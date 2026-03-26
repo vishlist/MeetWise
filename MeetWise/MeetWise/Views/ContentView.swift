@@ -24,6 +24,15 @@ struct ContentView: View {
             PricingView()
                 .environment(appState)
         }
+        // Issue 3: Upgrade prompt alert
+        .alert("Upgrade to Pro", isPresented: $state.showUpgradePrompt) {
+            Button("Upgrade") {
+                appState.showPricing = true
+            }
+            Button("Later", role: .cancel) { }
+        } message: {
+            Text(appState.upgradePromptMessage)
+        }
         .onAppear {
             setupInitialData()
             appState.initializeServices()
@@ -226,7 +235,7 @@ struct ContentView: View {
             case .chat:
                 ChatView()
             case .folder(let id):
-                FolderView(folderID: id)
+                FolderView(folderID: id, sessionManager: sessionManager)
             case .people:
                 PeopleView()
             case .companies:

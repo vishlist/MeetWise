@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import AppKit
 
 // MARK: - Tab Enum for Summary/Transcript/Notes
 enum NotepadTab: String, CaseIterable {
@@ -35,10 +36,48 @@ enum NoteTemplateChoice: String, CaseIterable, Identifiable {
     }
 }
 
+// MARK: - Issue 1: Native Share Button using NSShareServicePicker
+struct NativeShareButton: NSViewRepresentable {
+    let items: [Any]
+
+    func makeNSView(context: Context) -> NSButton {
+        let button = NSButton()
+        button.bezelStyle = .accessoryBarAction
+        button.title = ""
+        button.image = NSImage(systemSymbolName: "square.and.arrow.up", accessibilityDescription: "Share")
+        button.target = context.coordinator
+        button.action = #selector(Coordinator.showPicker(_:))
+        button.isBordered = false
+        return button
+    }
+
+    func updateNSView(_ nsView: NSButton, context: Context) {
+        context.coordinator.items = items
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(items: items)
+    }
+
+    class Coordinator: NSObject {
+        var items: [Any]
+
+        init(items: [Any]) {
+            self.items = items
+        }
+
+        @objc func showPicker(_ sender: NSButton) {
+            let picker = NSSharingServicePicker(items: items)
+            picker.show(relativeTo: sender.bounds, of: sender, preferredEdge: .minY)
+        }
+    }
+}
+
 struct NotepadView: View {
     let meeting: Meeting
     @Environment(\.modelContext) private var modelContext
     @Environment(AppState.self) private var appState
+    @Query(sort: \Folder.position) private var allFolders: [Folder]
     var sessionManager: MeetingSessionManager
     @State private var userNotes: String
     @State private var chatInput = ""
@@ -53,6 +92,11 @@ struct NotepadView: View {
     @State private var showDeleteConfirm = false
     @State private var newAttendee = ""
     @State private var showAddAttendee = false
+    // Issue 4: Speaker rename
+    @State private var editingSpeaker: String?
+    @State private var editedSpeakerName = ""
+    // Issue 11: Move to folder
+    @State private var showFolderPicker = false
 
     init(meeting: Meeting, sessionManager: MeetingSessionManager) {
         self.meeting = meeting
@@ -66,6 +110,17 @@ struct NotepadView: View {
 
     private var isActiveRecording: Bool {
         sessionManager.isRecording && sessionManager.currentMeeting?.id == meeting.id
+    }
+
+    /// Issue 1: Build share content for NSShareServicePicker
+    private var shareContent: [Any] {
+        var text = meeting.title + "\n\n"
+        if let enhanced = meeting.enhancedNotes, !enhanced.isEmpty {
+            text += enhanced
+        } else if !meeting.userNotes.isEmpty {
+            text += meeting.userNotes
+        }
+        return [text as NSString]
     }
 
     var body: some View {
@@ -82,6 +137,10 @@ struct NotepadView: View {
         .background(Theme.bgPrimary)
         .onChange(of: userNotes) { _, newValue in
             meeting.userNotes = newValue
+            // Issue 9: Mark as non-draft when user types something
+            if !newValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && meeting.isDraft {
+                meeting.isDraft = false
+            }
             try? modelContext.save()
         }
         .onChange(of: appState.showChatSidebar) { _, newValue in
@@ -93,6 +152,10 @@ struct NotepadView: View {
                 return .handled
             }
             return .ignored
+        }
+        .onDisappear {
+            // Issue 9: Clean up empty meetings when navigating away
+            sessionManager.cleanupEmptyMeeting(meeting, modelContext: modelContext)
         }
         .alert("Delete Meeting", isPresented: $showDeleteConfirm) {
             Button("Cancel", role: .cancel) { }
@@ -292,7 +355,12 @@ struct NotepadView: View {
                 .cornerRadius(Theme.radiusSM)
             }
 
-            // Share
+            // Issue 1: Native Share Button
+            NativeShareButton(items: shareContent)
+                .frame(width: 28, height: 28)
+                .help("Share via Mail, Messages, AirDrop, Notes...")
+
+            // Copy menu (for copy-specific actions)
             Menu {
                 Button {
                     ShareService.copyAsMarkdown(meeting: meeting)
@@ -321,9 +389,9 @@ struct NotepadView: View {
                 }
             } label: {
                 HStack(spacing: 4) {
-                    Image(systemName: "square.and.arrow.up")
+                    Image(systemName: "doc.on.doc")
                         .font(.system(size: 12))
-                    Text(copiedToClipboard ? "Copied!" : "Share")
+                    Text(copiedToClipboard ? "Copied!" : "Copy")
                         .font(.system(size: 13, weight: .light))
                 }
                 .foregroundStyle(Theme.textPrimary)
@@ -369,7 +437,7 @@ struct NotepadView: View {
             .buttonStyle(.plain)
             .hoverScale(1.05)
 
-            // More menu
+            // More menu — Issue 11: Move to Folder option
             Menu {
                 Menu("Choose Template...") {
                     ForEach(NoteTemplateChoice.allCases) { template in
@@ -381,6 +449,39 @@ struct NotepadView: View {
                                 Image(systemName: template.icon)
                                 Text(template.rawValue)
                                 if selectedTemplate == template {
+                                    Image(systemName: "checkmark")
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Issue 11: Move to Folder
+                Menu("Move to Folder...") {
+                    Button {
+                        meeting.folder = nil
+                        try? modelContext.save()
+                    } label: {
+                        HStack {
+                            Image(systemName: "tray")
+                            Text("No Folder")
+                            if meeting.folder == nil {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+
+                    Divider()
+
+                    ForEach(allFolders) { folder in
+                        Button {
+                            meeting.folder = folder
+                            try? modelContext.save()
+                        } label: {
+                            HStack {
+                                Image(systemName: "folder.fill")
+                                Text(folder.name)
+                                if meeting.folder?.id == folder.id {
                                     Image(systemName: "checkmark")
                                 }
                             }
@@ -441,6 +542,47 @@ struct NotepadView: View {
 
                 if let dur = meeting.durationSeconds, dur > 0 {
                     metadataPill(icon: "clock", text: meeting.formattedDuration, bg: Theme.tintSage)
+                }
+
+                // Issue 11: Folder pill / Add to folder
+                if let folder = meeting.folder {
+                    HStack(spacing: 4) {
+                        Image(systemName: "folder.fill").font(.system(size: 11))
+                        Text(folder.name).font(.system(size: 12, weight: .light))
+                    }
+                    .foregroundStyle(Theme.textSecondary)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(Theme.tintAmber)
+                    .cornerRadius(Theme.radiusPill)
+                } else {
+                    // Issue 11: Add to folder pill
+                    Menu {
+                        ForEach(allFolders) { folder in
+                            Button {
+                                meeting.folder = folder
+                                try? modelContext.save()
+                            } label: {
+                                Label(folder.name, systemImage: "folder.fill")
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "plus").font(.system(size: 10))
+                            Text("Add to folder").font(.system(size: 11, weight: .light))
+                        }
+                        .foregroundStyle(Theme.textMuted)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 5)
+                        .background(Theme.bgCard)
+                        .cornerRadius(Theme.radiusPill)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: Theme.radiusPill)
+                                .stroke(Theme.border, style: StrokeStyle(lineWidth: 1, dash: [4]))
+                        )
+                    }
+                    .menuStyle(.borderlessButton)
+                    .fixedSize()
                 }
             }
 
@@ -550,7 +692,7 @@ struct NotepadView: View {
             }
     }
 
-    // MARK: - Transcript Tab
+    // MARK: - Transcript Tab — Issue 4: Speaker names with rename support
     private var transcriptTabContent: some View {
         VStack(alignment: .leading, spacing: 12) {
             if sessionManager.liveTranscriptSegments.isEmpty && (meeting.transcriptRaw ?? "").isEmpty {
@@ -559,7 +701,7 @@ struct NotepadView: View {
                         .font(.system(size: 36))
                         .foregroundStyle(Theme.textMuted)
                     Text("No transcript yet")
-                        .font(.custom("Georgia", size: 14))
+                        .font(.custom("InstrumentSerif-Regular", size: 14))
                         .foregroundStyle(Theme.textSecondary)
                     Text("Start recording to see real-time transcription")
                         .font(.system(size: 12, weight: .light))
@@ -587,7 +729,14 @@ struct NotepadView: View {
             } else {
                 let lines = parseTranscriptLines(meeting.transcriptRaw ?? "")
                 ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
-                    savedTranscriptBubble(speaker: line.speaker, text: line.text, isUser: line.isUser)
+                    // Issue 4: Use meeting's display name mapping
+                    let displayName = meeting.displayName(for: line.speaker)
+                    savedTranscriptBubble(
+                        speaker: displayName,
+                        rawSpeaker: line.speaker,
+                        text: line.text,
+                        isUser: line.isUser
+                    )
                 }
             }
         }
@@ -623,14 +772,56 @@ struct NotepadView: View {
         }
     }
 
-    private func savedTranscriptBubble(speaker: String, text: String, isUser: Bool) -> some View {
+    // Issue 4: Saved transcript bubble with speaker rename support
+    private func savedTranscriptBubble(speaker: String, rawSpeaker: String, text: String, isUser: Bool) -> some View {
         HStack(alignment: .top, spacing: 8) {
             if isUser { Spacer(minLength: 40) }
 
             VStack(alignment: isUser ? .trailing : .leading, spacing: 4) {
-                Text(speaker)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(Theme.textMuted)
+                // Issue 4: Click to rename speaker
+                if editingSpeaker == rawSpeaker {
+                    HStack(spacing: 4) {
+                        TextField("Speaker name", text: $editedSpeakerName)
+                            .textFieldStyle(.plain)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(Theme.textPrimary)
+                            .frame(width: 120)
+                            .onSubmit {
+                                commitSpeakerRename(rawSpeaker: rawSpeaker)
+                            }
+                            .onExitCommand {
+                                editingSpeaker = nil
+                                editedSpeakerName = ""
+                            }
+                        Button {
+                            commitSpeakerRename(rawSpeaker: rawSpeaker)
+                        } label: {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.system(size: 12))
+                                .foregroundStyle(Theme.accentGreen)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Theme.bgCard)
+                    .cornerRadius(Theme.radiusSM)
+                } else {
+                    Button {
+                        editingSpeaker = rawSpeaker
+                        editedSpeakerName = speaker
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text(speaker)
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(Theme.textMuted)
+                            Image(systemName: "pencil")
+                                .font(.system(size: 8))
+                                .foregroundStyle(Theme.textMuted.opacity(0.5))
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
 
                 Text(text)
                     .font(.system(size: 14, weight: .light))
@@ -644,6 +835,18 @@ struct NotepadView: View {
 
             if !isUser { Spacer(minLength: 40) }
         }
+    }
+
+    private func commitSpeakerRename(rawSpeaker: String) {
+        let trimmed = editedSpeakerName.trimmingCharacters(in: .whitespaces)
+        if !trimmed.isEmpty {
+            var map = meeting.speakerNameMap
+            map[rawSpeaker] = trimmed
+            meeting.speakerNameMap = map
+            try? modelContext.save()
+        }
+        editingSpeaker = nil
+        editedSpeakerName = ""
     }
 
     // MARK: - Summary Tab (Collapsible Sections)
@@ -748,7 +951,7 @@ struct NotepadView: View {
                         .font(.system(size: 36))
                         .foregroundStyle(Theme.textMuted)
                     Text("No summary available")
-                        .font(.custom("Georgia", size: 14))
+                        .font(.custom("InstrumentSerif-Regular", size: 14))
                         .foregroundStyle(Theme.textSecondary)
                     Text("Enhance your notes to generate a summary")
                         .font(.system(size: 12, weight: .light))
@@ -779,7 +982,7 @@ struct NotepadView: View {
             HStack(spacing: 6) {
                 Text("#").font(.system(size: 14)).foregroundStyle(Theme.textMuted)
                 Text(String(trimmed.dropFirst(2)))
-                    .font(.custom("Georgia-Bold", size: 16))
+                    .font(.custom("InstrumentSerif-Regular", size: 16))
                     .foregroundStyle(Theme.textPrimary)
             }
             .padding(.top, 12)
@@ -787,7 +990,7 @@ struct NotepadView: View {
             HStack(spacing: 6) {
                 Text("#").font(.system(size: 13)).foregroundStyle(Theme.textMuted)
                 Text(String(trimmed.dropFirst(3)))
-                    .font(.custom("Georgia", size: 15))
+                    .font(.custom("InstrumentSerif-Regular", size: 15))
                     .foregroundStyle(Theme.textPrimary)
             }
             .padding(.top, 8)
@@ -827,7 +1030,7 @@ struct NotepadView: View {
         .padding(.leading, CGFloat(indent) * 20)
     }
 
-    // MARK: - Bottom Bar
+    // MARK: - Bottom Bar — Issue 3: Enhancement limit check
     private var bottomBar: some View {
         VStack(spacing: 0) {
             Divider().background(Theme.divider)
@@ -835,9 +1038,15 @@ struct NotepadView: View {
                 // Enhance button (dark charcoal bg, white text)
                 if !isActiveRecording && meeting.enhancedNotes == nil {
                     Button {
+                        // Issue 3: Check enhancement limit
+                        if !appState.checkEnhancementLimit() {
+                            let used = appState.currentUser?.enhancementsThisMonth ?? 0
+                            appState.showUpgrade("You've used \(used)/\(UserProfile.freeEnhancementLimit) free AI enhancements this month. Upgrade to Pro for unlimited.")
+                            return
+                        }
                         isEnhancing = true
                         Task {
-                            await sessionManager.enhanceNotes(meeting: meeting, modelContext: modelContext)
+                            await sessionManager.enhanceNotes(meeting: meeting, modelContext: modelContext, appState: appState)
                             isEnhancing = false
                         }
                     } label: {
@@ -945,7 +1154,7 @@ struct NotepadView: View {
                     )
 
                 Text("Ask about this meeting")
-                    .font(.custom("Georgia", size: 14))
+                    .font(.custom("InstrumentSerif-Regular", size: 14))
                     .foregroundStyle(Theme.textPrimary)
                 Spacer()
                 Text("J")
@@ -1086,9 +1295,19 @@ struct NotepadView: View {
     // MARK: - Actions
     private func sendChatMessage() {
         guard !chatInput.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+
+        // Issue 3: Check chat limit
+        if !appState.checkChatLimit() {
+            let used = appState.currentUser?.chatQuestionsToday ?? 0
+            chatMessages.append((role: "assistant", content: "You've used \(used)/\(UserProfile.freeChatLimit) free chat questions today. Upgrade to Pro for unlimited."))
+            return
+        }
+
         let question = chatInput
         chatInput = ""
         chatMessages.append((role: "user", content: question))
+
+        appState.incrementChatCount()
 
         Task {
             let response = await chatService.askAboutMeeting(question, meeting: meeting)

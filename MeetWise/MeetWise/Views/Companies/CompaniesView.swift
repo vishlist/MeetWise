@@ -132,7 +132,7 @@ struct CompaniesView: View {
                 VStack(spacing: 0) {
                     if let contacts = company.contacts, !contacts.isEmpty {
                         Text("People")
-                            .font(.custom("Georgia", size: 11))
+                            .font(.custom("InstrumentSerif-Regular", size: 11))
                             .foregroundStyle(Theme.textMuted)
                             .padding(.horizontal, 16)
                             .padding(.top, 8)
@@ -171,7 +171,7 @@ struct CompaniesView: View {
 
                     if !companyMeetings.isEmpty {
                         Text("Recent Meetings")
-                            .font(.custom("Georgia", size: 11))
+                            .font(.custom("InstrumentSerif-Regular", size: 11))
                             .foregroundStyle(Theme.textMuted)
                             .padding(.horizontal, 16)
                             .padding(.top, 8)
@@ -214,7 +214,7 @@ struct CompaniesView: View {
                 .font(.system(size: 36))
                 .foregroundStyle(Theme.textMuted)
             Text("No companies yet")
-                .font(.custom("Georgia", size: 14))
+                .font(.custom("InstrumentSerif-Regular", size: 14))
                 .foregroundStyle(Theme.textSecondary)
             Text("Companies from your meetings will appear here")
                 .font(.system(size: 12, weight: .light))
@@ -246,7 +246,7 @@ struct CompaniesView: View {
     private var createCompanySheet: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Add Company")
-                .font(.custom("Georgia", size: 16))
+                .font(.custom("InstrumentSerif-Regular", size: 16))
                 .foregroundStyle(Theme.textPrimary)
 
             VStack(alignment: .leading, spacing: 6) {

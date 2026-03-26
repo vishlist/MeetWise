@@ -25,6 +25,12 @@ final class Meeting {
     var language: String = "en"
     var templateID: String = "auto"
 
+    // Issue 9: Draft flag — empty quick notes are drafts until content is added
+    var isDraft: Bool = false
+
+    // Issue 4: Speaker name mapping (stored as JSON: {"Speaker 0": "Alice", "Speaker 1": "Bob"})
+    var speakerNameMapData: Data?
+
     // Relationships
     @Relationship(deleteRule: .cascade, inverse: \MeetingParticipant.meeting)
     var participants: [MeetingParticipant]?
@@ -72,6 +78,38 @@ final class Meeting {
         let formatter = DateFormatter()
         formatter.dateFormat = "h:mm a"
         return formatter.string(from: startedAt)
+    }
+
+    /// Check if this meeting has any real content
+    var hasContent: Bool {
+        !userNotes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+        !(transcriptRaw ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+        enhancedNotes != nil
+    }
+
+    // MARK: - Speaker Name Mapping (Issue 4)
+
+    var speakerNameMap: [String: String] {
+        get {
+            guard let data = speakerNameMapData else { return [:] }
+            return (try? JSONDecoder().decode([String: String].self, from: data)) ?? [:]
+        }
+        set {
+            speakerNameMapData = try? JSONEncoder().encode(newValue)
+        }
+    }
+
+    /// Returns the display name for a speaker label, falling back to "Speaker A", "Speaker B" etc.
+    func displayName(for speakerLabel: String) -> String {
+        if let mapped = speakerNameMap[speakerLabel], !mapped.isEmpty {
+            return mapped
+        }
+        // Convert "Speaker 0" -> "Speaker A", "Speaker 1" -> "Speaker B", etc.
+        if speakerLabel.hasPrefix("Speaker "), let numStr = speakerLabel.split(separator: " ").last, let num = Int(numStr) {
+            let letter = String(UnicodeScalar(65 + (num % 26))!) // A, B, C...
+            return "Speaker \(letter)"
+        }
+        return speakerLabel
     }
 }
 

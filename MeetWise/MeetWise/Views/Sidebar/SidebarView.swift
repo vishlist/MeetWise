@@ -82,7 +82,7 @@ struct SidebarView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("SPACES")
-                        .font(.custom("Georgia", size: 10))
+                        .font(.custom("InstrumentSerif-Regular", size: 10))
                         .foregroundStyle(Theme.textMuted)
                         .tracking(1.2)
                         .padding(.horizontal, 16)
@@ -243,9 +243,9 @@ struct SidebarView: View {
                     .padding(.leading, 12)
             }
 
-            // Recent meetings under this space (unfiled ones)
+            // Recent meetings under this space (unfiled ones) — Issue 9: exclude empty drafts
             let recentUnfiled = allMeetings
-                .filter { $0.folder == nil }
+                .filter { $0.folder == nil && (!$0.isDraft || $0.hasContent) }
                 .prefix(5)
             if !recentUnfiled.isEmpty && isPersonal {
                 ForEach(Array(recentUnfiled)) { meeting in

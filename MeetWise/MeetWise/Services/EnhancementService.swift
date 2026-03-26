@@ -57,6 +57,9 @@ final class EnhancementService {
         3. Extract action items, decisions, and key points.
         4. Use bullet points, not paragraphs.
         5. Be concise and professional.
+        6. For action items, extract REAL names from the transcript for assignees (not generic labels like "Speaker 0"). Look for who volunteered, who was asked to do something, or who is clearly responsible.
+        7. Extract specific dates/deadlines mentioned in the conversation. Format deadlines as readable dates (e.g., "Friday", "March 28", "End of week", "Next Monday").
+        8. If no specific assignee is mentioned, use null. If no deadline is mentioned, use null.
 
         MEETING: \(meetingTitle)
         ATTENDEES: \(attendees.isEmpty ? "Unknown" : attendees.joined(separator: ", "))
@@ -108,7 +111,7 @@ final class EnhancementService {
             return defaultSummary(title: meetingTitle)
         }
 
-        let systemPrompt = "You are a meeting summarization AI. Return ONLY valid JSON, no other text, no markdown fences."
+        let systemPrompt = "You are a meeting summarization AI. Return ONLY valid JSON, no other text, no markdown fences. For action items, extract REAL names from the transcript as assignees (not 'Speaker 0'). Extract specific deadlines mentioned (e.g., 'Friday', 'March 28', 'End of week')."
 
         let userMessage = """
         Summarize this meeting transcript as JSON:
@@ -116,7 +119,7 @@ final class EnhancementService {
         \(transcript.prefix(8000))
 
         Return exactly this structure:
-        {"title":"string","overview":"string","key_points":["string"],"action_items":[{"task":"string","assignee":null,"deadline":null}],"decisions":["string"],"questions_raised":["string"],"sentiment":"neutral","topics":["string"]}
+        {"title":"string","overview":"string","key_points":["string"],"action_items":[{"task":"string","assignee":"real name or null","deadline":"readable date or null"}],"decisions":["string"],"questions_raised":["string"],"sentiment":"neutral","topics":["string"]}
         """
 
         let response = try await callClaudeAPI(system: systemPrompt, message: userMessage, maxTokens: 2048)

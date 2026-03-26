@@ -14,6 +14,9 @@ final class MeetingSessionManager {
     var audioLevel: Float = 0.0
     var error: String?
 
+    // Issue 4: Speaker name mapping for current session
+    var speakerNames: [String: String] = [:]
+
     // Services (private)
     private var audioService: AudioCaptureService?
     private var transcriptionService: TranscriptionService?
@@ -59,26 +62,45 @@ final class MeetingSessionManager {
         await stopRecording(modelContext: modelContext)
     }
 
-    // MARK: - Quick Note (no recording)
+    // MARK: - Quick Note (no recording) — Issue 9 & 10
 
     /// Creates a meeting without starting audio recording — just a notepad.
-    func startQuickNote(modelContext: ModelContext) -> Meeting {
+    /// Pass a folder to create the meeting inside that folder.
+    func startQuickNote(modelContext: ModelContext, in folder: Folder? = nil) -> Meeting {
         let meeting = Meeting(title: "Quick Note", startedAt: Date())
         meeting.status = "completed"
+        meeting.isDraft = true  // Issue 9: Mark as draft until content is added
+        meeting.folder = folder // Issue 10: Assign to folder if provided
         modelContext.insert(meeting)
         try? modelContext.save()
         return meeting
     }
 
+    /// Issue 9: Clean up empty meetings (drafts with no content)
+    func cleanupEmptyMeeting(_ meeting: Meeting, modelContext: ModelContext) {
+        if !meeting.hasContent && meeting.isDraft {
+            modelContext.delete(meeting)
+            try? modelContext.save()
+        }
+    }
+
     // MARK: - Recording
 
-    func startRecording(modelContext: ModelContext, title: String? = nil, platform: String? = nil) async {
+    func startRecording(modelContext: ModelContext, title: String? = nil, platform: String? = nil, appState: AppState? = nil) async {
         guard !isRecording else { return }
+
+        // Issue 3: Check meeting limit
+        if let appState = appState, !appState.checkMeetingLimit() {
+            let used = appState.currentUser?.meetingsThisMonth ?? 0
+            appState.showUpgrade("You've used \(used)/\(UserProfile.freeMeetingLimit) free meetings this month. Upgrade to Pro for unlimited.")
+            return
+        }
 
         error = nil
         liveTranscriptText = ""
         liveTranscriptSegments = []
         interimText = ""
+        speakerNames = [:]
 
         // Create meeting
         let meeting = Meeting(title: title ?? "New Meeting", startedAt: Date())
@@ -86,6 +108,9 @@ final class MeetingSessionManager {
         modelContext.insert(meeting)
         try? modelContext.save()
         currentMeeting = meeting
+
+        // Issue 3: Increment meeting count
+        appState?.incrementMeetingCount()
 
         // Validate API key
         let apiKey = Constants.deepgramAPIKey
@@ -105,18 +130,20 @@ final class MeetingSessionManager {
             transcription?.sendAudioData(data)
         }
 
-        // Handle final transcript
+        // Handle final transcript — Issue 4: Map speaker names
         transcription.onFinalTranscript = { [weak self] segment in
             Task { @MainActor in
                 guard let self else { return }
-                let speaker = segment.speaker ?? "Speaker"
-                let line = "\(speaker): \(segment.text)\n"
+                let rawSpeaker = segment.speaker ?? "Speaker"
+                // Issue 4: Use mapped name if available, otherwise fallback to letter-based names
+                let displaySpeaker = self.speakerNames[rawSpeaker] ?? self.letterBasedSpeaker(rawSpeaker)
+                let line = "\(rawSpeaker): \(segment.text)\n"
                 self.liveTranscriptText += line
                 self.liveTranscriptSegments.append(
                     TranscriptSegmentData(
-                        speaker: speaker,
+                        speaker: displaySpeaker,
                         text: segment.text,
-                        isUser: speaker.lowercased().contains("you") || speaker == "Speaker 0"
+                        isUser: rawSpeaker.lowercased().contains("you") || rawSpeaker == "Speaker 0"
                     )
                 )
                 self.interimText = ""
@@ -160,6 +187,24 @@ final class MeetingSessionManager {
         }
     }
 
+    /// Issue 4: Convert "Speaker 0" to "Speaker A", "Speaker 1" to "Speaker B" etc.
+    private func letterBasedSpeaker(_ raw: String) -> String {
+        if raw.hasPrefix("Speaker "), let numStr = raw.split(separator: " ").last, let num = Int(numStr) {
+            let letter = String(UnicodeScalar(65 + (num % 26))!)
+            return "Speaker \(letter)"
+        }
+        return raw
+    }
+
+    /// Issue 4: Set speaker names from calendar attendees
+    func setSpeakerNamesFromAttendees(_ attendees: [String]) {
+        for (index, name) in attendees.enumerated() {
+            speakerNames["Speaker \(index)"] = name
+        }
+        // Store in meeting
+        currentMeeting?.speakerNameMap = speakerNames
+    }
+
     func stopRecording(modelContext: ModelContext) async {
         guard isRecording else { return }
 
@@ -191,6 +236,7 @@ final class MeetingSessionManager {
         meeting.endedAt = Date()
         meeting.durationSeconds = duration
         meeting.transcriptRaw = transcriptText
+        meeting.speakerNameMap = speakerNames
         try? modelContext.save()
 
         // Generate AI summary if we have transcript
@@ -219,7 +265,7 @@ final class MeetingSessionManager {
     }
 
     /// Enhance user notes with transcript
-    func enhanceNotes(meeting: Meeting, modelContext: ModelContext) async {
+    func enhanceNotes(meeting: Meeting, modelContext: ModelContext, appState: AppState? = nil) async {
         let transcript = meeting.transcriptRaw ?? ""
         let notes = meeting.userNotes
 
@@ -227,6 +273,13 @@ final class MeetingSessionManager {
         if transcript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
            notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             error = "Type some notes or record a meeting first, then enhance."
+            return
+        }
+
+        // Issue 3: Check enhancement limit
+        if let appState = appState, !appState.checkEnhancementLimit() {
+            let used = appState.currentUser?.enhancementsThisMonth ?? 0
+            appState.showUpgrade("You've used \(used)/\(UserProfile.freeEnhancementLimit) free AI enhancements this month. Upgrade to Pro for unlimited.")
             return
         }
 
@@ -244,6 +297,9 @@ final class MeetingSessionManager {
                 meeting.title = result.summary.title
             }
             try? modelContext.save()
+
+            // Issue 3: Increment enhancement count
+            appState?.incrementEnhancementCount()
         } catch {
             self.error = "Enhancement failed: \(error.localizedDescription)"
         }

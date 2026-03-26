@@ -1,5 +1,6 @@
 import EventKit
 import Foundation
+import AppKit
 
 @MainActor @Observable
 final class CalendarService {
@@ -126,5 +127,30 @@ final class CalendarService {
         // Return next upcoming meeting within 5 minutes
         let fiveMinutes = now.addingTimeInterval(5 * 60)
         return todayEvents.first(where: { $0.startDate > now && $0.startDate <= fiveMinutes && !$0.isAllDay })
+    }
+
+    // MARK: - Issue 2: Google Calendar Connection Helpers
+
+    /// Open macOS Internet Accounts settings where user can add their Google account
+    static func openInternetAccountsSettings() {
+        if let url = URL(string: "x-apple.systempreferences:com.apple.Internet-Accounts") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
+    /// Open macOS Calendar preferences
+    static func openCalendarSettings() {
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.datetime") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
+    /// Check if any Google calendar source is configured
+    var hasGoogleCalendar: Bool {
+        let sources = eventStore.sources
+        return sources.contains { source in
+            source.title.localizedCaseInsensitiveContains("Google") ||
+            source.title.localizedCaseInsensitiveContains("Gmail")
+        }
     }
 }

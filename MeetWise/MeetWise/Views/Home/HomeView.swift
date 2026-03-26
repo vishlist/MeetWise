@@ -5,7 +5,12 @@ struct HomeView: View {
     var sessionManager: MeetingSessionManager
     @Environment(AppState.self) private var appState
     @Environment(\.modelContext) private var modelContext
-    @Query(sort: \Meeting.startedAt, order: .reverse) private var recentMeetings: [Meeting]
+    @Query(sort: \Meeting.startedAt, order: .reverse) private var allMeetings: [Meeting]
+
+    // Issue 9: Filter out empty drafts from the meetings list
+    private var recentMeetings: [Meeting] {
+        allMeetings.filter { !$0.isDraft || $0.hasContent }
+    }
     @State private var homeChat = ""
     @State private var appeared = false
     @State private var homeChatMessages: [(role: String, content: String)] = []
@@ -172,7 +177,7 @@ struct HomeView: View {
             HStack(alignment: .top, spacing: 16) {
                 VStack(spacing: 2) {
                     Text("\(Calendar.current.component(.day, from: Date()))")
-                        .font(.custom("Georgia-Bold", size: 32))
+                        .font(.custom("InstrumentSerif-Regular", size: 32))
                         .foregroundStyle(Theme.textPrimary)
                     Text(dayOfWeek)
                         .font(.system(size: 14, weight: .medium))
@@ -181,7 +186,7 @@ struct HomeView: View {
                 .frame(width: 50)
 
                 Text(monthName)
-                    .font(.custom("Georgia", size: 14))
+                    .font(.custom("InstrumentSerif-Regular", size: 14))
                     .foregroundStyle(Theme.textSecondary)
 
                 Spacer()
@@ -218,18 +223,28 @@ struct HomeView: View {
                         .buttonStyle(.plain)
                         .hoverScale(1.05)
 
-                        Button("Calendar Settings") {
-                            NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.datetime")!)
+                        // Issue 2: Connect Google Calendar via Internet Accounts
+                        Button {
+                            CalendarService.openInternetAccountsSettings()
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "person.badge.plus").font(.system(size: 11))
+                                Text("Add Google Account")
+                                    .font(.system(size: 13, weight: .medium))
+                            }
+                            .foregroundStyle(Theme.textSecondary)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 6)
+                            .background(Theme.bgActive)
+                            .cornerRadius(Theme.radiusSM)
                         }
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(Theme.textSecondary)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 6)
-                        .background(Theme.bgActive)
-                        .cornerRadius(Theme.radiusSM)
                         .buttonStyle(.plain)
                     }
                     .padding(.top, 4)
+
+                    Text("Add your Google account to macOS to sync your calendar")
+                        .font(.system(size: 11, weight: .light))
+                        .foregroundStyle(Theme.textMuted)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 24)
@@ -355,7 +370,7 @@ struct HomeView: View {
     private var notesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Recent Notes")
-                .font(.custom("Georgia", size: 16))
+                .font(.custom("InstrumentSerif-Regular", size: 16))
                 .foregroundStyle(Theme.textPrimary)
 
             let grouped = Dictionary(grouping: recentMeetings) { meeting in
@@ -455,7 +470,7 @@ struct HomeView: View {
                     .font(.system(size: 13))
                     .foregroundStyle(Theme.textSecondary)
                 Text("Today's Tasks")
-                    .font(.custom("Georgia", size: 14))
+                    .font(.custom("InstrumentSerif-Regular", size: 14))
                     .foregroundStyle(Theme.textPrimary)
                 Spacer()
                 Text("\(todayActionItems.count)")
@@ -489,7 +504,7 @@ struct HomeView: View {
                 .foregroundStyle(Theme.textMuted)
 
             Text("Take your first note")
-                .font(.custom("Georgia", size: 16))
+                .font(.custom("InstrumentSerif-Regular", size: 16))
                 .foregroundStyle(Theme.textPrimary)
 
             Text("Your meeting notes will appear here")

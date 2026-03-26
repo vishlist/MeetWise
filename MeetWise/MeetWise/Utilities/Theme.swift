@@ -102,13 +102,13 @@ enum Theme {
     ]
 }
 
-// MARK: - Fonts (Georgia serif for headings, system light for body)
+// MARK: - Fonts (Instrument Serif for headings, system light for body)
 extension Font {
     static func heading(_ size: CGFloat) -> Font {
-        .custom("Georgia-Bold", size: size)
+        .custom("InstrumentSerif-Regular", size: size)
     }
     static func subheading(_ size: CGFloat) -> Font {
-        .custom("Georgia", size: size)
+        .custom("InstrumentSerif-Regular", size: size)
     }
     static func body(_ size: CGFloat) -> Font {
         .system(size: size, weight: .light)
@@ -361,7 +361,7 @@ struct CollapsibleSection<Content: View>: View {
                         .foregroundStyle(Theme.textSecondary)
                         .frame(width: 18)
                     Text(title)
-                        .font(.custom("Georgia", size: 15))
+                        .font(.custom("InstrumentSerif-Regular", size: 15))
                         .foregroundStyle(Theme.textPrimary)
                     Spacer()
                     Image(systemName: "chevron.right")
@@ -413,7 +413,7 @@ struct StatsCard: View {
             }
 
             Text(value)
-                .font(.custom("Georgia-Bold", size: 28))
+                .font(.custom("InstrumentSerif-Regular", size: 28))
                 .foregroundStyle(Theme.textHeading)
 
             VStack(alignment: .leading, spacing: 2) {
@@ -567,22 +567,38 @@ struct ActionItemRow: View {
     }
 }
 
-// MARK: - Typing Indicator (3 animated dots)
+// MARK: - Typing Indicator (3 animated dots) — Issue 6: Fixed animation
 struct TypingIndicator: View {
-    @State private var phase: CGFloat = 0
+    @State private var dot0Active = false
+    @State private var dot1Active = false
+    @State private var dot2Active = false
 
     var body: some View {
         HStack(spacing: 4) {
-            ForEach(0..<3, id: \.self) { index in
-                Circle()
-                    .fill(Theme.textMuted)
-                    .frame(width: 6, height: 6)
-                    .offset(y: sin(phase + Double(index) * 0.8) * 4)
-            }
+            Circle()
+                .fill(Theme.textMuted)
+                .frame(width: 6, height: 6)
+                .offset(y: dot0Active ? -4 : 0)
+
+            Circle()
+                .fill(Theme.textMuted)
+                .frame(width: 6, height: 6)
+                .offset(y: dot1Active ? -4 : 0)
+
+            Circle()
+                .fill(Theme.textMuted)
+                .frame(width: 6, height: 6)
+                .offset(y: dot2Active ? -4 : 0)
         }
         .onAppear {
-            withAnimation(.linear(duration: 1.0).repeatForever(autoreverses: false)) {
-                phase = .pi * 2
+            withAnimation(.easeInOut(duration: 0.5).repeatForever(autoreverses: true)) {
+                dot0Active = true
+            }
+            withAnimation(.easeInOut(duration: 0.5).repeatForever(autoreverses: true).delay(0.15)) {
+                dot1Active = true
+            }
+            withAnimation(.easeInOut(duration: 0.5).repeatForever(autoreverses: true).delay(0.3)) {
+                dot2Active = true
             }
         }
     }
