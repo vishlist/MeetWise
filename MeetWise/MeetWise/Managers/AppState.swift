@@ -94,14 +94,15 @@ final class AppState {
         resetCountsIfNeeded()
     }
 
-    /// Sign out: clear session state only — user data (profile, meetings, folders) persists
+    /// Sign out: clear session state — user data persists for re-login
     func signOut(modelContext: ModelContext) {
         // Sign out from Supabase (fire-and-forget)
         Task { await SupabaseAuth.shared.signOut() }
 
-        // Clear session flags only
+        // Clear ALL session flags
         UserDefaults.standard.set(false, forKey: "isLoggedIn")
         UserDefaults.standard.set(false, forKey: "onboardingComplete")
+        UserDefaults.standard.removeObject(forKey: "userEmail")
 
         // DO NOT delete UserProfile, Meeting, Folder, or any SwiftData records.
         // The user's data persists so they can sign back in and see everything.
@@ -277,16 +278,24 @@ final class SupabaseAuth: @unchecked Sendable {
 
     // MARK: - Sign Up
 
-    func signUp(email: String, password: String) async throws -> SignUpResponse {
+    func signUp(email: String, password: String, fullName: String = "") async throws -> SignUpResponse {
         let url = URL(string: "\(baseURL)/auth/v1/signup")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue(apiKey, forHTTPHeaderField: "apikey")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try JSONSerialization.data(withJSONObject: [
+
+        var body: [String: Any] = [
             "email": email,
             "password": password
-        ])
+        ]
+        if !fullName.isEmpty {
+            body["data"] = [
+                "full_name": fullName,
+                "display_name": fullName
+            ]
+        }
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
         let (data, response) = try await performRequest(request)
         let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
@@ -449,6 +458,50 @@ final class SupabaseAuth: @unchecked Sendable {
 
         accessToken = nil
         refreshToken = nil
+    }
+
+    // MARK: - Upsert Profile in Supabase
+
+    func upsertProfile(userId: String, fullName: String, email: String) async {
+        guard let token = accessToken else { return }
+
+        let url = URL(string: "\(baseURL)/rest/v1/profiles")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue(apiKey, forHTTPHeaderField: "apikey")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("resolution=merge-duplicates", forHTTPHeaderField: "Prefer")
+
+        let profile: [String: Any] = [
+            "id": userId,
+            "full_name": fullName,
+            "email": email,
+            "plan": "free",
+            "meetings_this_month": 0,
+            "total_meetings": 0,
+            "total_recording_minutes": 0,
+            "settings": [
+                "auto_record": true,
+                "default_language": "en",
+                "transcript_notifications": true
+            ] as [String: Any]
+        ]
+
+        request.httpBody = try? JSONSerialization.data(withJSONObject: profile)
+
+        do {
+            let (data, response) = try await performRequest(request)
+            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
+            if statusCode >= 400 {
+                let errorBody = String(data: data, encoding: .utf8) ?? ""
+                print("[SupabaseAuth] Profile upsert failed (\(statusCode)): \(errorBody)")
+            } else {
+                print("[SupabaseAuth] Profile upserted for \(email)")
+            }
+        } catch {
+            print("[SupabaseAuth] Profile upsert error: \(error)")
+        }
     }
 
     // MARK: - Refresh Session

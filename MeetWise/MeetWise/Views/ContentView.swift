@@ -317,30 +317,48 @@ struct ContentView: View {
 
     // MARK: - Setup
     private func setupInitialData() {
-        // Only load existing profile — don't create one (auth flow handles creation)
+        // Only run if onboarding is complete (user has signed in)
+        guard onboardingComplete else {
+            appState.currentUser = nil
+            appState.isAuthenticated = false
+            return
+        }
+
+        // Load profile matching the currently logged-in Supabase user
+        let savedEmail = UserDefaults.standard.string(forKey: "userEmail") ?? ""
+
         let descriptor = FetchDescriptor<UserProfile>()
         let profiles = (try? modelContext.fetch(descriptor)) ?? []
-        if let profile = profiles.first {
+
+        // Find profile matching the logged-in user's email
+        let matchingProfile = profiles.first(where: { $0.email == savedEmail }) ?? profiles.first
+
+        if let profile = matchingProfile {
             appState.currentUser = profile
             appState.isAuthenticated = true
+        } else {
+            // No profile found — force re-login
+            UserDefaults.standard.set(false, forKey: "isLoggedIn")
+            UserDefaults.standard.set(false, forKey: "onboardingComplete")
+            onboardingComplete = false
+            appState.isAuthenticated = false
+            return
         }
 
         // Seed recipes if needed
         RecipeService.seedRecipes(modelContext: modelContext)
 
-        // Validate Supabase session on launch
-        if onboardingComplete {
-            Task {
-                let valid = await SupabaseAuth.shared.validateSession()
-                if !valid {
-                    // Session expired — force re-login
-                    await MainActor.run {
-                        UserDefaults.standard.set(false, forKey: "isLoggedIn")
-                        UserDefaults.standard.set(false, forKey: "onboardingComplete")
-                        onboardingComplete = false
-                        appState.isAuthenticated = false
-                        appState.currentUser = nil
-                    }
+        // Validate Supabase session on launch (background)
+        Task {
+            let valid = await SupabaseAuth.shared.validateSession()
+            if !valid {
+                // Session expired — force re-login
+                await MainActor.run {
+                    UserDefaults.standard.set(false, forKey: "isLoggedIn")
+                    UserDefaults.standard.set(false, forKey: "onboardingComplete")
+                    onboardingComplete = false
+                    appState.isAuthenticated = false
+                    appState.currentUser = nil
                 }
             }
         }
@@ -813,7 +831,8 @@ struct ContentView: View {
 
         Task {
             do {
-                _ = try await SupabaseAuth.shared.signUp(email: email, password: password)
+                let name = authName.trimmingCharacters(in: .whitespaces)
+                _ = try await SupabaseAuth.shared.signUp(email: email, password: password, fullName: name)
                 // Supabase sends a verification email with OTP code
                 await MainActor.run {
                     authIsLoading = false
@@ -841,13 +860,19 @@ struct ContentView: View {
         Task {
             do {
                 let response = try await SupabaseAuth.shared.verifyOTP(email: email, token: entered, type: "signup")
+
+                // Upsert profile in Supabase (background)
+                let trimmedName = authName.trimmingCharacters(in: .whitespaces)
+                if let userId = response.user?.id {
+                    await SupabaseAuth.shared.upsertProfile(userId: userId, fullName: trimmedName, email: email)
+                }
+
                 await MainActor.run {
                     authIsLoading = false
                     otpResendTimer?.invalidate()
                     otpResendTimer = nil
 
                     // Create local profile in SwiftData
-                    let trimmedName = authName.trimmingCharacters(in: .whitespaces)
                     let normalizedEmail = email
 
                     let profile = UserProfile()
@@ -855,7 +880,8 @@ struct ContentView: View {
                     profile.email = normalizedEmail
                     profile.isEmailVerified = true
                     if let userId = response.user?.id {
-                        profile.supabaseAccessToken = userId
+                        profile.supabaseUserId = userId
+                        profile.supabaseAccessToken = SupabaseAuth.shared.accessToken ?? ""
                     }
                     modelContext.insert(profile)
 
@@ -891,20 +917,21 @@ struct ContentView: View {
                 await MainActor.run {
                     authIsLoading = false
 
-                    // Load or create local profile
+                    // Load or create local profile for THIS user
                     let descriptor = FetchDescriptor<UserProfile>()
                     let profiles = (try? modelContext.fetch(descriptor)) ?? []
                     let profile = profiles.first(where: { $0.email == email }) ?? {
                         let p = UserProfile()
                         p.email = email
-                        p.fullName = response.user?.email ?? email
+                        p.fullName = email.components(separatedBy: "@").first ?? email
                         modelContext.insert(p)
                         return p
                     }()
 
                     profile.isEmailVerified = response.user?.isEmailVerified ?? false
                     if let userId = response.user?.id {
-                        profile.supabaseAccessToken = userId
+                        profile.supabaseUserId = userId
+                        profile.supabaseAccessToken = SupabaseAuth.shared.accessToken ?? ""
                     }
                     try? modelContext.save()
 
@@ -955,7 +982,8 @@ struct ContentView: View {
 
         Task {
             do {
-                _ = try await SupabaseAuth.shared.signUp(email: email, password: password)
+                let name = authName.trimmingCharacters(in: .whitespaces)
+                _ = try await SupabaseAuth.shared.signUp(email: email, password: password, fullName: name)
                 await MainActor.run {
                     startResendCooldown()
                 }

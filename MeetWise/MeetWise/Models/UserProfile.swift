@@ -10,6 +10,7 @@ final class UserProfile {
     var focusAreas: String?
     var avatarURL: String?
     var googleRefreshToken: String?
+    var supabaseUserId: String?
     var supabaseAccessToken: String?
 
     // Auth

@@ -4,14 +4,14 @@ enum Constants {
     static let appName = "MeetWise"
     static let bundleID = "com.meetwise.app"
 
-    // API Keys — hardcoded
-    static let deepgramAPIKey = "YOUR_KEY"
-    static let anthropicAPIKey = "YOUR_KEY"
-    static let openAIAPIKey = "YOUR_KEY"
+    // API Keys — loaded from Secrets.plist (git-ignored) or environment
+    static var deepgramAPIKey: String { secret("DEEPGRAM_API_KEY") }
+    static var anthropicAPIKey: String { secret("ANTHROPIC_API_KEY") }
+    static var openAIAPIKey: String { secret("OPENAI_API_KEY") }
 
     // Supabase
-    static let supabaseURL = "https://ygwjivwcwoqbhjcogpby.supabase.co"
-    static let supabaseAnonKey = "sb_publishable_zO5IZ9UEwIPNAfPRZXfwWQ_TSf5XBSL"
+    static var supabaseURL: String { secret("SUPABASE_URL", fallback: "https://ygwjivwcwoqbhjcogpby.supabase.co") }
+    static var supabaseAnonKey: String { secret("SUPABASE_ANON_KEY", fallback: "sb_publishable_zO5IZ9UEwIPNAfPRZXfwWQ_TSf5XBSL") }
 
     // Stripe (placeholder)
     static let stripePublishableKey = ""
@@ -27,4 +27,25 @@ enum Constants {
     // OpenAI
     static let openAIEmbeddingsURL = "https://api.openai.com/v1/embeddings"
     static let openAIEmbeddingsModel = "text-embedding-3-small"
+
+    // MARK: - Secret Loading
+
+    private static var secrets: [String: String] = {
+        // Try loading from Secrets.plist in bundle
+        if let url = Bundle.main.url(forResource: "Secrets", withExtension: "plist"),
+           let data = try? Data(contentsOf: url),
+           let dict = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: String] {
+            return dict
+        }
+        return [:]
+    }()
+
+    private static func secret(_ key: String, fallback: String = "") -> String {
+        // 1. Environment variable (Xcode scheme)
+        if let env = ProcessInfo.processInfo.environment[key], !env.isEmpty { return env }
+        // 2. Secrets.plist
+        if let val = secrets[key], !val.isEmpty { return val }
+        // 3. Fallback
+        return fallback
+    }
 }

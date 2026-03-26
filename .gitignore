@@ -26,3 +26,7 @@ profile
 .vscode/
 .idea/
 .next/
+
+# Secrets (API keys)
+Secrets.plist
+MeetWise/MeetWise/Resources/Secrets.plist
